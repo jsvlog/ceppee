@@ -31,14 +31,17 @@ export async function POST(request: NextRequest) {
     switch (action) {
       /* ---------- PAYMENTS ---------- */
       case "approve_payment": {
-        const { error } = await admin.rpc("approve_payment_request", {
+        // RPC via SERVER client (real admin JWT) — the RPC's internal is_admin()
+        // guard needs auth.uid(); the service-role client has no user context and
+        // would make is_admin() return false -> "Not authorized".
+        const { error } = await supabase.rpc("approve_payment_request", {
           p_payment_id: payload.payment_id,
         });
         if (error) throw error;
         return NextResponse.json({ ok: true });
       }
       case "reject_payment": {
-        const { error } = await admin.rpc("reject_payment_request", {
+        const { error } = await supabase.rpc("reject_payment_request", {
           p_payment_id: payload.payment_id,
           p_note: payload.note ?? null,
         });

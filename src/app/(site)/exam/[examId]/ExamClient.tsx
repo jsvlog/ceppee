@@ -72,9 +72,9 @@ export default function ExamClient({
     [answers, exam, questions, router, secondsLeft, total]
   );
 
-  // Countdown timer
+  // Countdown timer — mock mode only (practice has no time limit)
   useEffect(() => {
-    if (phase !== "running") return;
+    if (!isMock || phase !== "running") return;
     const id = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
@@ -183,8 +183,10 @@ export default function ExamClient({
           </div>
 
           <p className="mb-2 text-sm text-[#8c7a64]">
-            Time used: <strong className="text-[#3d3227]">{fmtDuration(exam.duration_minutes * 60 - secondsLeft)}</strong>
-            {saving && " · saving..."}
+            {isMock && (
+              <>Time used: <strong className="text-[#3d3227]">{fmtDuration(exam.duration_minutes * 60 - secondsLeft)}</strong> </>
+            )}
+            {saving && "· saving..."}
           </p>
 
           <div className="mt-6 flex justify-center gap-3">
@@ -256,11 +258,17 @@ export default function ExamClient({
         <div className="text-sm font-semibold text-[#8c7a64]">
           Q{current + 1} of {total}
         </div>
-        <div className={`flex items-center gap-2 rounded-xl px-4 py-1.5 font-mono text-lg font-bold ${
-          timeCritical ? "animate-pulse bg-red-50 text-red-600" : "bg-[#fff5e0] text-[#3d3227]"
-        }`}>
-          ⏱ {fmtDuration(secondsLeft)}
-        </div>
+        {isMock ? (
+          <div className={`flex items-center gap-2 rounded-xl px-4 py-1.5 font-mono text-lg font-bold ${
+            timeCritical ? "animate-pulse bg-red-50 text-red-600" : "bg-[#fff5e0] text-[#3d3227]"
+          }`}>
+            ⏱ {fmtDuration(secondsLeft)}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl bg-[#dcfce7] px-4 py-1.5 text-sm font-bold text-[#166534]">
+            🎯 Practice — walang time limit
+          </div>
+        )}
         <div className="text-sm text-[#8c7a64]">{answeredCount}/{total} sagot</div>
       </div>
 

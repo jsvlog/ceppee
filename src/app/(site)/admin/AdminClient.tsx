@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { peso, fmtDate, fmtDateTime } from "@/lib/format";
-import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, SiteSettings } from "@/lib/types";
+import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings } from "@/lib/types";
 import type { AdminProfile, LessonMeta } from "./page";
 
 /* ================= helpers ================= */
@@ -585,7 +585,7 @@ function TopicForm({
       className="space-y-4"
     >
       <Field label="Track">
-        <select className="input-warm" value={f.track} onChange={(e) => setF({ ...f, track: e.target.value })}>
+        <select className="input-warm" value={f.track} onChange={(e) => setF({ ...f, track: e.target.value as Track })}>
           <option value="CSE">CSE</option>
           <option value="LET">LET</option>
         </select>
@@ -972,13 +972,13 @@ function ExamForm({
     <form onSubmit={(e) => { e.preventDefault(); void onSave({ ...f, id: initial.id }); }} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <Field label="Track">
-          <select className="input-warm" value={f.track} onChange={(e) => setF({ ...f, track: e.target.value, topic: "" })}>
+          <select className="input-warm" value={f.track} onChange={(e) => setF({ ...f, track: e.target.value as Track, topic: "" })}>
             <option value="CSE">CSE</option>
             <option value="LET">LET</option>
           </select>
         </Field>
         <Field label="Mode">
-          <select className="input-warm" value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}>
+          <select className="input-warm" value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as "mock" | "practice" })}>
             <option value="mock">Mock (timed, one-shot)</option>
             <option value="practice">Practice (may explanation agad)</option>
           </select>

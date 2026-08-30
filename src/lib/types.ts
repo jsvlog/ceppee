@@ -81,12 +81,12 @@ export interface Lesson {
   video_url: string | null;
   order_index: number;
   is_published: boolean;
+  is_free: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface SiteSettings {
-  id: number;
   key: string;
   value: string;
   updated_at?: string;

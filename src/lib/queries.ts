@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import type { Subscription, Track } from "@/lib/types";
 
 export interface SiteStats {
@@ -7,13 +8,16 @@ export interface SiteStats {
   exams: number;
 }
 
+// Public marketing stats. Uses the service-role client so the counts reflect the
+// FULL catalog — RLS would otherwise hide paid lessons/questions from anonymous
+// visitors and undercount these numbers on the homepage.
 export async function getSiteStats(): Promise<SiteStats> {
-  const supabase = await createClient();
+  const admin = getAdminClient();
   try {
     const [lessons, questions, exams] = await Promise.all([
-      supabase.from("lessons").select("id", { count: "exact", head: true }).eq("is_published", true),
-      supabase.from("exam_questions").select("id", { count: "exact", head: true }),
-      supabase.from("exams").select("id", { count: "exact", head: true }).eq("is_active", true),
+      admin.from("lessons").select("id", { count: "exact", head: true }).eq("is_published", true),
+      admin.from("exam_questions").select("id", { count: "exact", head: true }),
+      admin.from("exams").select("id", { count: "exact", head: true }).eq("is_active", true),
     ]);
     return {
       lessons: lessons.count ?? 0,

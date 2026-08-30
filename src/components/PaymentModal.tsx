@@ -46,6 +46,7 @@ export default function PaymentModal({
       setPendingReq(pending);
       setStep("upload");
       setReference(pending.reference_number || "");
+      if (pending.payment_method === "bank") setMethod("bank");
     }
     const supabase = createClient();
     supabase.from("site_settings").select("key, value").then(({ data }) => {
@@ -59,7 +60,7 @@ export default function PaymentModal({
 
   const handleSubmit = async () => {
     setError(null);
-    if (!/^\d{13}$/.test(reference)) {
+    if (method === "gcash" && !/^\d{13}$/.test(reference)) {
       setError("Ang GCash reference number ay 13 digits (makikita sa GCash receipt mo).");
       return;
     }
@@ -223,19 +224,25 @@ export default function PaymentModal({
 
             <div className="mb-4">
               <label className="mb-1.5 block text-sm font-semibold text-[#57534e]">
-                13-digit GCash Reference Number
+                {method === "gcash" ? "13-digit GCash Reference Number" : "Reference Number (optional)"}
               </label>
               <input
                 type="text"
-                inputMode="numeric"
+                inputMode={method === "gcash" ? "numeric" : "text"}
                 value={reference}
-                onChange={(e) => setReference(e.target.value.replace(/\D/g, "").slice(0, 13))}
-                maxLength={13}
+                onChange={(e) =>
+                  method === "gcash"
+                    ? setReference(e.target.value.replace(/\D/g, "").slice(0, 13))
+                    : setReference(e.target.value)
+                }
+                maxLength={method === "gcash" ? 13 : 64}
                 className="input-warm font-mono text-lg tracking-widest"
-                placeholder="1234567890123"
+                placeholder={method === "gcash" ? "1234567890123" : "e.g. Bank ref / name"}
               />
               <p className="mt-1 text-xs text-[#8c7a64]">
-                Makikita sa GCash app mo pagkatapos magbayad — "Reference No."
+                {method === "gcash"
+                  ? 'Makikita sa GCash app mo pagkatapos magbayad — "Reference No."'
+                  : "Bank transfer: ang admin ay magma-match gamit ang eksaktong amount + receipt."}
               </p>
             </div>
 

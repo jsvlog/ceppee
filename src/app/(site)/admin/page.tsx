@@ -78,7 +78,7 @@ export default async function AdminPage() {
 
   return (
     <AdminClient
-      stats={(stats as Record<string, number>) || {}}
+      stats={(stats as unknown as Record<string, number>) || {}}
       payments={(payments as unknown as (PaymentRequest & { profile?: { email: string; full_name: string } })[]) || []}
       subs={(subs as unknown as (Subscription & { profile?: { email: string; full_name: string } })[]) || []}
       profiles={(profiles as AdminProfile[]) || []}

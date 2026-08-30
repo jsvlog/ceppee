@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PaymentModal from "@/components/PaymentModal";
 import { peso, daysUntil, fmtDate, fmtDateTime, TRACK_LABEL } from "@/lib/format";
-import type { Track, PaymentRequest, Subscription, ExamAttempt, Exam } from "@/lib/types";
+import type { Track, PaymentRequest, Subscription, ExamAttempt, Exam, ExamWithCount } from "@/lib/types";
 
 const PRICE = 500;
 
@@ -25,7 +25,7 @@ export default function DashboardClient({
   subs: Subscription[];
   requests: PaymentRequest[];
   attempts: (ExamAttempt & { exam?: Exam })[];
-  freeExams: Exam[];
+  freeExams: ExamWithCount[];
 }) {
   const router = useRouter();
   const [payTrack, setPayTrack] = useState<Track | null>(null);
