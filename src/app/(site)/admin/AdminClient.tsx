@@ -128,7 +128,7 @@ export default function AdminClient({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-[#142a56]">🛠️ Admin Dashboard</h1>
-          <p className="text-sm text-[#5a6d91]">Ceppee Review control center</p>
+          <p className="text-sm text-[#5a6d91]">Teacher Ceppee Review control center</p>
         </div>
         {busy && <span className="badge badge-pending">Processing…</span>}
       </div>

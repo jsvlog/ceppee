@@ -74,7 +74,7 @@ function LoginInner() {
               C
             </span>
             <span className="text-2xl font-extrabold text-[#142a56]">
-              Ceppee<span className="gradient-text">Review</span>
+              Teacher Ceppee<span className="gradient-text"> Review</span>
             </span>
           </Link>
         </div>
@@ -162,7 +162,7 @@ function LoginInner() {
           </form>
 
           <p className="mt-6 text-center text-xs leading-relaxed text-[#93a4c0]">
-            By continuing, you agree to use Ceppee Review for your personal exam preparation.
+            By continuing, you agree to use Teacher Ceppee Review for your personal exam preparation.
           </p>
         </div>
 

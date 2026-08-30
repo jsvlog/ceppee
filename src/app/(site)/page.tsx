@@ -210,7 +210,7 @@ export default async function HomePage() {
       <section className="w-full py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#142a56] sm:text-4xl">
-            Why Ceppee Review?
+            Why Teacher Ceppee Review?
           </h2>
           <p className="mb-10 text-center mx-auto max-w-xl text-[#5a6d91]">
             This isn't just a PDF dump. It's a complete review system built for real exam day.

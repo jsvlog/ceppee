@@ -21,7 +21,7 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
   if (!exam) {
     return (
       <Shell>
-        <Locked title="Hindi mahanap ang exam" msg="Baka wala na ito o hindi pa para sa iyo." />
+        <Locked title="Exam not found" msg="It may have been removed or isn’t available to you yet." />
       </Shell>
     );
   }
@@ -33,8 +33,8 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
     return (
       <Shell>
         <Locked
-          title="Kandado ang exam na ito 🔒"
-          msg={`Ang "${e.title}" ay para sa mga ${e.track} subscribers. Subscribe sa dashboard mo para mabuksan lahat ng mock exams at drills.`}
+          title="This exam is locked 🔒"
+          msg={`"${e.title}" is for ${e.track} subscribers. Subscribe from your dashboard to unlock all mock exams and drills.`}
         />
       </Shell>
     );
@@ -51,8 +51,8 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
     return (
       <Shell>
         <Locked
-          title="Wala pang questions ang exam na ito"
-          msg="Idadagdag pa lang ni Teacher Ceppee ang mga tanong. Balik ka ulit mamaya!"
+          title="This exam has no questions yet"
+          msg="Teacher Ceppee is still adding the questions to this exam. Check back soon!"
         />
       </Shell>
     );
@@ -77,7 +77,7 @@ function Locked({ title, msg }: { title: string; msg: string }) {
       <p className="mb-6 text-sm text-[#5a6d91]">{msg}</p>
       <div className="flex justify-center gap-3">
         <Link href="/dashboard" className="btn-primary px-6 py-3 text-sm">
-          Puntahan ang Dashboard
+          Go to Dashboard
         </Link>
         <Link href="/" className="rounded-xl border border-[#dbe7f8] bg-white px-6 py-3 text-sm font-semibold text-[#3f4d78]">
           Home

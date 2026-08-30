@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       case "bulk_import_questions": {
         // payload.questions: array of question objects for one exam
         const qs = payload.questions as Array<Record<string, unknown>>;
-        if (!Array.isArray(qs) || qs.length === 0) throw new Error("Walang questions na na-import");
+        if (!Array.isArray(qs) || qs.length === 0) throw new Error("No questions were imported");
         const rows = qs.map((q, i) => ({
           exam_id: payload.exam_id,
           order_index: Number(q.order_index) || i + 1,
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
         }));
         for (const r of rows) {
           if (!r.question_text || !r.choice_a || !r.choice_b || !r.choice_c || !r.choice_d) {
-            throw new Error(`May kulang na field sa question #${r.order_index}`);
+            throw new Error(`Missing field in question #${r.order_index}`);
           }
           if (!["A", "B", "C", "D"].includes(r.correct_choice)) {
             throw new Error(`Invalid correct_choice sa question #${r.order_index}`);

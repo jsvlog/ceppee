@@ -92,7 +92,7 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
               C
             </span>
             <span className="text-lg font-extrabold tracking-tight text-[#142a56]">
-              Ceppee<span className="gradient-text">Review</span>
+              Teacher Ceppee<span className="gradient-text"> Review</span>
             </span>
           </Link>
 

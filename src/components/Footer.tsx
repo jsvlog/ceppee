@@ -11,7 +11,7 @@ export default function Footer() {
                 C
               </span>
               <span className="text-lg font-extrabold text-[#142a56]">
-                Ceppee<span className="gradient-text">Review</span>
+                Teacher Ceppee<span className="gradient-text"> Review</span>
               </span>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-[#5a6d91]">
@@ -51,7 +51,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-[#dbe7f8] pt-6 text-center text-xs text-[#93a4c0]">
-          © {new Date().getFullYear()} Ceppee Review · Made with ☀️ in the Philippines
+          © {new Date().getFullYear()} Teacher Ceppee Review · Made with ☀️ in the Philippines
         </div>
       </div>
     </footer>

@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Ceppee Review — CSE & LET Reviewer Online",
-    template: "%s — Ceppee Review",
+    default: "Teacher Ceppee Review — CSE & LET Reviewer Online",
+    template: "%s — Teacher Ceppee Review",
   },
   description:
     "Online reviewer for the Civil Service Exam (CSE) and Licensure Examination for Teachers (LET). Lessons, practice quizzes, and timed mock exams by Teacher Ceppee.",
@@ -18,8 +18,8 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
-    siteName: "Ceppee Review",
-    title: "Ceppee Review — CSE & LET Reviewer Online",
+    siteName: "Teacher Ceppee Review",
+    title: "Teacher Ceppee Review — CSE & LET Reviewer Online",
     description: "Lessons, practice quizzes, and timed mock exams for CSE and LET.",
   },
 };
