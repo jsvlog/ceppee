@@ -73,13 +73,13 @@ function Locked({ title, msg }: { title: string; msg: string }) {
   return (
     <>
       <div className="mb-4 text-6xl">🔒</div>
-      <h1 className="mb-2 text-2xl font-black text-[#3d3227]">{title}</h1>
-      <p className="mb-6 text-sm text-[#8c7a64]">{msg}</p>
+      <h1 className="mb-2 text-2xl font-black text-[#142a56]">{title}</h1>
+      <p className="mb-6 text-sm text-[#5a6d91]">{msg}</p>
       <div className="flex justify-center gap-3">
         <Link href="/dashboard" className="btn-primary px-6 py-3 text-sm">
           Puntahan ang Dashboard
         </Link>
-        <Link href="/" className="rounded-xl border border-[#f5e6cc] bg-white px-6 py-3 text-sm font-semibold text-[#57534e]">
+        <Link href="/" className="rounded-xl border border-[#dbe7f8] bg-white px-6 py-3 text-sm font-semibold text-[#3f4d78]">
           Home
         </Link>
       </div>

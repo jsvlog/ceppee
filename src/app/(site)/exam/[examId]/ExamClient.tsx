@@ -103,28 +103,28 @@ export default function ExamClient({
   if (phase === "intro") {
     return (
       <div className="card relative overflow-hidden p-10 text-center">
-        <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#ffa94d]/10 blur-2xl" />
+        <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#38bdf8]/10 blur-2xl" />
         <div className="mb-4 text-5xl">{isMock ? "⏱️" : "🎯"}</div>
-        <h1 className="mb-2 text-3xl font-black text-[#3d3227]">{exam.title}</h1>
-        {exam.description && <p className="mx-auto mb-6 max-w-md text-sm text-[#8c7a64]">{exam.description}</p>}
+        <h1 className="mb-2 text-3xl font-black text-[#142a56]">{exam.title}</h1>
+        {exam.description && <p className="mx-auto mb-6 max-w-md text-sm text-[#5a6d91]">{exam.description}</p>}
 
         <div className="mx-auto mb-8 grid max-w-md grid-cols-3 gap-3">
-          <div className="rounded-2xl bg-[#fff5e0] p-4">
-            <div className="text-2xl font-black text-[#3d3227]">{total}</div>
-            <div className="text-xs text-[#92734a]">Questions</div>
+          <div className="rounded-2xl bg-[#e0f2fe] p-4">
+            <div className="text-2xl font-black text-[#142a56]">{total}</div>
+            <div className="text-xs text-[#0284c7]">Questions</div>
           </div>
-          <div className="rounded-2xl bg-[#fff5e0] p-4">
-            <div className="text-2xl font-black text-[#3d3227]">{exam.duration_minutes}m</div>
-            <div className="text-xs text-[#92734a]">Time limit</div>
+          <div className="rounded-2xl bg-[#e0f2fe] p-4">
+            <div className="text-2xl font-black text-[#142a56]">{exam.duration_minutes}m</div>
+            <div className="text-xs text-[#0284c7]">Time limit</div>
           </div>
-          <div className="rounded-2xl bg-[#fff5e0] p-4">
-            <div className="text-2xl font-black text-[#3d3227]">{isMock ? "1x" : "∞"}</div>
-            <div className="text-xs text-[#92734a]">{isMock ? "Parang totohanan" : "Relax lang"}</div>
+          <div className="rounded-2xl bg-[#e0f2fe] p-4">
+            <div className="text-2xl font-black text-[#142a56]">{isMock ? "1x" : "∞"}</div>
+            <div className="text-xs text-[#0284c7]">{isMock ? "Parang totohanan" : "Relax lang"}</div>
           </div>
         </div>
 
         {isMock ? (
-          <p className="mx-auto mb-8 max-w-md rounded-xl bg-[#fff0ef] px-4 py-3 text-sm text-[#92400e]">
+          <p className="mx-auto mb-8 max-w-md rounded-xl bg-[#e0f2fe] px-4 py-3 text-sm text-[#0369a1]">
             ⚠️ Timed exam ito. Kapag nag-start, tuloy tuloy na ang oras — parang totohanan.
             Ihanda ang sarili!
           </p>
@@ -142,7 +142,7 @@ export default function ExamClient({
         </button>
 
         <div className="mt-4">
-          <a href={backHref} className="text-sm text-[#8c7a64] hover:text-[#3d3227]">
+          <a href={backHref} className="text-sm text-[#5a6d91] hover:text-[#142a56]">
             ← Bumalik sa reviewer
           </a>
         </div>
@@ -159,16 +159,16 @@ export default function ExamClient({
         <div className="card relative overflow-hidden p-10 text-center">
           <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-[#22c55e]/10 blur-2xl" />
           <div className="mb-2 text-5xl">{passed ? "🎉" : "💪"}</div>
-          <h1 className="mb-1 text-3xl font-black text-[#3d3227]">
+          <h1 className="mb-1 text-3xl font-black text-[#142a56]">
             {passed ? "Galing mo!" : "Kaya mo yan next round!"}
           </h1>
-          <p className="mb-6 text-sm text-[#8c7a64]">
+          <p className="mb-6 text-sm text-[#5a6d91]">
             {isMock ? "Passing: 80% sa totoong CSE" : "Target: 75%+ bago mag-mock exam"}
           </p>
 
           <div className="relative mx-auto mb-6 h-40 w-40">
             <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-              <circle cx="60" cy="60" r="52" fill="none" stroke="#f5e6cc" strokeWidth="12" />
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#dbe7f8" strokeWidth="12" />
               <circle
                 cx="60" cy="60" r="52" fill="none"
                 stroke={passed ? "#22c55e" : "#f59e0b"}
@@ -177,14 +177,14 @@ export default function ExamClient({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-[#3d3227]">{pct}%</span>
-              <span className="text-xs text-[#8c7a64]">{score}/{total}</span>
+              <span className="text-3xl font-black text-[#142a56]">{pct}%</span>
+              <span className="text-xs text-[#5a6d91]">{score}/{total}</span>
             </div>
           </div>
 
-          <p className="mb-2 text-sm text-[#8c7a64]">
+          <p className="mb-2 text-sm text-[#5a6d91]">
             {isMock && (
-              <>Time used: <strong className="text-[#3d3227]">{fmtDuration(exam.duration_minutes * 60 - secondsLeft)}</strong> </>
+              <>Time used: <strong className="text-[#142a56]">{fmtDuration(exam.duration_minutes * 60 - secondsLeft)}</strong> </>
             )}
             {saving && "· saving..."}
           </p>
@@ -193,19 +193,19 @@ export default function ExamClient({
             <a href={backHref} className="btn-primary px-6 py-3 text-sm">
               Balik sa Reviewer
             </a>
-            <a href="/dashboard" className="rounded-xl border border-[#f5e6cc] bg-white px-6 py-3 text-sm font-semibold text-[#57534e]">
+            <a href="/dashboard" className="rounded-xl border border-[#dbe7f8] bg-white px-6 py-3 text-sm font-semibold text-[#3f4d78]">
               Dashboard
             </a>
           </div>
         </div>
 
         {/* Answer review */}
-        <h2 className="mb-4 mt-10 text-xl font-bold text-[#3d3227]">📝 Review ng sagot mo</h2>
+        <h2 className="mb-4 mt-10 text-xl font-bold text-[#142a56]">📝 Review ng sagot mo</h2>
         <div className="space-y-4">
           {results.map((r, i) => (
             <div key={r.q.id} className={`card p-6 ${r.correct ? "border-[#bbf7d0]" : "border-red-200"}`}>
               <div className="mb-3 flex items-start justify-between gap-3">
-                <span className="font-bold text-[#3d3227]">
+                <span className="font-bold text-[#142a56]">
                   {i + 1}. {r.q.question_text}
                 </span>
                 <span className={`badge ${r.correct ? "badge-approved" : "badge-rejected"}`}>
@@ -224,7 +224,7 @@ export default function ExamClient({
                           ? "bg-[#dcfce7] font-semibold text-[#166534]"
                           : isChosen
                             ? "bg-[#fee2e2] text-[#991b1b]"
-                            : "text-[#8c7a64]"
+                            : "text-[#5a6d91]"
                       }`}
                     >
                       {c}. {r.q[`choice_${c.toLowerCase()}` as "choice_a"]}
@@ -235,7 +235,7 @@ export default function ExamClient({
                 })}
               </div>
               {r.q.explanation && (
-                <p className="mt-3 rounded-xl bg-[#fff5e0] px-4 py-3 text-sm text-[#92734a]">
+                <p className="mt-3 rounded-xl bg-[#e0f2fe] px-4 py-3 text-sm text-[#0284c7]">
                   💡 {r.q.explanation}
                 </p>
               )}
@@ -255,12 +255,12 @@ export default function ExamClient({
     <div>
       {/* Timer bar */}
       <div className="card sticky top-20 z-30 mb-6 flex items-center justify-between p-4">
-        <div className="text-sm font-semibold text-[#8c7a64]">
+        <div className="text-sm font-semibold text-[#5a6d91]">
           Q{current + 1} of {total}
         </div>
         {isMock ? (
           <div className={`flex items-center gap-2 rounded-xl px-4 py-1.5 font-mono text-lg font-bold ${
-            timeCritical ? "animate-pulse bg-red-50 text-red-600" : "bg-[#fff5e0] text-[#3d3227]"
+            timeCritical ? "animate-pulse bg-red-50 text-red-600" : "bg-[#e0f2fe] text-[#142a56]"
           }`}>
             ⏱ {fmtDuration(secondsLeft)}
           </div>
@@ -269,20 +269,20 @@ export default function ExamClient({
             🎯 Practice — walang time limit
           </div>
         )}
-        <div className="text-sm text-[#8c7a64]">{answeredCount}/{total} sagot</div>
+        <div className="text-sm text-[#5a6d91]">{answeredCount}/{total} sagot</div>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-[#f5e6cc]">
+      <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-[#dbe7f8]">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#ffa94d] transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#38bdf8] transition-all"
           style={{ width: `${((current + 1) / total) * 100}%` }}
         />
       </div>
 
       {/* Question card */}
       <div className="card p-8">
-        <h2 className="mb-6 text-lg font-bold leading-relaxed text-[#3d3227]">
+        <h2 className="mb-6 text-lg font-bold leading-relaxed text-[#142a56]">
           {current + 1}. {q.question_text}
         </h2>
 
@@ -303,12 +303,12 @@ export default function ExamClient({
                 }}
                 className={`flex w-full items-center gap-3 rounded-2xl border-2 px-5 py-4 text-left text-sm transition ${
                   selected
-                    ? "border-[#ff6b6b] bg-[#fff0ef] font-semibold text-[#3d3227]"
-                    : "border-[#f5e6cc] bg-white text-[#57534e] hover:border-[#ffa94d]"
+                    ? "border-[#0ea5e9] bg-[#e0f2fe] font-semibold text-[#142a56]"
+                    : "border-[#dbe7f8] bg-white text-[#3f4d78] hover:border-[#38bdf8]"
                 }`}
               >
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-bold ${
-                  selected ? "bg-gradient-to-br from-[#ff6b6b] to-[#ffa94d] text-white" : "bg-[#fff5e0] text-[#92734a]"
+                  selected ? "bg-gradient-to-br from-[#0ea5e9] to-[#38bdf8] text-white" : "bg-[#e0f2fe] text-[#0284c7]"
                 }`}>
                   {c}
                 </span>
@@ -325,7 +325,7 @@ export default function ExamClient({
               <strong>{answers[q.id] === q.correct_choice ? "✓ Tama!" : `✕ Mali — ang sagot ay ${q.correct_choice}.`}</strong>
             </div>
             {q.explanation && (
-              <p className="mt-3 rounded-2xl bg-[#fff5e0] px-5 py-4 text-sm text-[#92734a]">
+              <p className="mt-3 rounded-2xl bg-[#e0f2fe] px-5 py-4 text-sm text-[#0284c7]">
                 💡 {q.explanation}
               </p>
             )}
@@ -338,7 +338,7 @@ export default function ExamClient({
         <button
           onClick={goPrev}
           disabled={current === 0}
-          className="rounded-xl border border-[#f5e6cc] bg-white px-6 py-3 text-sm font-semibold text-[#57534e] disabled:opacity-40"
+          className="rounded-xl border border-[#dbe7f8] bg-white px-6 py-3 text-sm font-semibold text-[#3f4d78] disabled:opacity-40"
         >
           ← Previous
         </button>
@@ -362,10 +362,10 @@ export default function ExamClient({
             onClick={() => setCurrent(i)}
             className={`h-8 w-8 rounded-lg text-xs font-bold transition ${
               i === current
-                ? "bg-[#3d3227] text-white"
+                ? "bg-[#142a56] text-white"
                 : answers[qq.id]
                   ? "bg-[#dcfce7] text-[#166534]"
-                  : "bg-[#f5e6cc] text-[#b0a48e] hover:bg-[#f0e0c0]"
+                  : "bg-[#dbe7f8] text-[#93a4c0] hover:bg-[#f0e0c0]"
             }`}
           >
             {i + 1}

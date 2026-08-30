@@ -2,19 +2,19 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#f5e6cc] bg-white">
+    <footer className="border-t border-[#dbe7f8] bg-white">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="mb-3 flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6b6b] to-[#ffa94d] text-lg font-black text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563eb] to-[#38bdf8] text-lg font-black text-white">
                 C
               </span>
-              <span className="text-lg font-extrabold text-[#3d3227]">
+              <span className="text-lg font-extrabold text-[#142a56]">
                 Ceppee<span className="gradient-text">Review</span>
               </span>
             </div>
-            <p className="max-w-sm text-sm leading-relaxed text-[#8c7a64]">
+            <p className="max-w-sm text-sm leading-relaxed text-[#5a6d91]">
               Your review buddy for the Civil Service Exam and Licensure Examination for Teachers.
               Lessons, practice drills, and full mock exams — made by Teacher Ceppee.
             </p>
@@ -32,25 +32,25 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#8c7a64]">Review</h4>
-            <ul className="space-y-2 text-sm text-[#57534e]">
-              <li><Link href="/review/cse" className="hover:text-[#f4444e]">CSE Review</Link></li>
+            <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#5a6d91]">Review</h4>
+            <ul className="space-y-2 text-sm text-[#3f4d78]">
+              <li><Link href="/review/cse" className="hover:text-[#0284c7]">CSE Review</Link></li>
               <li><Link href="/review/let" className="hover:text-[#8b5cf6]">LET Review</Link></li>
-              <li><Link href="/pricing" className="hover:text-[#3d3227]">Pricing</Link></li>
+              <li><Link href="/pricing" className="hover:text-[#142a56]">Pricing</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#8c7a64]">Support</h4>
-            <ul className="space-y-2 text-sm text-[#57534e]">
-              <li><Link href="/#faq" className="hover:text-[#3d3227]">FAQ</Link></li>
-              <li><a href="https://m.me/teacherceppee" target="_blank" rel="noopener noreferrer" className="hover:text-[#3d3227]">Messenger</a></li>
-              <li><Link href="/login" className="hover:text-[#3d3227]">Log in</Link></li>
+            <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#5a6d91]">Support</h4>
+            <ul className="space-y-2 text-sm text-[#3f4d78]">
+              <li><Link href="/#faq" className="hover:text-[#142a56]">FAQ</Link></li>
+              <li><a href="https://m.me/teacherceppee" target="_blank" rel="noopener noreferrer" className="hover:text-[#142a56]">Messenger</a></li>
+              <li><Link href="/login" className="hover:text-[#142a56]">Log in</Link></li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-10 border-t border-[#f5e6cc] pt-6 text-center text-xs text-[#b0a48e]">
+        <div className="mt-10 border-t border-[#dbe7f8] pt-6 text-center text-xs text-[#93a4c0]">
           © {new Date().getFullYear()} Ceppee Review · Made with ☀️ in the Philippines
         </div>
       </div>

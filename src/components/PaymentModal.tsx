@@ -124,24 +124,24 @@ export default function PaymentModal({
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#8c7a64] hover:bg-[#fff5e0]"
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#5a6d91] hover:bg-[#e0f2fe]"
           aria-label="Close"
         >
           ✕
         </button>
 
-        <div className="mb-1 text-xs font-bold uppercase tracking-wider text-[#ffa94d]">
+        <div className="mb-1 text-xs font-bold uppercase tracking-wider text-[#38bdf8]">
           {track === "CSE" ? "🏛️ CSE Review" : "🍎 LET Review"} Subscription
         </div>
-        <h3 className="mb-4 text-xl font-extrabold text-[#3d3227]">Bayad Details</h3>
+        <h3 className="mb-4 text-xl font-extrabold text-[#142a56]">Bayad Details</h3>
 
         {step === "pay" && (
           <>
             {/* Amount */}
-            <div className="mb-5 rounded-2xl border-2 border-dashed border-[#ffa94d] bg-[#fff5e0] p-5 text-center">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#92734a]">Ipadala ang EKSAKTONG halaga</div>
-              <div className="my-1 text-4xl font-black text-[#3d3227]">{peso(amount)}</div>
-              <div className="text-xs text-[#92734a]">
+            <div className="mb-5 rounded-2xl border-2 border-dashed border-[#38bdf8] bg-[#e0f2fe] p-5 text-center">
+              <div className="text-xs font-semibold uppercase tracking-wider text-[#0284c7]">Ipadala ang EKSAKTONG halaga</div>
+              <div className="my-1 text-4xl font-black text-[#142a56]">{peso(amount)}</div>
+              <div className="text-xs text-[#0284c7]">
                 May kaunting sentimo ito para ma-match namin ang bayad mo agad. Ipadala ang buong halaga kasama ang sentimo.
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function PaymentModal({
               <button
                 onClick={() => setMethod("gcash")}
                 className={`rounded-xl border-2 px-4 py-3 text-sm font-bold transition ${
-                  method === "gcash" ? "border-[#ff6b6b] bg-[#fff0ef] text-[#f4444e]" : "border-[#f5e6cc] text-[#8c7a64]"
+                  method === "gcash" ? "border-[#0ea5e9] bg-[#e0f2fe] text-[#0284c7]" : "border-[#dbe7f8] text-[#5a6d91]"
                 }`}
               >
                 📱 GCash
@@ -159,7 +159,7 @@ export default function PaymentModal({
               <button
                 onClick={() => setMethod("bank")}
                 className={`rounded-xl border-2 px-4 py-3 text-sm font-bold transition ${
-                  method === "bank" ? "border-[#ff6b6b] bg-[#fff0ef] text-[#f4444e]" : "border-[#f5e6cc] text-[#8c7a64]"
+                  method === "bank" ? "border-[#0ea5e9] bg-[#e0f2fe] text-[#0284c7]" : "border-[#dbe7f8] text-[#5a6d91]"
                 }`}
               >
                 🏦 Bank Transfer
@@ -167,11 +167,11 @@ export default function PaymentModal({
             </div>
 
             {method === "gcash" ? (
-              <div className="mb-4 space-y-2 rounded-2xl bg-[#fffdf7] p-4 text-sm">
+              <div className="mb-4 space-y-2 rounded-2xl bg-[#f5f8ff] p-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#8c7a64]">GCash Number</span>
+                  <span className="text-[#5a6d91]">GCash Number</span>
                   <button
-                    className="font-mono font-bold text-[#3d3227] underline decoration-[#ffa94d] decoration-2 underline-offset-2"
+                    className="font-mono font-bold text-[#142a56] underline decoration-[#38bdf8] decoration-2 underline-offset-2"
                     onClick={() => navigator.clipboard?.writeText(settings?.gcash_number || "")}
                     title="Click to copy"
                   >
@@ -179,24 +179,24 @@ export default function PaymentModal({
                   </button>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#8c7a64]">Account Name</span>
-                  <span className="font-semibold text-[#3d3227]">{settings?.gcash_name || "—"}</span>
+                  <span className="text-[#5a6d91]">Account Name</span>
+                  <span className="font-semibold text-[#142a56]">{settings?.gcash_name || "—"}</span>
                 </div>
               </div>
             ) : (
-              <div className="mb-4 space-y-2 rounded-2xl bg-[#fffdf7] p-4 text-sm">
+              <div className="mb-4 space-y-2 rounded-2xl bg-[#f5f8ff] p-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[#8c7a64]">Bank</span>
-                  <span className="font-semibold text-[#3d3227]">{settings?.bank_name || "—"}</span>
+                  <span className="text-[#5a6d91]">Bank</span>
+                  <span className="font-semibold text-[#142a56]">{settings?.bank_name || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#8c7a64]">Account Name</span>
-                  <span className="font-semibold text-[#3d3227]">{settings?.bank_account_name || "—"}</span>
+                  <span className="text-[#5a6d91]">Account Name</span>
+                  <span className="font-semibold text-[#142a56]">{settings?.bank_account_name || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#8c7a64]">Account Number</span>
+                  <span className="text-[#5a6d91]">Account Number</span>
                   <button
-                    className="font-mono font-bold text-[#3d3227] underline decoration-[#ffa94d] decoration-2 underline-offset-2"
+                    className="font-mono font-bold text-[#142a56] underline decoration-[#38bdf8] decoration-2 underline-offset-2"
                     onClick={() => navigator.clipboard?.writeText(settings?.bank_account_number || "")}
                     title="Click to copy"
                   >
@@ -206,7 +206,7 @@ export default function PaymentModal({
               </div>
             )}
 
-            <p className="mb-5 rounded-xl bg-[#fff5e0] px-4 py-3 text-xs leading-relaxed text-[#92734a]">
+            <p className="mb-5 rounded-xl bg-[#e0f2fe] px-4 py-3 text-xs leading-relaxed text-[#0284c7]">
               📋 {settings?.payment_instructions}
             </p>
 
@@ -223,7 +223,7 @@ export default function PaymentModal({
             </div>
 
             <div className="mb-4">
-              <label className="mb-1.5 block text-sm font-semibold text-[#57534e]">
+              <label className="mb-1.5 block text-sm font-semibold text-[#3f4d78]">
                 {method === "gcash" ? "13-digit GCash Reference Number" : "Reference Number (optional)"}
               </label>
               <input
@@ -239,7 +239,7 @@ export default function PaymentModal({
                 className="input-warm font-mono text-lg tracking-widest"
                 placeholder={method === "gcash" ? "1234567890123" : "e.g. Bank ref / name"}
               />
-              <p className="mt-1 text-xs text-[#8c7a64]">
+              <p className="mt-1 text-xs text-[#5a6d91]">
                 {method === "gcash"
                   ? 'Makikita sa GCash app mo pagkatapos magbayad — "Reference No."'
                   : "Bank transfer: ang admin ay magma-match gamit ang eksaktong amount + receipt."}
@@ -247,13 +247,13 @@ export default function PaymentModal({
             </div>
 
             <div className="mb-5">
-              <label className="mb-1.5 block text-sm font-semibold text-[#57534e]">Receipt Screenshot</label>
+              <label className="mb-1.5 block text-sm font-semibold text-[#3f4d78]">Receipt Screenshot</label>
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="input-warm file:mr-3 file:rounded-lg file:border-0 file:bg-[#fff5e0] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[#92734a]"
+                className="input-warm file:mr-3 file:rounded-lg file:border-0 file:bg-[#e0f2fe] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[#0284c7]"
               />
               {file && <p className="mt-1 text-xs text-[#22c55e]">✓ {file.name}</p>}
             </div>
@@ -267,7 +267,7 @@ export default function PaymentModal({
             <button onClick={handleSubmit} disabled={submitting} className="btn-primary w-full py-3 text-sm">
               {submitting ? "Isinusubmit..." : "Submit for Verification"}
             </button>
-            <p className="mt-3 text-center text-xs text-[#8c7a64]">
+            <p className="mt-3 text-center text-xs text-[#5a6d91]">
               I-verify namin within 24 hours. Mau-update ang dashboard mo pag approved na. 🎉
             </p>
           </>
@@ -275,7 +275,7 @@ export default function PaymentModal({
 
         {/* Pending status */}
         {pendingReq?.status === "pending" && step === "upload" && pendingReq.created_at && !submitting && (
-          <div className="mt-4 rounded-xl bg-[#fef3c7] px-4 py-3 text-sm text-[#92400e]">
+          <div className="mt-4 rounded-xl bg-[#fef3c7] px-4 py-3 text-sm text-[#0369a1]">
             ⏳ May pending submission ka na ({fmtDateTime(pendingReq.created_at)}). Pwede mong i-update ito sa pamamagitan ng pag-submit ulit.
           </div>
         )}
