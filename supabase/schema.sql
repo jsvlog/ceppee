@@ -17,6 +17,18 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- ============================================================
+-- 2. is_admin() — SECURITY DEFINER
+-- MUST exist BEFORE any policy that references it!
+-- ============================================================
+create or replace function public.is_admin()
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid() and p.is_admin = true
+  );
+$$;
+
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles
   for select using (auth.uid() = id);
@@ -49,17 +61,6 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
-
--- ============================================================
--- 2. is_admin() — SECURITY DEFINER (create BEFORE any admin policy)
--- ============================================================
-create or replace function public.is_admin()
-returns boolean language sql security definer stable set search_path = public as $$
-  select exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid() and p.is_admin = true
-  );
-$$;
 
 -- ============================================================
 -- 3. SITE SETTINGS (editable payment details, from admin panel)
