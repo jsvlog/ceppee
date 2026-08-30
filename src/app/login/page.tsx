@@ -100,12 +100,12 @@ function LoginInner() {
           </div>
 
           <h1 className="mb-1 text-xl font-bold text-[#142a56]">
-            {mode === "login" ? "Welcome back!" : "Gawin na ang account mo"}
+            {mode === "login" ? "Welcome back!" : "Create your account"}
           </h1>
           <p className="mb-6 text-sm text-[#5a6d91]">
             {mode === "login"
-              ? "Log in para tuloy ang review mo."
-              : "Libre ang account — bayad lang kapag nag-subscribe ka na."}
+              ? "Log in to continue your review."
+              : "It's a free account — you only pay once you subscribe."}
           </p>
 
           {error && (
@@ -141,7 +141,7 @@ function LoginInner() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="input-warm"
-                placeholder="ikaw@email.com"
+                placeholder="you@email.com"
               />
             </div>
             <div>
@@ -157,7 +157,7 @@ function LoginInner() {
               />
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-sm">
-              {loading ? "Sandali lang..." : mode === "login" ? "Log in" : "Create account"}
+              {loading ? "Just a moment..." : mode === "login" ? "Log in" : "Create account"}
             </button>
           </form>
 
@@ -167,7 +167,7 @@ function LoginInner() {
         </div>
 
         <p className="mt-6 text-center text-sm text-[#5a6d91]">
-          <Link href="/" className="hover:text-[#142a56]">← Balik sa homepage</Link>
+          <Link href="/" className="hover:text-[#142a56]">← Back to homepage</Link>
         </p>
       </div>
     </div>

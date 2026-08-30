@@ -96,7 +96,7 @@ export default async function TopicPage({
 
       {(lessons ?? []).length === 0 && (
         <div className="card p-8 text-center text-sm text-[#5a6d91]">
-          Wala pang lessons sa topic na ito — malapit na!
+          No lessons in this topic yet — coming soon!
         </div>
       )}
     </div>

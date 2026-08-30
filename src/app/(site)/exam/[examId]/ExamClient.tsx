@@ -119,18 +119,18 @@ export default function ExamClient({
           </div>
           <div className="rounded-2xl bg-[#e0f2fe] p-4">
             <div className="text-2xl font-black text-[#142a56]">{isMock ? "1x" : "∞"}</div>
-            <div className="text-xs text-[#0284c7]">{isMock ? "Parang totohanan" : "Relax lang"}</div>
+            <div className="text-xs text-[#0284c7]">{isMock ? "Just like the real thing" : "No pressure"}</div>
           </div>
         </div>
 
         {isMock ? (
           <p className="mx-auto mb-8 max-w-md rounded-xl bg-[#e0f2fe] px-4 py-3 text-sm text-[#0369a1]">
-            ⚠️ Timed exam ito. Kapag nag-start, tuloy tuloy na ang oras — parang totohanan.
-            Ihanda ang sarili!
+            ⚠️ This is a timed exam. Once you start, the clock runs nonstop — just like the real thing.
+            Get ready!
           </p>
         ) : (
           <p className="mx-auto mb-8 max-w-md rounded-xl bg-[#dcfce7] px-4 py-3 text-sm text-[#166534]">
-            🎯 Practice mode: may makikita kang explanation pagkatapos pumili ng sagot.
+            🎯 Practice mode: you’ll see an explanation after choosing an answer.
           </p>
         )}
 
@@ -138,12 +138,12 @@ export default function ExamClient({
           onClick={() => setPhase("running")}
           className="btn-primary px-10 py-4 text-base"
         >
-          {isMock ? "Simulan ang Exam →" : "Start Practice →"}
+          {isMock ? "Start the Exam →" : "Start Practice →"}
         </button>
 
         <div className="mt-4">
           <a href={backHref} className="text-sm text-[#5a6d91] hover:text-[#142a56]">
-            ← Bumalik sa reviewer
+            ← Back to reviewer
           </a>
         </div>
       </div>
@@ -160,10 +160,10 @@ export default function ExamClient({
           <div className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-[#22c55e]/10 blur-2xl" />
           <div className="mb-2 text-5xl">{passed ? "🎉" : "💪"}</div>
           <h1 className="mb-1 text-3xl font-black text-[#142a56]">
-            {passed ? "Galing mo!" : "Kaya mo yan next round!"}
+            {passed ? "Great job!" : "You’ll get it next round!"}
           </h1>
           <p className="mb-6 text-sm text-[#5a6d91]">
-            {isMock ? "Passing: 80% sa totoong CSE" : "Target: 75%+ bago mag-mock exam"}
+            {isMock ? "Passing: 80% on the real CSE" : "Target: 75%+ before your mock exam"}
           </p>
 
           <div className="relative mx-auto mb-6 h-40 w-40">
@@ -191,7 +191,7 @@ export default function ExamClient({
 
           <div className="mt-6 flex justify-center gap-3">
             <a href={backHref} className="btn-primary px-6 py-3 text-sm">
-              Balik sa Reviewer
+              Back to Reviewer
             </a>
             <a href="/dashboard" className="rounded-xl border border-[#dbe7f8] bg-white px-6 py-3 text-sm font-semibold text-[#3f4d78]">
               Dashboard
@@ -200,7 +200,7 @@ export default function ExamClient({
         </div>
 
         {/* Answer review */}
-        <h2 className="mb-4 mt-10 text-xl font-bold text-[#142a56]">📝 Review ng sagot mo</h2>
+        <h2 className="mb-4 mt-10 text-xl font-bold text-[#142a56]">📝 Review your answers</h2>
         <div className="space-y-4">
           {results.map((r, i) => (
             <div key={r.q.id} className={`card p-6 ${r.correct ? "border-[#bbf7d0]" : "border-red-200"}`}>
@@ -229,7 +229,7 @@ export default function ExamClient({
                     >
                       {c}. {r.q[`choice_${c.toLowerCase()}` as "choice_a"]}
                       {isCorrect && " ✓"}
-                      {isChosen && !isCorrect && " ✕ (sagot mo)"}
+                      {isChosen && !isCorrect && " ✕ (your answer)"}
                     </div>
                   );
                 })}
@@ -266,10 +266,10 @@ export default function ExamClient({
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-xl bg-[#dcfce7] px-4 py-1.5 text-sm font-bold text-[#166534]">
-            🎯 Practice — walang time limit
+            🎯 Practice — no time limit
           </div>
         )}
-        <div className="text-sm text-[#5a6d91]">{answeredCount}/{total} sagot</div>
+        <div className="text-sm text-[#5a6d91]">{answeredCount}/{total} answered</div>
       </div>
 
       {/* Progress bar */}
@@ -322,7 +322,7 @@ export default function ExamClient({
         {!isMock && answers[q.id] && (
           <div className="mt-5">
             <div className={`rounded-2xl px-5 py-4 text-sm ${answers[q.id] === q.correct_choice ? "bg-[#dcfce7] text-[#166534]" : "bg-[#fee2e2] text-[#991b1b]"}`}>
-              <strong>{answers[q.id] === q.correct_choice ? "✓ Tama!" : `✕ Mali — ang sagot ay ${q.correct_choice}.`}</strong>
+              <strong>{answers[q.id] === q.correct_choice ? "✓ Correct!" : `✕ Wrong — the answer is ${q.correct_choice}.`}</strong>
             </div>
             {q.explanation && (
               <p className="mt-3 rounded-2xl bg-[#e0f2fe] px-5 py-4 text-sm text-[#0284c7]">
@@ -365,7 +365,7 @@ export default function ExamClient({
                 ? "bg-[#142a56] text-white"
                 : answers[qq.id]
                   ? "bg-[#dcfce7] text-[#166534]"
-                  : "bg-[#dbe7f8] text-[#93a4c0] hover:bg-[#f0e0c0]"
+                  : "bg-[#dbe7f8] text-[#93a4c0] hover:bg-[#cfe4fb]"
             }`}
           >
             {i + 1}
@@ -376,7 +376,7 @@ export default function ExamClient({
       {/* Mobile-friendly submit at end */}
       {current === total - 1 && answeredCount < total && (
         <p className="mt-3 text-center text-xs text-[#f59e0b]">
-          ⚠️ May {total - answeredCount} pang hindi nasasagutan — pwede mong balikan gamit ang numbers sa baba.
+          ⚠️ You have {total - answeredCount} unanswered questions — go back using the numbers below.
         </p>
       )}
     </div>

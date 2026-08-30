@@ -95,10 +95,10 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
               <h1 className="text-4xl font-black text-white sm:text-5xl">{trackKey} Review</h1>
               <p className="mt-2 max-w-xl text-white/90">
                 {subscribed
-                  ? "✅ Active subscription — sulit sulitin ang review mo!"
+                  ? "✅ Active subscription — make the most of your review!"
                   : user
-                    ? `🔒 Kandado ang mga lessons. Subscribe for ${peso(500)} para mabuksan lahat.`
-                    : `🔓 May free preview ka! Subscribe for ${peso(500)} para mabuksan lahat.`}
+                    ? `🔒 The lessons are locked. Subscribe for ${peso(500)} to unlock everything.`
+                    : `🔓 You have a free preview! Subscribe for ${peso(500)} to unlock everything.`}
               </p>
             </div>
             {!subscribed && (
@@ -118,8 +118,8 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <h2 className="mb-2 text-2xl font-black text-[#142a56]">📚 Lessons & Notes</h2>
           <p className="mb-8 text-sm text-[#5a6d91]">
-            Basahin ang mga lessons bago mag-take ng mock exams.
-            {!subscribed && " Ang mga may 🔒 ay para sa subscribers lang."}
+            Read the lessons before taking the mock exams.
+            {!subscribed && " Items with 🔒 are for subscribers only."}
           </p>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 justify-center">
             {(topics as Topic[])?.map((t) => (
@@ -143,7 +143,7 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
           </div>
           {(topics ?? []).length === 0 && (
             <div className="card p-8 text-center text-sm text-[#5a6d91]">
-              Malapit na! Idadagdag pa lang ni Teacher Ceppee ang mga lessons dito.
+              Coming soon! Teacher Ceppee is still adding lessons here.
             </div>
           )}
         </div>
@@ -154,7 +154,7 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <h2 className="mb-2 text-2xl font-black text-[#142a56]">⏱️ Mock Exams & Practice</h2>
           <p className="mb-8 text-sm text-[#5a6d91]">
-            Mock = timed, parang totohanan. Practice = may explanation agad pagkatapos sumagot.
+            Mock = timed, just like the real thing. Practice = instant explanation after each answer.
           </p>
 
           <ExamGrid exams={mockExams} subscribed={subscribed} m={m} label="Mock Exams (timed)" />

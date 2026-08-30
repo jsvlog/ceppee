@@ -94,17 +94,17 @@ function LockedOrMissing({ user }: { user: boolean }) {
     <div className="mx-auto max-w-md px-4 py-24 text-center">
       <div className="mb-4 text-6xl">🔒</div>
       <h1 className="mb-2 text-2xl font-black text-[#142a56]">
-        {user ? "Kandado pa ito" : "Log in muna"}
+        {user ? "This lesson is still locked" : "Log in first"}
       </h1>
       <p className="mb-6 text-sm text-[#5a6d91]">
         {user
-          ? "Ang lesson na ito ay para sa mga subscribers. Subscribe sa dashboard mo para mabuksan."
-          : "Log in muna para ma-access ang mga lessons."}
+          ? "This lesson is for subscribers. Subscribe from your dashboard to unlock it."
+          : "Log in first to access the lessons."}
       </p>
       <div className="flex justify-center gap-3">
         {user ? (
           <Link href="/dashboard" className="btn-primary px-6 py-3 text-sm">
-            Subscribe sa Dashboard
+            Subscribe from Dashboard
           </Link>
         ) : (
           <Link href="/login?next=/dashboard" className="btn-primary px-6 py-3 text-sm">

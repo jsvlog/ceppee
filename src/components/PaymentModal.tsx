@@ -61,7 +61,7 @@ export default function PaymentModal({
   const handleSubmit = async () => {
     setError(null);
     if (method === "gcash" && !/^\d{13}$/.test(reference)) {
-      setError("Ang GCash reference number ay 13 digits (makikita sa GCash receipt mo).");
+      setError("The GCash reference number is 13 digits (found on your GCash receipt).");
       return;
     }
     if (!file) {
@@ -110,7 +110,7 @@ export default function PaymentModal({
       }
       onSuccess();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "May naganap na error. Try again.");
+      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -133,16 +133,16 @@ export default function PaymentModal({
         <div className="mb-1 text-xs font-bold uppercase tracking-wider text-[#38bdf8]">
           {track === "CSE" ? "🏛️ CSE Review" : "🍎 LET Review"} Subscription
         </div>
-        <h3 className="mb-4 text-xl font-extrabold text-[#142a56]">Bayad Details</h3>
+        <h3 className="mb-4 text-xl font-extrabold text-[#142a56]">Payment Details</h3>
 
         {step === "pay" && (
           <>
             {/* Amount */}
             <div className="mb-5 rounded-2xl border-2 border-dashed border-[#38bdf8] bg-[#e0f2fe] p-5 text-center">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#0284c7]">Ipadala ang EKSAKTONG halaga</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-[#0284c7]">Send the EXACT amount</div>
               <div className="my-1 text-4xl font-black text-[#142a56]">{peso(amount)}</div>
               <div className="text-xs text-[#0284c7]">
-                May kaunting sentimo ito para ma-match namin ang bayad mo agad. Ipadala ang buong halaga kasama ang sentimo.
+                It has a few centavos so we can match your payment instantly. Send the full amount including the centavos.
               </div>
             </div>
 
@@ -211,7 +211,7 @@ export default function PaymentModal({
             </p>
 
             <button onClick={() => setStep("upload")} className="btn-primary w-full py-3 text-sm">
-              Nagbayad na ako — Next →
+              I’ve paid — Next →
             </button>
           </>
         )}
@@ -219,7 +219,7 @@ export default function PaymentModal({
         {step === "upload" && (
           <>
             <div className="mb-5 rounded-2xl bg-[#dcfce7] p-4 text-sm text-[#166534]">
-              ✅ Galing! Ngayon i-upload ang proof of payment mo para ma-verify namin.
+              ✅ Great! Now upload your proof of payment so we can verify it.
             </div>
 
             <div className="mb-4">
@@ -241,8 +241,8 @@ export default function PaymentModal({
               />
               <p className="mt-1 text-xs text-[#5a6d91]">
                 {method === "gcash"
-                  ? 'Makikita sa GCash app mo pagkatapos magbayad — "Reference No."'
-                  : "Bank transfer: ang admin ay magma-match gamit ang eksaktong amount + receipt."}
+                  ? 'You’ll see it in your GCash app after paying — "Reference No."'
+                  : "Bank transfer: we match using the exact amount + receipt."}
               </p>
             </div>
 
@@ -265,10 +265,10 @@ export default function PaymentModal({
             )}
 
             <button onClick={handleSubmit} disabled={submitting} className="btn-primary w-full py-3 text-sm">
-              {submitting ? "Isinusubmit..." : "Submit for Verification"}
+              {submitting ? "Submitting..." : "Submit for Verification"}
             </button>
             <p className="mt-3 text-center text-xs text-[#5a6d91]">
-              I-verify namin within 24 hours. Mau-update ang dashboard mo pag approved na. 🎉
+              We verify within 24 hours. Your dashboard updates once approved. 🎉
             </p>
           </>
         )}
@@ -276,7 +276,7 @@ export default function PaymentModal({
         {/* Pending status */}
         {pendingReq?.status === "pending" && step === "upload" && pendingReq.created_at && !submitting && (
           <div className="mt-4 rounded-xl bg-[#fef3c7] px-4 py-3 text-sm text-[#0369a1]">
-            ⏳ May pending submission ka na ({fmtDateTime(pendingReq.created_at)}). Pwede mong i-update ito sa pamamagitan ng pag-submit ulit.
+            ⏳ You already have a pending submission ({fmtDateTime(pendingReq.created_at)}). You can update it by submitting again.
           </div>
         )}
       </div>

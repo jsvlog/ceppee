@@ -41,9 +41,9 @@ export default function DashboardClient({
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="mb-1 text-3xl font-black text-[#142a56]">
-        Kumusta, {userName}! 👋
+        Hi, {userName}! 👋
       </h1>
-      <p className="mb-8 text-[#5a6d91]">Etong status ng review mo.</p>
+      <p className="mb-8 text-[#5a6d91]">Here’s the status of your review.</p>
 
       {/* Subscription cards */}
       <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -70,18 +70,18 @@ export default function DashboardClient({
               {sub ? (
                 <>
                   <p className="mb-1 text-sm text-[#5a6d91]">
-                    Access hanggang <strong className="text-[#142a56]">{fmtDate(sub.expires_at)}</strong>
+                    Access until <strong className="text-[#142a56]">{fmtDate(sub.expires_at)}</strong>
                   </p>
-                  <p className="mb-5 text-xs text-[#5a6d91]">{days} days na lang</p>
+                  <p className="mb-5 text-xs text-[#5a6d91]">{days} days left</p>
                   <Link href={`/review/${t.toLowerCase()}`} className={`${meta.btn} inline-block px-6 py-2.5 text-sm`}>
-                    Tuloy ang Review →
+                    Continue Review →
                   </Link>
                 </>
               ) : (
                 <>
                   <p className="mb-5 text-sm leading-relaxed text-[#5a6d91]">
-                    Kandado pa ang {TRACK_LABEL[t]} reviewer. Subscribe para mabuksan ang lahat ng lessons,
-                    drills, at mock exams.
+                    The {TRACK_LABEL[t]} reviewer is still locked. Subscribe to unlock all lessons,
+                    drills, and mock exams.
                   </p>
                   <button
                     onClick={() => setPayTrack(t)}
@@ -125,7 +125,7 @@ export default function DashboardClient({
         <h2 className="mb-4 text-xl font-bold text-[#142a56]">📊 Recent exam results</h2>
         {attempts.length === 0 ? (
           <div className="card p-6 text-sm text-[#5a6d91]">
-            Wala ka pang natapos na exam. Kapag may na-take ka na, dito lalabas ang results mo.
+            You haven’t finished an exam yet. Once you take one, your results will show up here.
           </div>
         ) : (
           <div className="card divide-y divide-[#dbe7f8]">
@@ -154,7 +154,7 @@ export default function DashboardClient({
       <div>
         <h2 className="mb-4 text-xl font-bold text-[#142a56]">💳 Payment history</h2>
         {requests.length === 0 ? (
-          <div className="card p-6 text-sm text-[#5a6d91]">Wala pa. Kapag nag-subscribe ka, dito makikita ang status ng bayad mo.</div>
+          <div className="card p-6 text-sm text-[#5a6d91]">Nothing yet. Once you subscribe, your payment status will show up here.</div>
         ) : (
           <div className="card divide-y divide-[#dbe7f8]">
             {requests.map((r) => (

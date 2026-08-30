@@ -15,7 +15,7 @@ async function postAdmin(action: string, payload: Record<string, unknown>) {
     body: JSON.stringify({ action, payload }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "May error na naganap");
+  if (!res.ok) throw new Error(data.error || "Something went wrong");
   return data;
 }
 
@@ -29,7 +29,7 @@ function parseBulk(text: string): Array<Record<string, unknown>> {
     .split(/\n\s*\n/)
     .map((b) => b.trim())
     .filter(Boolean);
-  if (blocks.length === 0) throw new Error("Walang naka-parse na questions.");
+  if (blocks.length === 0) throw new Error("No questions parsed.");
   return blocks.map((block, i) => {
     const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
     const qText = lines[0].replace(/^\d+[.)]\s*/, "");
@@ -54,9 +54,9 @@ function parseBulk(text: string): Array<Record<string, unknown>> {
       }
     }
     if (!qText || !choices.A || !choices.B || !choices.C || !choices.D) {
-      throw new Error(`Block ${i + 1}: kulang ang question o apat na choices (A-D).`);
+      throw new Error(`Block ${i + 1}: missing question or four choices (A-D).`);
     }
-    if (!correct) throw new Error(`Block ${i + 1}: walang ANSWER line (e.g. "ANSWER: B")`);
+    if (!correct) throw new Error(`Block ${i + 1}: no ANSWER line (e.g. "ANSWER: B")`);
     return {
       order_index: i + 1,
       question_text: qText,
@@ -182,7 +182,7 @@ export default function AdminClient({
               ⏳ Pending verification ({pendingPayments.length})
             </h2>
             {pendingPayments.length === 0 ? (
-              <div className="card p-6 text-sm text-[#5a6d91]">Walang pending. Enjoy the calm! ☕</div>
+              <div className="card p-6 text-sm text-[#5a6d91]">No pending. Enjoy the calm! ☕</div>
             ) : (
               <div className="space-y-5">
                 {pendingPayments.map((p) => (
@@ -190,7 +190,7 @@ export default function AdminClient({
                     key={p.id}
                     p={p}
                     busy={busy}
-                    onApprove={() => run("approve_payment", { payment_id: p.id }, `Approved! Na-activate na ang ${p.track} subscription.`)}
+                    onApprove={() => run("approve_payment", { payment_id: p.id }, `Approved! The ${p.track} subscription is now active.`)}
                     onReject={(note) => run("reject_payment", { payment_id: p.id, note }, "Rejected.")}
                   />
                 ))}
@@ -202,7 +202,7 @@ export default function AdminClient({
             <h2 className="mb-4 text-lg font-bold text-[#142a56]">📁 Reviewed ({reviewedPayments.length})</h2>
             <div className="card divide-y divide-[#dbe7f8]">
               {reviewedPayments.length === 0 && (
-                <div className="p-6 text-sm text-[#5a6d91]">Wala pang na-review na payments.</div>
+                <div className="p-6 text-sm text-[#5a6d91]">No reviewed payments yet.</div>
               )}
               {reviewedPayments.map((p) => (
                 <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
@@ -244,7 +244,7 @@ export default function AdminClient({
                           <div className={`mb-1 font-bold ${t === "CSE" ? "text-[#0284c7]" : "text-[#7c3aed]"}`}>{t}</div>
                           {sub ? (
                             <>
-                              <div className="font-semibold text-[#16a34a]">✓ hanggang {fmtDate(sub.expires_at)}</div>
+                              <div className="font-semibold text-[#16a34a]">✓ until {fmtDate(sub.expires_at)}</div>
                               <div className="mt-1 flex justify-center gap-1">
                                 <button disabled={busy} onClick={() => run("extend_sub", { user_id: u.id, track: t, days: 180 }, `${t} extended +180 days`)} className="rounded-md bg-[#e0f2fe] px-2 py-1 font-bold text-[#0284c7] hover:bg-[#bae6fd]">+180d</button>
                                 <button disabled={busy} onClick={() => run("revoke_sub", { user_id: u.id, track: t }, `${t} revoked`)} className="rounded-md bg-[#fee2e2] px-2 py-1 font-bold text-[#991b1b] hover:bg-[#fecaca]">Revoke</button>
@@ -252,7 +252,7 @@ export default function AdminClient({
                             </>
                           ) : (
                             <>
-                              <div className="text-[#93a4c0]">🔒 Walang sub</div>
+                              <div className="text-[#93a4c0]">🔒 No sub</div>
                               <div className="mt-1 flex justify-center">
                                 <button disabled={busy} onClick={() => run("grant_sub", { user_id: u.id, track: t, days: 180 }, `${t} granted (180 days)`)} className="rounded-md bg-[#dcfce7] px-2 py-1 font-bold text-[#166534] hover:bg-[#bbf7d0]">Grant 180d</button>
                               </div>
@@ -273,7 +273,7 @@ export default function AdminClient({
               </div>
             );
           })}
-          {profiles.length === 0 && <div className="card p-6 text-sm text-[#5a6d91]">Wala pang users.</div>}
+          {profiles.length === 0 && <div className="card p-6 text-sm text-[#5a6d91]">No users yet.</div>}
         </div>
       )}
 
@@ -340,7 +340,7 @@ function PaymentCard({
               <img src={p.receipt_url} alt="Payment receipt" className="max-h-56 rounded-xl border border-[#dbe7f8] object-contain transition hover:opacity-90" />
             </a>
           ) : (
-            <div className="rounded-xl bg-[#eef2f7] p-6 text-center text-sm text-[#93a4c0]">Walang screenshot</div>
+            <div className="rounded-xl bg-[#eef2f7] p-6 text-center text-sm text-[#93a4c0]">No screenshot</div>
           )}
         </div>
 
@@ -377,7 +377,7 @@ function PaymentCard({
             <div className="space-y-2">
               <input
                 className="input-warm text-sm"
-                placeholder="Reason (optional, makikita ng user)"
+                placeholder="Reason (optional, visible to the user)"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
@@ -395,7 +395,7 @@ function PaymentCard({
               </div>
             </div>
           )}
-          <p className="text-center text-xs text-[#93a4c0]">I-check: halaga + sentimo, ref number, at pangalan sa receipt.</p>
+          <p className="text-center text-xs text-[#93a4c0]">Check: amount + centavos, reference number, and name on the receipt.</p>
         </div>
       </div>
     </div>
@@ -477,7 +477,7 @@ function ContentTab({
                   <button onClick={(e) => { e.stopPropagation(); setTopicModal(t); }} className="rounded-md bg-[#e0f2fe] px-2 py-1 text-xs font-bold text-[#0284c7]">Edit</button>
                   <button
                     disabled={busy}
-                    onClick={(e) => { e.stopPropagation(); if (confirm(`Delete topic "${t.title}" at lahat ng lessons nito?`)) run("delete_topic", { id: t.id }, "Topic deleted"); }}
+                    onClick={(e) => { e.stopPropagation(); if (confirm(`Delete topic "${t.title}" and all its lessons?`)) run("delete_topic", { id: t.id }, "Topic deleted"); }}
                     className="rounded-md bg-[#fee2e2] px-2 py-1 text-xs font-bold text-[#991b1b]"
                   >
                     ✕
@@ -486,7 +486,7 @@ function ContentTab({
               </div>
             </div>
           ))}
-          {trackTopics.length === 0 && <div className="card p-6 text-center text-sm text-[#5a6d91]">Wala pang topics sa {track}.</div>}
+          {trackTopics.length === 0 && <div className="card p-6 text-center text-sm text-[#5a6d91]">No topics in {track} yet.</div>}
         </div>
 
         {/* Lessons of selected topic */}
@@ -527,12 +527,12 @@ function ContentTab({
                     </div>
                   </div>
                 ))}
-                {topicLessons.length === 0 && <div className="card p-6 text-center text-sm text-[#5a6d91]">Wala pang lessons. Click &quot;+ New Lesson&quot;.</div>}
+                {topicLessons.length === 0 && <div className="card p-6 text-center text-sm text-[#5a6d91]">No lessons yet. Click &quot;+ New Lesson&quot;.</div>}
               </div>
             </div>
           ) : (
             <div className="card flex h-full items-center justify-center p-10 text-sm text-[#5a6d91]">
-              ← Pumili ng topic para makita ang lessons
+              ← Pick a topic to see its lessons
             </div>
           )}
         </div>
@@ -603,7 +603,7 @@ function TopicForm({
         <Field label="Published">
           <label className="flex h-[42px] items-center gap-2 text-sm">
             <input type="checkbox" checked={f.is_published} onChange={(e) => setF({ ...f, is_published: e.target.checked })} />
-            Visible sa users
+            Visible to users
           </label>
         </Field>
       </div>
@@ -640,7 +640,7 @@ function LessonForm({
       <Field label="Video URL (optional — YouTube link)">
         <input className="input-warm" value={f.video_url} onChange={(e) => setF({ ...f, video_url: e.target.value })} placeholder="https://youtube.com/watch?v=..." />
       </Field>
-      <Field label="Content (HTML — pwede ring plain text)">
+      <Field label="Content (HTML — plain text works too)">
         <textarea
           className="input-warm font-mono text-xs"
           rows={14}
@@ -662,7 +662,7 @@ function LessonForm({
         <Field label="Access">
           <label className="flex h-[42px] items-center gap-2 text-sm">
             <input type="checkbox" checked={f.is_free} onChange={(e) => setF({ ...f, is_free: e.target.checked })} />
-            🎁 Free preview (kahit hindi subscriber, makikita)
+            🎁 Free preview (visible even to non-subscribers)
           </label>
         </Field>
       </div>
@@ -733,7 +733,7 @@ function ExamsTab({
               />
             ))}
             {(t === "CSE" ? cse : letx).length === 0 && (
-              <div className="card p-6 text-center text-sm text-[#5a6d91]">Wala pang {t} exams.</div>
+              <div className="card p-6 text-center text-sm text-[#5a6d91]">No {t} exams yet.</div>
             )}
           </div>
         </section>
@@ -770,16 +770,16 @@ function ExamsTab({
       {importExam && (
         <Modal title="Bulk Import Questions" onClose={() => { setImportExam(null); setImportErr(null); }} wide>
           <p className="mb-3 rounded-xl bg-[#e0f2fe] px-4 py-3 text-xs leading-relaxed text-[#0284c7]">
-            Isang question per block (hiwalay ng blank line). Format:
+            One question per block (separate by a blank line). Format:
             <br />
-            <code>1. Tanong dito{'\n'}A. choice{'\n'}B. choice{'\n'}C. choice{'\n'}D. choice{'\n'}ANSWER: B{'\n'}EXPLANATION: bakit</code>
+            <code>1. Question here{'\n'}A. choice{'\n'}B. choice{'\n'}C. choice{'\n'}D. choice{'\n'}ANSWER: B{'\n'}EXPLANATION: bakit</code>
           </p>
           <textarea
             className="input-warm font-mono text-xs"
             rows={14}
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
-            placeholder={"1. Ano ang 2+2?\nA. 3\nB. 4\nC. 5\nD. 6\nANSWER: B\nEXPLANATION: Basic addition.\n\n2. ..."}
+            placeholder={"1. What is 2+2?\nA. 3\nB. 4\nC. 5\nD. 6\nANSWER: B\nEXPLANATION: Basic addition.\n\n2. ..."}
           />
           {importErr && <div className="mt-3 rounded-xl bg-[#fee2e2] px-4 py-3 text-sm text-[#991b1b]">{importErr}</div>}
           <button
@@ -853,7 +853,7 @@ function ExamRow({
           <button onClick={onEdit} className="rounded-md bg-[#e0f2fe] px-3 py-1.5 text-xs font-bold text-[#0284c7]">Edit</button>
           <button
             disabled={busy}
-            onClick={() => { if (confirm(`Delete exam "${e.title}" at lahat ng questions nito?`)) void run("delete_exam", { id: e.id }, "Exam deleted"); }}
+            onClick={() => { if (confirm(`Delete exam "${e.title}" and all its questions?`)) void run("delete_exam", { id: e.id }, "Exam deleted"); }}
             className="rounded-md bg-[#fee2e2] px-3 py-1.5 text-xs font-bold text-[#991b1b]"
           >
             ✕
@@ -939,7 +939,7 @@ function QuestionList({
           </div>
         ))}
         {qs !== null && qs.length === 0 && (
-          <div className="p-4 text-center text-sm text-[#5a6d91]">Wala pang questions — add or import na!</div>
+          <div className="p-4 text-center text-sm text-[#5a6d91]">No questions yet — add or import some!</div>
         )}
       </div>
     </div>
@@ -980,7 +980,7 @@ function ExamForm({
         <Field label="Mode">
           <select className="input-warm" value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as "mock" | "practice" })}>
             <option value="mock">Mock (timed, one-shot)</option>
-            <option value="practice">Practice (may explanation agad)</option>
+            <option value="practice">Practice (instant explanation)</option>
           </select>
         </Field>
       </div>
@@ -1006,7 +1006,7 @@ function ExamForm({
       <div className="flex gap-6">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={f.is_free_preview} onChange={(e) => setF({ ...f, is_free_preview: e.target.checked })} />
-          🎁 Free preview (kahit sino, pwedeng i-take)
+          🎁 Free preview (anyone can take it)
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} />
@@ -1062,7 +1062,7 @@ function QuestionForm({
           </Field>
         ))}
       </div>
-      <Field label="Explanation (nakikita ng user pagkatapos)">
+      <Field label="Explanation (shown to the user afterward)">
         <textarea className="input-warm" rows={2} value={f.explanation} onChange={(e) => set("explanation", e.target.value)} />
       </Field>
       <div className="flex items-center justify-between">
@@ -1105,7 +1105,7 @@ function SettingsTab({
         </div>
       </div>
       <div className="card p-6 lg:col-span-2">
-        <h3 className="mb-4 font-bold text-[#142a56]">📋 Payment Instructions (nakikita ng users sa payment modal)</h3>
+        <h3 className="mb-4 font-bold text-[#142a56]">📋 Payment Instructions (shown to users in the payment modal)</h3>
         <SettingField
           label="Instructions"
           textarea

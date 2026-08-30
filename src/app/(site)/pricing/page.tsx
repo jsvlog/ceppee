@@ -14,11 +14,11 @@ const plans = [
     accent: "text-[#0284c7]",
     soft: "bg-[#e0f2fe]",
     features: [
-      "Lahat ng CSE lessons (Math, English, Filipino, Clerical, Constitution)",
-      "Topic practice drills na may explanation",
-      "Full timed mock exams na parang totohanan",
-      "Score history at progress tracking",
-      "Access hanggang sa next CSE exam (usually 6 months)",
+      "All CSE lessons (Math, English, Filipino, Clerical, Constitution)",
+      "Topic practice drills with explanations",
+      "Full timed mock exams, just like the real thing",
+      "Score history and progress tracking",
+      "Access until the next CSE exam (usually 6 months)",
     ],
   },
   {
@@ -29,11 +29,11 @@ const plans = [
     accent: "text-[#7c3aed]",
     soft: "bg-[#f5f0ff]",
     features: [
-      "Professional Education lessons (40% ng score!)",
+      "Professional Education lessons (40% of the score!)",
       "Gen Ed: English, Math, Science reviewers",
-      "Case-based practice drills na may explanation",
+      "Case-based practice drills with explanations",
       "Full timed mock exams",
-      "Access hanggang sa next LET exam (usually 6 months)",
+      "Access until the next LET exam (usually 6 months)",
     ],
   },
 ];
@@ -49,10 +49,10 @@ export default async function PricingPage() {
       <div className="relative mx-auto max-w-5xl px-4 pt-20 pb-14 sm:px-6 lg:px-8">
         <div className="mb-4 text-center mx-auto">
           <h1 className="text-4xl font-black text-[#142a56] sm:text-5xl">
-            Isang bayad, <span className="gradient-text">buong review season</span>
+            One payment, <span className="gradient-text">the whole review season</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-lg text-[#5a6d91]">
-            ₱500 kada track. Walang monthly fees, walang hidden charges. GCash o bank transfer lang.
+            ₱500 per track. No monthly fees, no hidden charges. Just GCash or bank transfer.
           </p>
         </div>
 
@@ -80,30 +80,30 @@ export default async function PricingPage() {
                 href={user ? "/dashboard" : "/login?mode=signup"}
                 className={`${p.btn} block px-6 py-3.5 text-center text-sm`}
               >
-                {user ? `Subscribe sa ${p.track}` : `Get ${p.track} Review — ₱500`}
+                {user ? `Subscribe to ${p.track}` : `Get ${p.track} Review — ₱500`}
               </Link>
             </div>
           ))}
         </div>
 
         <div className="card mx-auto mt-12 max-w-2xl p-8 text-center">
-          <h2 className="mb-3 text-xl font-bold text-[#142a56]">Paano nagbabayad?</h2>
+          <h2 className="mb-3 text-xl font-bold text-[#142a56]">How to pay</h2>
           <div className="grid grid-cols-1 gap-4 text-sm text-[#5a6d91] sm:grid-cols-3">
             <div className="rounded-2xl bg-[#e0f2fe] p-4">
               <div className="mb-1 text-2xl">1️⃣</div>
-              Click Subscribe at makikita ang GCash/bank details
+              Click Subscribe and you'll see the GCash/bank details
             </div>
             <div className="rounded-2xl bg-[#e0f2fe] p-4">
               <div className="mb-1 text-2xl">2️⃣</div>
-              Send the exact amount, upload receipt + reference number
+              Send the exact amount, then upload the receipt + reference number
             </div>
             <div className="rounded-2xl bg-[#e0f2fe] p-4">
               <div className="mb-1 text-2xl">3️⃣</div>
-              I-verify namin within 24 hrs — automatic na bubukas ang access
+              We verify within 24 hours — access unlocks automatically
             </div>
           </div>
           <p className="mt-6 text-xs text-[#93a4c0]">
-            Kung nagbago ang exam date at humaba ang season, ina-extend namin ang access ng libre. Promise yan.
+            If the exam date changes and the season gets longer, we extend your access for free. Promise.
           </p>
         </div>
       </div>
