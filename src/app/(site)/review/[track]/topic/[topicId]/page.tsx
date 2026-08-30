@@ -1,0 +1,104 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
+import { getUserContext, hasActiveSub } from "@/lib/queries";
+import type { Topic, Track } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Topic" };
+
+export default async function TopicPage({
+  params,
+}: {
+  params: Promise<{ track: string; topicId: string }>;
+}) {
+  const { track, topicId } = await params;
+  if (!["cse", "let"].includes(track)) notFound();
+
+  const { subs } = await getUserContext();
+  const subscribed = hasActiveSub(subs, track.toUpperCase() as Track);
+
+  const supabase = await createClient();
+  const { data: topic } = await supabase
+    .from("topics")
+    .select("*")
+    .eq("id", topicId)
+    .eq("track", track.toUpperCase())
+    .maybeSingle();
+  if (!topic) notFound();
+  const t = topic as Topic;
+
+  // Metadata list via admin (content itself is RLS-gated on the lesson page)
+  const admin = getAdminClient();
+  const { data: lessonRows } = await admin
+    .from("lessons")
+    .select("id, title, is_free, order_index")
+    .eq("topic_id", topicId)
+    .eq("is_published", true)
+    .order("order_index");
+  const lessons = (lessonRows as Array<{ id: string; title: string; is_free: boolean; order_index: number }> | null) ?? [];
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+      <Link href={`/review/${track}`} className="mb-6 inline-block text-sm font-semibold text-[#8c7a64] hover:text-[#3d3227]">
+        ← Back to {track.toUpperCase()} Review
+      </Link>
+
+      <div className="mb-8">
+        <h1 className="mb-2 text-3xl font-black text-[#3d3227]">{t.title}</h1>
+        {t.description && <p className="text-[#8c7a64]">{t.description}</p>}
+      </div>
+
+      <div className="space-y-3">
+        {(lessons ?? []).map((l, i) => {
+          const unlocked = subscribed || l.is_free;
+          return unlocked ? (
+            <Link
+              key={l.id}
+              href={`/lesson/${l.id}`}
+              className="card card-hover flex items-center justify-between gap-4 p-5"
+            >
+              <div className="flex items-center gap-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#fff5e0] to-[#ffe8cc] font-bold text-[#92734a]">
+                  {i + 1}
+                </span>
+                <div>
+                  <div className="font-bold text-[#3d3227]">{l.title}</div>
+                  {l.is_free && <span className="text-xs font-semibold text-[#16a34a]">🎁 Free preview</span>}
+                </div>
+              </div>
+              <span className="text-sm font-bold text-[#ffa94d]">Start →</span>
+            </Link>
+          ) : (
+            <div key={l.id} className="card flex items-center justify-between gap-4 bg-[#faf6ec] p-5 opacity-80">
+              <div className="flex items-center gap-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f5e6cc] text-[#b0a48e]">
+                  🔒
+                </span>
+                <div>
+                  <div className="font-bold text-[#8c7a64]">{l.title}</div>
+                  <div className="text-xs text-[#b0a48e]">Subscribe to unlock</div>
+                </div>
+              </div>
+              <Link
+                href="/dashboard"
+                className="rounded-xl bg-gradient-to-br from-[#ff6b6b] to-[#ffa94d] px-4 py-2 text-xs font-bold text-white shadow"
+              >
+                Unlock
+              </Link>
+            </div>
+          );
+        })}
+      </div>
+
+      {(lessons ?? []).length === 0 && (
+        <div className="card p-8 text-center text-sm text-[#8c7a64]">
+          Wala pang lessons sa topic na ito — malapit na!
+        </div>
+      )}
+    </div>
+  );
+}
