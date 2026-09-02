@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSiteStats } from "@/lib/queries";
 import { TRACK_LABEL } from "@/lib/format";
+import Testimonials from "@/components/Testimonials";
 
 export const dynamic = "force-dynamic";
 
@@ -228,6 +229,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===== TESTIMONIALS ===== */}
+      <Testimonials />
 
       {/* ===== FAQ ===== */}
       <section id="faq" className="w-full py-16">
