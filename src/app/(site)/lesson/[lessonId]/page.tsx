@@ -47,12 +47,12 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href={t ? `/review/${track.toLowerCase()}/topic/${t.id}` : "/dashboard"} className="mb-6 inline-block text-sm font-semibold text-[#5a6d91] hover:text-[#142a56]">
+      <Link href={t ? `/review/${track.toLowerCase()}/topic/${t.id}` : "/dashboard"} className="mb-6 inline-block text-sm font-semibold text-[#5c7863] hover:text-[#16331f]">
         ← Back to {t?.title || "topics"}
       </Link>
 
       <article className="card p-8 sm:p-10">
-        <h1 className="mb-6 text-3xl font-black text-[#142a56]">{l.title}</h1>
+        <h1 className="mb-6 text-3xl font-black text-[#16331f]">{l.title}</h1>
 
         {l.video_url && (
           <div className="mb-8 aspect-video w-full overflow-hidden rounded-2xl shadow-md">
@@ -71,14 +71,14 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
 
       <div className="mt-8 flex items-center justify-between gap-4">
         {prev ? (
-          <Link href={`/lesson/${prev.id}`} className="card card-hover px-5 py-3 text-sm font-semibold text-[#3f4d78]">
+          <Link href={`/lesson/${prev.id}`} className="card card-hover px-5 py-3 text-sm font-semibold text-[#3d5c44]">
             ← {prev.title}
           </Link>
         ) : (
           <span />
         )}
         {next ? (
-          <Link href={`/lesson/${next.id}`} className="card card-hover px-5 py-3 text-right text-sm font-semibold text-[#3f4d78]">
+          <Link href={`/lesson/${next.id}`} className="card card-hover px-5 py-3 text-right text-sm font-semibold text-[#3d5c44]">
             {next.title} →
           </Link>
         ) : (
@@ -93,10 +93,10 @@ function LockedOrMissing({ user }: { user: boolean }) {
   return (
     <div className="mx-auto max-w-md px-4 py-24 text-center">
       <div className="mb-4 text-6xl">🔒</div>
-      <h1 className="mb-2 text-2xl font-black text-[#142a56]">
+      <h1 className="mb-2 text-2xl font-black text-[#16331f]">
         {user ? "This lesson is still locked" : "Log in first"}
       </h1>
-      <p className="mb-6 text-sm text-[#5a6d91]">
+      <p className="mb-6 text-sm text-[#5c7863]">
         {user
           ? "This lesson is for subscribers. Subscribe from your dashboard to unlock it."
           : "Log in first to access the lessons."}

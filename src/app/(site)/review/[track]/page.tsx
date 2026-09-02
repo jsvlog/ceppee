@@ -15,18 +15,18 @@ const meta: Record<Track, { label: string; emoji: string; text: string; soft: st
   CSE: {
     label: "Civil Service Exam",
     emoji: "🏛️",
-    text: "text-[#0284c7]",
-    soft: "bg-[#e0f2fe]",
+    text: "text-[#15803d]",
+    soft: "bg-[#dcfce7]",
     btn: "btn-primary",
-    grad: "from-[#0ea5e9] to-[#38bdf8]",
+    grad: "from-[#16a34a] to-[#d4af37]",
   },
   LET: {
     label: "Licensure Exam for Teachers",
     emoji: "🍎",
-    text: "text-[#7c3aed]",
-    soft: "bg-[#f5f0ff]",
-    btn: "btn-violet",
-    grad: "from-[#8b5cf6] to-[#d946ef]",
+    text: "text-[#b45309]",
+    soft: "bg-[#fef9c3]",
+    btn: "btn-gold",
+    grad: "from-[#ca8a04] to-[#eab308]",
   },
 };
 
@@ -104,7 +104,7 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
             {!subscribed && (
               <Link
                 href={user ? "/dashboard" : "/login?next=/dashboard"}
-                className="rounded-xl bg-white px-7 py-3.5 font-bold text-[#142a56] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+                className="rounded-xl bg-white px-7 py-3.5 font-bold text-[#16331f] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
               >
                 Subscribe — {peso(500)}
               </Link>
@@ -116,8 +116,8 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
       {/* Lessons by topic */}
       <section className="w-full py-14">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-2 text-2xl font-black text-[#142a56]">📚 Lessons & Notes</h2>
-          <p className="mb-8 text-sm text-[#5a6d91]">
+          <h2 className="mb-2 text-2xl font-black text-[#16331f]">📚 Lessons & Notes</h2>
+          <p className="mb-8 text-sm text-[#5c7863]">
             Read the lessons before taking the mock exams.
             {!subscribed && " Items with 🔒 are for subscribers only."}
           </p>
@@ -127,10 +127,10 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
                 <div className={`mb-3 inline-flex rounded-xl ${m.soft} px-3 py-1 text-xs font-bold ${m.text}`}>
                   Topic
                 </div>
-                <h3 className="mb-2 font-bold text-[#142a56]">{t.title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-[#5a6d91]">{t.description}</p>
+                <h3 className="mb-2 font-bold text-[#16331f]">{t.title}</h3>
+                <p className="mb-4 text-sm leading-relaxed text-[#5c7863]">{t.description}</p>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-[#5a6d91]">
+                  <span className="text-[#5c7863]">
                     📖 {lessonCounts[t.id]?.total ?? 0} lessons
                     {(lessonCounts[t.id]?.free ?? 0) > 0 && !subscribed && (
                       <span className="ml-2 font-semibold text-[#16a34a]">· {lessonCounts[t.id].free} free</span>
@@ -142,7 +142,7 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
             ))}
           </div>
           {(topics ?? []).length === 0 && (
-            <div className="card p-8 text-center text-sm text-[#5a6d91]">
+            <div className="card p-8 text-center text-sm text-[#5c7863]">
               Coming soon! Teacher Ceppee is still adding lessons here.
             </div>
           )}
@@ -152,8 +152,8 @@ export default async function TrackPage({ params }: { params: Promise<{ track: s
       {/* Exams */}
       <section className="w-full pb-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-2 text-2xl font-black text-[#142a56]">⏱️ Mock Exams & Practice</h2>
-          <p className="mb-8 text-sm text-[#5a6d91]">
+          <h2 className="mb-2 text-2xl font-black text-[#16331f]">⏱️ Mock Exams & Practice</h2>
+          <p className="mb-8 text-sm text-[#5c7863]">
             Mock = timed, just like the real thing. Practice = instant explanation after each answer.
           </p>
 
@@ -180,18 +180,18 @@ function ExamGrid({
   if (exams.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#5a6d91]">{label}</h3>
+      <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#5c7863]">{label}</h3>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 justify-center">
         {exams.map((e) => {
           const locked = !subscribed && !e.is_free_preview;
           return (
             <Link key={e.id} href={`/exam/${e.id}`} className="card card-hover flex items-center justify-between gap-4 p-5">
               <div>
-                <div className="font-bold text-[#142a56]">
+                <div className="font-bold text-[#16331f]">
                   {locked && "🔒 "}
                   {e.title}
                 </div>
-                <div className="mt-1 text-xs text-[#5a6d91]">
+                <div className="mt-1 text-xs text-[#5c7863]">
                   {e.duration_minutes} min
                   {e.topic ? ` · ${e.topic}` : ""}
                   {e.is_free_preview ? " · 🎁 FREE preview" : ""}

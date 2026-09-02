@@ -71,31 +71,31 @@ export default async function HomePage() {
     <div>
       {/* ===== HERO ===== */}
       <section className="gradient-hero relative overflow-hidden">
-        <div className="orb orb-blue -left-24 -top-24 animate-float" />
-        <div className="orb orb-sky -right-20 top-32 animate-float-delayed" />
+        <div className="orb orb-green -left-24 -top-24 animate-float" />
+        <div className="orb orb-gold -right-20 top-32 animate-float-delayed" />
         <div className="relative mx-auto max-w-6xl px-4 pt-20 pb-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="animate-fade-up mb-5 inline-flex items-center gap-2 rounded-full border border-[#dbe7f8] bg-white/80 px-4 py-1.5 text-sm font-semibold text-[#0369a1] shadow-sm">
+            <div className="animate-fade-up mb-5 inline-flex items-center gap-2 rounded-full border border-[#d9e6d3] bg-white/80 px-4 py-1.5 text-sm font-semibold text-[#0369a1] shadow-sm">
               <span className="flex h-2 w-2 rounded-full bg-[#22c55e]" />
               Reviewing made easy, made by Teacher Ceppee
             </div>
-            <h1 className="animate-fade-up mb-6 text-4xl font-black leading-tight tracking-tight text-[#142a56] sm:text-5xl lg:text-6xl">
+            <h1 className="animate-fade-up mb-6 text-4xl font-black leading-tight tracking-tight text-[#16331f] sm:text-5xl lg:text-6xl">
               Pass the CSE or LET —<br />
               <span className="gradient-text">on your first take.</span>
             </h1>
-            <p className="animate-fade-up mb-8 text-lg leading-relaxed text-[#5a6d91] sm:text-xl">
+            <p className="animate-fade-up mb-8 text-lg leading-relaxed text-[#5c7863] sm:text-xl">
               A complete online reviewer: lessons, practice drills, and realistic timed mock exams.
-              The deal: <strong className="text-[#3f4d78]">₱500 per track</strong>, for the whole review season.
+              The deal: <strong className="text-[#3d5c44]">₱500 per track</strong>, for the whole review season.
             </p>
             <div className="animate-fade-up mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="#tracks" className="btn-primary px-8 py-3.5 text-base">
                 Choose Your Review →
               </Link>
-              <Link href="/review/cse" className="rounded-xl border border-[#dbe7f8] bg-white px-8 py-3.5 text-base font-semibold text-[#3f4d78] shadow-sm transition hover:border-[#38bdf8] hover:text-[#142a56]">
+              <Link href="/review/cse" className="rounded-xl border border-[#d9e6d3] bg-white px-8 py-3.5 text-base font-semibold text-[#3d5c44] shadow-sm transition hover:border-[#d4af37] hover:text-[#16331f]">
                 Try Free Preview
               </Link>
             </div>
-            <div className="animate-fade-up flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-[#5a6d91]">
+            <div className="animate-fade-up flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-[#5c7863]">
               <span>✓ {stats.lessons}+ lessons</span>
               <span>✓ {stats.questions}+ practice questions</span>
               <span>✓ {stats.exams} mock & practice exams</span>
@@ -108,34 +108,34 @@ export default async function HomePage() {
       {/* ===== TRACK CHOOSER ===== */}
       <section id="tracks" className="w-full py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#142a56] sm:text-4xl">
+          <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#16331f] sm:text-4xl">
             Which exam are you reviewing for?
           </h2>
-          <p className="mb-10 text-center mx-auto max-w-xl text-[#5a6d91]">
+          <p className="mb-10 text-center mx-auto max-w-xl text-[#5c7863]">
             Two different exams, two dedicated reviewers. Pick the one for you.
           </p>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 justify-center">
             {/* CSE card */}
             <div className="card card-hover relative overflow-hidden p-8">
-              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[#0ea5e9]/10 blur-2xl" />
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#e0f2fe] px-4 py-1.5 text-sm font-bold text-[#0284c7]">
+              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[#16a34a]/10 blur-2xl" />
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#dcfce7] px-4 py-1.5 text-sm font-bold text-[#15803d]">
                 🏛️ For government work
               </div>
-              <h3 className="mb-2 text-2xl font-extrabold text-[#142a56]">
+              <h3 className="mb-2 text-2xl font-extrabold text-[#16331f]">
                 CSE Review
               </h3>
-              <p className="mb-5 text-sm leading-relaxed text-[#5a6d91]">
+              <p className="mb-5 text-sm leading-relaxed text-[#5c7863]">
                 Civil Service Exam — Professional and Sub-Professional. Math, English, Filipino,
                 Clerical & Reasoning, and Constitution — all with lessons and drills.
               </p>
-              <ul className="mb-6 space-y-2 text-sm text-[#3f4d78]">
-                <li className="flex items-start gap-2"><span className="text-[#0ea5e9]">●</span> 5 major topics, pattern-based strategies</li>
-                <li className="flex items-start gap-2"><span className="text-[#0ea5e9]">●</span> Timed mock exam with 170 items</li>
-                <li className="flex items-start gap-2"><span className="text-[#0ea5e9]">●</span> Free preview lesson + sample drill</li>
+              <ul className="mb-6 space-y-2 text-sm text-[#3d5c44]">
+                <li className="flex items-start gap-2"><span className="text-[#16a34a]">●</span> 5 major topics, pattern-based strategies</li>
+                <li className="flex items-start gap-2"><span className="text-[#16a34a]">●</span> Timed mock exam with 170 items</li>
+                <li className="flex items-start gap-2"><span className="text-[#16a34a]">●</span> Free preview lesson + sample drill</li>
               </ul>
               <div className="mb-6 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#142a56]">₱500</span>
-                <span className="text-sm text-[#5a6d91]">/ full review season</span>
+                <span className="text-3xl font-black text-[#16331f]">₱500</span>
+                <span className="text-sm text-[#5c7863]">/ full review season</span>
               </div>
               <Link href="/review/cse" className="btn-primary block px-6 py-3 text-center text-sm">
                 Start CSE Review
@@ -144,27 +144,27 @@ export default async function HomePage() {
 
             {/* LET card */}
             <div className="card card-hover relative overflow-hidden p-8">
-              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[#8b5cf6]/10 blur-2xl" />
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#f5f0ff] px-4 py-1.5 text-sm font-bold text-[#7c3aed]">
+              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[#ca8a04]/10 blur-2xl" />
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#fef9c3] px-4 py-1.5 text-sm font-bold text-[#b45309]">
                 🍎 For future LPTs
               </div>
-              <h3 className="mb-2 text-2xl font-extrabold text-[#142a56]">
+              <h3 className="mb-2 text-2xl font-extrabold text-[#16331f]">
                 LET Review
               </h3>
-              <p className="mb-5 text-sm leading-relaxed text-[#5a6d91]">
+              <p className="mb-5 text-sm leading-relaxed text-[#5c7863]">
                 Licensure Examination for Teachers. Professional Education, Gen Ed English, Math,
                 and Science — case-based strategies that actually work.
               </p>
-              <ul className="mb-6 space-y-2 text-sm text-[#3f4d78]">
-                <li className="flex items-start gap-2"><span className="text-[#8b5cf6]">●</span> Professional Education focus (40% of the score)</li>
-                <li className="flex items-start gap-2"><span className="text-[#8b5cf6]">●</span> Case-based timed mock exams</li>
-                <li className="flex items-start gap-2"><span className="text-[#8b5cf6]">●</span> Free preview lesson + sample drill</li>
+              <ul className="mb-6 space-y-2 text-sm text-[#3d5c44]">
+                <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> Professional Education focus (40% of the score)</li>
+                <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> Case-based timed mock exams</li>
+                <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> Free preview lesson + sample drill</li>
               </ul>
               <div className="mb-6 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#142a56]">₱500</span>
-                <span className="text-sm text-[#5a6d91]">/ full review season</span>
+                <span className="text-3xl font-black text-[#16331f]">₱500</span>
+                <span className="text-sm text-[#5c7863]">/ full review season</span>
               </div>
-              <Link href="/review/let" className="btn-violet block px-6 py-3 text-center text-sm">
+              <Link href="/review/let" className="btn-gold block px-6 py-3 text-center text-sm">
                 Start LET Review
               </Link>
             </div>
@@ -176,18 +176,18 @@ export default async function HomePage() {
       <section className="w-full py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="card relative overflow-hidden p-8 sm:p-12">
-            <div className="orb orb-indigo -right-16 -bottom-16 opacity-60" />
+            <div className="orb orb-gold -right-16 -bottom-16 opacity-60" />
             <div className="relative grid grid-cols-1 items-center gap-10 md:grid-cols-3">
               <div className="flex justify-center">
-                <div className="flex h-36 w-36 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#38bdf8] text-6xl font-black text-white shadow-xl">
+                <div className="flex h-36 w-36 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-6xl font-black text-white shadow-xl">
                   C
                 </div>
               </div>
               <div className="md:col-span-2">
-                <h2 className="mb-3 text-2xl font-extrabold text-[#142a56] sm:text-3xl">
+                <h2 className="mb-3 text-2xl font-extrabold text-[#16331f] sm:text-3xl">
                   From <span className="gradient-text">Teacher Ceppee</span>
                 </h2>
-                <p className="mb-4 leading-relaxed text-[#3f4d78]">
+                <p className="mb-4 leading-relaxed text-[#3d5c44]">
                   Years of experience teaching CSE and LET review — and thousands of Filipinos have
                   already passed with his guidance. Every lesson here comes from the proven review
                   style he uses on his Facebook page.
@@ -209,20 +209,20 @@ export default async function HomePage() {
       {/* ===== FEATURES ===== */}
       <section className="w-full py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#142a56] sm:text-4xl">
+          <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#16331f] sm:text-4xl">
             Why Teacher Ceppee Review?
           </h2>
-          <p className="mb-10 text-center mx-auto max-w-xl text-[#5a6d91]">
+          <p className="mb-10 text-center mx-auto max-w-xl text-[#5c7863]">
             This isn't just a PDF dump. It's a complete review system built for real exam day.
           </p>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 justify-center">
             {features.map((f) => (
               <div key={f.title} className="card card-hover p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e0f2fe] to-[#bae6fd] text-2xl">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#dcfce7] to-[#bbf7d0] text-2xl">
                   {f.icon}
                 </div>
-                <h3 className="mb-2 font-bold text-[#142a56]">{f.title}</h3>
-                <p className="text-sm leading-relaxed text-[#5a6d91]">{f.desc}</p>
+                <h3 className="mb-2 font-bold text-[#16331f]">{f.title}</h3>
+                <p className="text-sm leading-relaxed text-[#5c7863]">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -232,22 +232,22 @@ export default async function HomePage() {
       {/* ===== FAQ ===== */}
       <section id="faq" className="w-full py-16">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#142a56] sm:text-4xl">
+          <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#16331f] sm:text-4xl">
             Frequently asked questions
           </h2>
-          <p className="mb-10 text-center mx-auto text-[#5a6d91]">
+          <p className="mb-10 text-center mx-auto text-[#5c7863]">
             Have a different question? Message Teacher Ceppee on Facebook.
           </p>
           <div className="space-y-4">
             {faqs.map((f) => (
               <details key={f.q} className="card group p-5 open:shadow-lg">
-                <summary className="cursor-pointer list-none font-semibold text-[#142a56] marker:hidden">
+                <summary className="cursor-pointer list-none font-semibold text-[#16331f] marker:hidden">
                   <span className="flex items-center justify-between gap-4">
                     {f.q}
-                    <span className="text-[#38bdf8] transition group-open:rotate-45">✦</span>
+                    <span className="text-[#d4af37] transition group-open:rotate-45">✦</span>
                   </span>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-[#5a6d91]">{f.a}</p>
+                <p className="mt-3 text-sm leading-relaxed text-[#5c7863]">{f.a}</p>
               </details>
             ))}
           </div>
@@ -257,7 +257,7 @@ export default async function HomePage() {
       {/* ===== FINAL CTA ===== */}
       <section className="w-full py-14">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] p-10 text-center shadow-2xl sm:p-14">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#15803d] via-[#16a34a] to-[#d4af37] p-10 text-center shadow-2xl sm:p-14">
             <div className="absolute -left-16 -top-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
             <h2 className="relative mb-3 text-3xl font-black text-white sm:text-4xl">
@@ -268,7 +268,7 @@ export default async function HomePage() {
               for a single retake.
             </p>
             <div className="relative flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link href="/review/cse" className="rounded-xl bg-white px-8 py-3.5 font-bold text-[#0284c7] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl">
+              <Link href="/review/cse" className="rounded-xl bg-white px-8 py-3.5 font-bold text-[#15803d] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl">
                 CSE Review — ₱500
               </Link>
               <Link href="/review/let" className="rounded-xl border-2 border-white/70 px-8 py-3.5 font-bold text-white transition hover:bg-white/10">

@@ -35,7 +35,7 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
 
   const linkCls = (href: string) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition ${
-      pathname === href ? "text-[#0284c7]" : "text-[#3f4d78] hover:text-[#142a56] hover:bg-white/70"
+      pathname === href ? "text-[#15803d]" : "text-[#3d5c44] hover:text-[#16331f] hover:bg-white/70"
     }`;
 
   const desktopLinks = (
@@ -64,17 +64,17 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
 
   const desktopAuth = user ? (
     <div className="flex items-center gap-3">
-      <span className="hidden text-xs text-[#5a6d91] lg:block">{user.email}</span>
+      <span className="hidden text-xs text-[#5c7863] lg:block">{user.email}</span>
       <button
         onClick={handleSignOut}
-        className="rounded-xl border border-[#dbe7f8] bg-white px-4 py-2 text-sm font-semibold text-[#3f4d78] transition hover:border-[#38bdf8] hover:text-[#142a56]"
+        className="rounded-xl border border-[#d9e6d3] bg-white px-4 py-2 text-sm font-semibold text-[#3d5c44] transition hover:border-[#d4af37] hover:text-[#16331f]"
       >
         Sign out
       </button>
     </div>
   ) : (
     <div className="flex items-center gap-3">
-      <Link href="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#3f4d78] transition hover:text-[#142a56]">
+      <Link href="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#3d5c44] transition hover:text-[#16331f]">
         Log in
       </Link>
       <Link href="/login?mode=signup" className="btn-primary px-5 py-2.5 text-sm">
@@ -85,13 +85,13 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-[#dbe7f8]/80 bg-[#f5f8ff]/85 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-[#d9e6d3]/80 bg-[#f6faf4]/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563eb] to-[#38bdf8] text-lg font-black text-white shadow-md">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-lg font-black text-white shadow-md">
               C
             </span>
-            <span className="text-lg font-extrabold tracking-tight text-[#142a56]">
+            <span className="text-lg font-extrabold tracking-tight text-[#16331f]">
               Teacher Ceppee<span className="gradient-text"> Review</span>
             </span>
           </Link>
@@ -106,9 +106,9 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
             className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-lg md:hidden"
             aria-label="Toggle menu"
           >
-            <span className={`block h-0.5 w-5 bg-[#142a56] transition ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
-            <span className={`block h-0.5 w-5 bg-[#142a56] transition ${menuOpen ? "opacity-0" : ""}`} />
-            <span className={`block h-0.5 w-5 bg-[#142a56] transition ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
+            <span className={`block h-0.5 w-5 bg-[#16331f] transition ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
+            <span className={`block h-0.5 w-5 bg-[#16331f] transition ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block h-0.5 w-5 bg-[#16331f] transition ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
           </button>
         </div>
       </nav>
@@ -121,23 +121,23 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
       >
         <div className="absolute inset-0 bg-black/50" onClick={() => setMenuOpen(false)} />
         <div
-          className={`absolute right-0 top-0 h-full w-72 bg-[#f5f8ff] shadow-2xl transition-transform ${
+          className={`absolute right-0 top-0 h-full w-72 bg-[#f6faf4] shadow-2xl transition-transform ${
             menuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
           <div className="flex flex-col gap-1 p-5 pt-20">
             {desktopLinks}
-            <div className="mt-4 border-t border-[#dbe7f8] pt-4">
+            <div className="mt-4 border-t border-[#d9e6d3] pt-4">
               {user ? (
                 <>
-                  <p className="mb-3 truncate px-3 text-xs text-[#5a6d91]">{user.email}</p>
-                  <button onClick={handleSignOut} className="w-full rounded-xl border border-[#dbe7f8] px-4 py-2.5 text-sm font-semibold text-[#3f4d78]">
+                  <p className="mb-3 truncate px-3 text-xs text-[#5c7863]">{user.email}</p>
+                  <button onClick={handleSignOut} className="w-full rounded-xl border border-[#d9e6d3] px-4 py-2.5 text-sm font-semibold text-[#3d5c44]">
                     Sign out
                   </button>
                 </>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <Link href="/login" className="rounded-xl border border-[#dbe7f8] px-4 py-2.5 text-center text-sm font-semibold">
+                  <Link href="/login" className="rounded-xl border border-[#d9e6d3] px-4 py-2.5 text-center text-sm font-semibold">
                     Log in
                   </Link>
                   <Link href="/login?mode=signup" className="btn-primary px-4 py-2.5 text-center text-sm">

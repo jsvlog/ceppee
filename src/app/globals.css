@@ -1,32 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand blues */
-  --blue-400: #60a5fa;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-700: #1d4ed8;
-  --sky-400: #38bdf8;
-  --sky-500: #0ea5e9;
-  --sky-600: #0284c7;
-  --indigo-500: #6366f1;
-  --indigo-600: #4f46e5;
+  /* Brand greens & golds (primary brand = green, accent = gold) */
+  --green-400: #34d399;
+  --green-500: #16a34a;
+  --green-600: #16a34a;
+  --green-700: #15803d;
+  --gold-400: #eab308;
+  --gold-500: #d4af37;
+  --gold-600: #ca8a04;
+  --gold-700: #b45309;
 
-  --bg-primary: #f5f8ff;
+  --bg-primary: #f6faf4;
   --bg-surface: #ffffff;
-  --text-primary: #142a56;
-  --text-strong: #3f4d78;
-  --text-secondary: #5a6d91;
-  --text-muted: #93a4c0;
-  --border-default: #dbe7f8;
+  --text-primary: #16331f;
+  --text-strong: #3d5c44;
+  --text-secondary: #5c7863;
+  --text-muted: #94a896;
+  --border-default: #d9e6d3;
 
-  /* Track accents */
-  --cse-500: #0ea5e9;
-  --cse-600: #0284c7;
-  --cse-soft: #e0f2fe;
-  --let-500: #8b5cf6;
-  --let-600: #7c3aed;
-  --let-soft: #f5f0ff;
+  /* Track accents: CSE = green, LET = gold */
+  --cse-500: #16a34a;
+  --cse-600: #15803d;
+  --cse-soft: #dcfce7;
+  --let-500: #ca8a04;
+  --let-600: #b45309;
+  --let-soft: #fef9c3;
 
   --success: #22c55e;
   --danger: #ef4444;
@@ -41,29 +40,29 @@ body {
 /* ===== Gradients ===== */
 .gradient-hero {
   background:
-    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(56, 189, 248, 0.16), transparent),
-    radial-gradient(ellipse 55% 45% at 16% 85%, rgba(37, 99, 235, 0.14), transparent),
-    radial-gradient(ellipse 55% 45% at 84% 68%, rgba(99, 102, 241, 0.12), transparent),
-    linear-gradient(180deg, #eef5ff 0%, #f5f8ff 50%, #ffffff 100%);
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(22, 163, 74, 0.16), transparent),
+    radial-gradient(ellipse 55% 45% at 16% 85%, rgba(212, 175, 55, 0.14), transparent),
+    radial-gradient(ellipse 55% 45% at 84% 68%, rgba(202, 138, 4, 0.10), transparent),
+    linear-gradient(180deg, #eef7ee 0%, #f6faf4 50%, #ffffff 100%);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #d4af37 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.gradient-text-violet {
-  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+.gradient-text-gold {
+  background: linear-gradient(135deg, #ca8a04 0%, #eab308 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, #15803d, #16a34a);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.25);
   border-radius: 12px;
   color: #fff;
   font-weight: 600;
@@ -71,8 +70,8 @@ body {
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.38);
-  background: linear-gradient(135deg, #1d4ed8, #0284c7);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.32);
+  background: linear-gradient(135deg, #14532d, #15803d);
 }
 .btn-primary:disabled {
   opacity: 0.6;
@@ -80,24 +79,24 @@ body {
   transform: none;
 }
 
-.btn-violet {
-  background: linear-gradient(135deg, #8b5cf6, #d946ef);
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25);
+.btn-gold {
+  background: linear-gradient(135deg, #ca8a04, #eab308);
+  box-shadow: 0 4px 16px rgba(202, 138, 4, 0.25);
   border-radius: 12px;
   color: #fff;
   font-weight: 600;
   transition: all 0.2s ease;
 }
-.btn-violet:hover {
+.btn-gold:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 6px 20px rgba(202, 138, 4, 0.32);
 }
 
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(20, 42, 86, 0.06);
+  box-shadow: 0 4px 16px rgba(22, 51, 31, 0.06);
 }
 
 .card-hover {
@@ -105,7 +104,7 @@ body {
 }
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(20, 42, 86, 0.12);
+  box-shadow: 0 12px 32px rgba(22, 51, 31, 0.12);
 }
 
 /* ===== Floating orbs ===== */
@@ -116,25 +115,15 @@ body {
   pointer-events: none;
   z-index: 0;
 }
-.orb-blue {
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.35) 0%, transparent 70%);
+.orb-green {
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.35) 0%, transparent 70%);
   width: 400px;
   height: 400px;
 }
-.orb-sky {
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.32) 0%, transparent 70%);
+.orb-gold {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.32) 0%, transparent 70%);
   width: 350px;
   height: 350px;
-}
-.orb-indigo {
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, transparent 70%);
-  width: 380px;
-  height: 380px;
-}
-.orb-violet {
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
-  width: 380px;
-  height: 380px;
 }
 
 @keyframes float {
@@ -180,11 +169,11 @@ body {
 }
 .input-warm:focus {
   outline: none;
-  border-color: var(--blue-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+  border-color: var(--green-600);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
 }
 
-/* ===== Badges ===== */
+/* ===== Badges (status colors preserved) ===== */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -203,21 +192,21 @@ body {
 /* Prose for lesson content */
 .lesson-content h2 { font-size: 1.35rem; font-weight: 700; margin: 1.4rem 0 0.6rem; }
 .lesson-content h3 { font-size: 1.1rem; font-weight: 700; margin: 1.1rem 0 0.5rem; }
-.lesson-content p { margin: 0.6rem 0; line-height: 1.75; color: #3f4d78; }
-.lesson-content ul, .lesson-content ol { margin: 0.6rem 0 0.6rem 1.4rem; line-height: 1.75; color: #3f4d78; }
+.lesson-content p { margin: 0.6rem 0; line-height: 1.75; color: var(--text-strong); }
+.lesson-content ul, .lesson-content ol { margin: 0.6rem 0 0.6rem 1.4rem; line-height: 1.75; color: var(--text-strong); }
 .lesson-content ul { list-style: disc; }
 .lesson-content ol { list-style: decimal; }
-.lesson-content strong { color: #142a56; }
+.lesson-content strong { color: var(--text-primary); }
 .lesson-content code {
-  background: #e0f2fe;
+  background: var(--cse-soft);
   padding: 2px 6px;
   border-radius: 6px;
   font-size: 0.9em;
 }
 .lesson-content blockquote {
-  border-left: 4px solid var(--sky-400);
+  border-left: 4px solid var(--green-400);
   padding-left: 14px;
   margin: 0.8rem 0;
-  color: #0369a1;
+  color: #15803d;
   font-style: italic;
 }

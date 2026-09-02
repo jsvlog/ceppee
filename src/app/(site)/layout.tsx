@@ -6,7 +6,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const { user, isAdmin } = await getUserContext();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f8ff]">
+    <div className="flex min-h-screen flex-col bg-[#f6faf4]">
       <Navbar user={user} isAdmin={isAdmin} />
       <main className="flex-1">{children}</main>
       <Footer />

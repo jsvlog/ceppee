@@ -43,13 +43,13 @@ export default async function TopicPage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href={`/review/${track}`} className="mb-6 inline-block text-sm font-semibold text-[#5a6d91] hover:text-[#142a56]">
+      <Link href={`/review/${track}`} className="mb-6 inline-block text-sm font-semibold text-[#5c7863] hover:text-[#16331f]">
         ← Back to {track.toUpperCase()} Review
       </Link>
 
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-black text-[#142a56]">{t.title}</h1>
-        {t.description && <p className="text-[#5a6d91]">{t.description}</p>}
+        <h1 className="mb-2 text-3xl font-black text-[#16331f]">{t.title}</h1>
+        {t.description && <p className="text-[#5c7863]">{t.description}</p>}
       </div>
 
       <div className="space-y-3">
@@ -62,30 +62,30 @@ export default async function TopicPage({
               className="card card-hover flex items-center justify-between gap-4 p-5"
             >
               <div className="flex items-center gap-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#e0f2fe] to-[#bae6fd] font-bold text-[#0284c7]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#dcfce7] to-[#bbf7d0] font-bold text-[#15803d]">
                   {i + 1}
                 </span>
                 <div>
-                  <div className="font-bold text-[#142a56]">{l.title}</div>
+                  <div className="font-bold text-[#16331f]">{l.title}</div>
                   {l.is_free && <span className="text-xs font-semibold text-[#16a34a]">🎁 Free preview</span>}
                 </div>
               </div>
-              <span className="text-sm font-bold text-[#38bdf8]">Start →</span>
+              <span className="text-sm font-bold text-[#d4af37]">Start →</span>
             </Link>
           ) : (
             <div key={l.id} className="card flex items-center justify-between gap-4 bg-[#eef2f7] p-5 opacity-80">
               <div className="flex items-center gap-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#dbe7f8] text-[#93a4c0]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#d9e6d3] text-[#94a896]">
                   🔒
                 </span>
                 <div>
-                  <div className="font-bold text-[#5a6d91]">{l.title}</div>
-                  <div className="text-xs text-[#93a4c0]">Subscribe to unlock</div>
+                  <div className="font-bold text-[#5c7863]">{l.title}</div>
+                  <div className="text-xs text-[#94a896]">Subscribe to unlock</div>
                 </div>
               </div>
               <Link
                 href="/dashboard"
-                className="rounded-xl bg-gradient-to-br from-[#0ea5e9] to-[#38bdf8] px-4 py-2 text-xs font-bold text-white shadow"
+                className="rounded-xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] px-4 py-2 text-xs font-bold text-white shadow"
               >
                 Unlock
               </Link>
@@ -95,7 +95,7 @@ export default async function TopicPage({
       </div>
 
       {(lessons ?? []).length === 0 && (
-        <div className="card p-8 text-center text-sm text-[#5a6d91]">
+        <div className="card p-8 text-center text-sm text-[#5c7863]">
           No lessons in this topic yet — coming soon!
         </div>
       )}

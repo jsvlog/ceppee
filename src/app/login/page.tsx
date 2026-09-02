@@ -65,26 +65,26 @@ function LoginInner() {
 
   return (
     <div className="gradient-hero relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-16">
-      <div className="orb orb-blue -left-24 -top-24" />
-      <div className="orb orb-sky -bottom-24 -right-20" />
+      <div className="orb orb-green -left-24 -top-24" />
+      <div className="orb orb-gold -bottom-24 -right-20" />
       <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563eb] to-[#38bdf8] text-xl font-black text-white shadow-lg">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-xl font-black text-white shadow-lg">
               C
             </span>
-            <span className="text-2xl font-extrabold text-[#142a56]">
+            <span className="text-2xl font-extrabold text-[#16331f]">
               Teacher Ceppee<span className="gradient-text"> Review</span>
             </span>
           </Link>
         </div>
 
         <div className="card p-8">
-          <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-[#e0f2fe] p-1">
+          <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-[#dcfce7] p-1">
             <button
               onClick={() => { setMode("login"); setError(null); setMessage(null); }}
               className={`rounded-lg py-2 text-sm font-semibold transition ${
-                mode === "login" ? "bg-white text-[#142a56] shadow" : "text-[#5a6d91]"
+                mode === "login" ? "bg-white text-[#16331f] shadow" : "text-[#5c7863]"
               }`}
             >
               Log in
@@ -92,17 +92,17 @@ function LoginInner() {
             <button
               onClick={() => { setMode("signup"); setError(null); setMessage(null); }}
               className={`rounded-lg py-2 text-sm font-semibold transition ${
-                mode === "signup" ? "bg-white text-[#142a56] shadow" : "text-[#5a6d91]"
+                mode === "signup" ? "bg-white text-[#16331f] shadow" : "text-[#5c7863]"
               }`}
             >
               Sign up
             </button>
           </div>
 
-          <h1 className="mb-1 text-xl font-bold text-[#142a56]">
+          <h1 className="mb-1 text-xl font-bold text-[#16331f]">
             {mode === "login" ? "Welcome back!" : "Create your account"}
           </h1>
-          <p className="mb-6 text-sm text-[#5a6d91]">
+          <p className="mb-6 text-sm text-[#5c7863]">
             {mode === "login"
               ? "Log in to continue your review."
               : "It's a free account — you only pay once you subscribe."}
@@ -122,7 +122,7 @@ function LoginInner() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
               <div>
-                <label className="mb-1.5 block text-sm font-semibold text-[#3f4d78]">Full name</label>
+                <label className="mb-1.5 block text-sm font-semibold text-[#3d5c44]">Full name</label>
                 <input
                   type="text"
                   required
@@ -134,7 +134,7 @@ function LoginInner() {
               </div>
             )}
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-[#3f4d78]">Email</label>
+              <label className="mb-1.5 block text-sm font-semibold text-[#3d5c44]">Email</label>
               <input
                 type="email"
                 required
@@ -145,7 +145,7 @@ function LoginInner() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-[#3f4d78]">Password</label>
+              <label className="mb-1.5 block text-sm font-semibold text-[#3d5c44]">Password</label>
               <input
                 type="password"
                 required
@@ -161,13 +161,13 @@ function LoginInner() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-xs leading-relaxed text-[#93a4c0]">
+          <p className="mt-6 text-center text-xs leading-relaxed text-[#94a896]">
             By continuing, you agree to use Teacher Ceppee Review for your personal exam preparation.
           </p>
         </div>
 
-        <p className="mt-6 text-center text-sm text-[#5a6d91]">
-          <Link href="/" className="hover:text-[#142a56]">← Back to homepage</Link>
+        <p className="mt-6 text-center text-sm text-[#5c7863]">
+          <Link href="/" className="hover:text-[#16331f]">← Back to homepage</Link>
         </p>
       </div>
     </div>
@@ -176,7 +176,7 @@ function LoginInner() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f5f8ff]"><div className="skeleton h-10 w-48 rounded-xl" /></div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f6faf4]"><div className="skeleton h-10 w-48 rounded-xl" /></div>}>
       <LoginInner />
     </Suspense>
   );

@@ -20,7 +20,7 @@ async function postAdmin(action: string, payload: Record<string, unknown>) {
 }
 
 const trackPill = (t: Track) =>
-  t === "CSE" ? "bg-[#e0f2fe] text-[#0284c7]" : "bg-[#f5f0ff] text-[#7c3aed]";
+  t === "CSE" ? "bg-[#dcfce7] text-[#15803d]" : "bg-[#fef9c3] text-[#b45309]";
 
 /* ================= bulk question parser ================= */
 
@@ -127,8 +127,8 @@ export default function AdminClient({
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-[#142a56]">🛠️ Admin Dashboard</h1>
-          <p className="text-sm text-[#5a6d91]">Teacher Ceppee Review control center</p>
+          <h1 className="text-3xl font-black text-[#16331f]">🛠️ Admin Dashboard</h1>
+          <p className="text-sm text-[#5c7863]">Teacher Ceppee Review control center</p>
         </div>
         {busy && <span className="badge badge-pending">Processing…</span>}
       </div>
@@ -155,18 +155,18 @@ export default function AdminClient({
       )}
 
       {/* Tabs */}
-      <div className="mb-8 flex flex-wrap gap-2 rounded-2xl bg-[#e0f2fe] p-1.5">
+      <div className="mb-8 flex flex-wrap gap-2 rounded-2xl bg-[#dcfce7] p-1.5">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`relative rounded-xl px-4 py-2 text-sm font-bold transition ${
-              tab === t.id ? "bg-white text-[#142a56] shadow" : "text-[#0284c7] hover:text-[#142a56]"
+              tab === t.id ? "bg-white text-[#16331f] shadow" : "text-[#15803d] hover:text-[#16331f]"
             }`}
           >
             {t.label}
             {t.id === "payments" && pendingPayments.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#0284c7] text-[10px] font-black text-white">
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#15803d] text-[10px] font-black text-white">
                 {pendingPayments.length}
               </span>
             )}
@@ -178,11 +178,11 @@ export default function AdminClient({
       {tab === "payments" && (
         <div className="space-y-8">
           <section>
-            <h2 className="mb-4 text-lg font-bold text-[#142a56]">
+            <h2 className="mb-4 text-lg font-bold text-[#16331f]">
               ⏳ Pending verification ({pendingPayments.length})
             </h2>
             {pendingPayments.length === 0 ? (
-              <div className="card p-6 text-sm text-[#5a6d91]">No pending. Enjoy the calm! ☕</div>
+              <div className="card p-6 text-sm text-[#5c7863]">No pending. Enjoy the calm! ☕</div>
             ) : (
               <div className="space-y-5">
                 {pendingPayments.map((p) => (
@@ -199,17 +199,17 @@ export default function AdminClient({
           </section>
 
           <section>
-            <h2 className="mb-4 text-lg font-bold text-[#142a56]">📁 Reviewed ({reviewedPayments.length})</h2>
-            <div className="card divide-y divide-[#dbe7f8]">
+            <h2 className="mb-4 text-lg font-bold text-[#16331f]">📁 Reviewed ({reviewedPayments.length})</h2>
+            <div className="card divide-y divide-[#d9e6d3]">
               {reviewedPayments.length === 0 && (
-                <div className="p-6 text-sm text-[#5a6d91]">No reviewed payments yet.</div>
+                <div className="p-6 text-sm text-[#5c7863]">No reviewed payments yet.</div>
               )}
               {reviewedPayments.map((p) => (
                 <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
                   <div>
-                    <span className="font-semibold text-[#142a56]">{p.profile?.email || "—"}</span>
+                    <span className="font-semibold text-[#16331f]">{p.profile?.email || "—"}</span>
                     <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${trackPill(p.track)}`}>{p.track}</span>
-                    <span className="ml-2 text-[#5a6d91]">{peso(p.amount)} · {fmtDateTime(p.created_at)}</span>
+                    <span className="ml-2 text-[#5c7863]">{peso(p.amount)} · {fmtDateTime(p.created_at)}</span>
                     {p.admin_note && <div className="mt-1 text-xs text-[#991b1b]">Note: {p.admin_note}</div>}
                   </div>
                   <span className={`badge badge-${p.status}`}>{p.status}</span>
@@ -230,29 +230,29 @@ export default function AdminClient({
               <div key={u.id} className="card p-5">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-2 font-bold text-[#142a56]">
+                    <div className="flex items-center gap-2 font-bold text-[#16331f]">
                       {u.full_name || "—"}
                       {u.is_admin && <span className="badge badge-pending">👑 Admin</span>}
                     </div>
-                    <div className="text-xs text-[#5a6d91]">{u.email}</div>
+                    <div className="text-xs text-[#5c7863]">{u.email}</div>
                   </div>
                   <div className="flex gap-2">
                     {(["CSE", "LET"] as Track[]).map((t) => {
                       const sub = t === "CSE" ? cseSub : letSub;
                       return (
-                        <div key={t} className="rounded-xl border border-[#dbe7f8] px-3 py-2 text-center text-xs">
-                          <div className={`mb-1 font-bold ${t === "CSE" ? "text-[#0284c7]" : "text-[#7c3aed]"}`}>{t}</div>
+                        <div key={t} className="rounded-xl border border-[#d9e6d3] px-3 py-2 text-center text-xs">
+                          <div className={`mb-1 font-bold ${t === "CSE" ? "text-[#15803d]" : "text-[#b45309]"}`}>{t}</div>
                           {sub ? (
                             <>
                               <div className="font-semibold text-[#16a34a]">✓ until {fmtDate(sub.expires_at)}</div>
                               <div className="mt-1 flex justify-center gap-1">
-                                <button disabled={busy} onClick={() => run("extend_sub", { user_id: u.id, track: t, days: 180 }, `${t} extended +180 days`)} className="rounded-md bg-[#e0f2fe] px-2 py-1 font-bold text-[#0284c7] hover:bg-[#bae6fd]">+180d</button>
+                                <button disabled={busy} onClick={() => run("extend_sub", { user_id: u.id, track: t, days: 180 }, `${t} extended +180 days`)} className="rounded-md bg-[#dcfce7] px-2 py-1 font-bold text-[#15803d] hover:bg-[#bbf7d0]">+180d</button>
                                 <button disabled={busy} onClick={() => run("revoke_sub", { user_id: u.id, track: t }, `${t} revoked`)} className="rounded-md bg-[#fee2e2] px-2 py-1 font-bold text-[#991b1b] hover:bg-[#fecaca]">Revoke</button>
                               </div>
                             </>
                           ) : (
                             <>
-                              <div className="text-[#93a4c0]">🔒 No sub</div>
+                              <div className="text-[#94a896]">🔒 No sub</div>
                               <div className="mt-1 flex justify-center">
                                 <button disabled={busy} onClick={() => run("grant_sub", { user_id: u.id, track: t, days: 180 }, `${t} granted (180 days)`)} className="rounded-md bg-[#dcfce7] px-2 py-1 font-bold text-[#166534] hover:bg-[#bbf7d0]">Grant 180d</button>
                               </div>
@@ -264,7 +264,7 @@ export default function AdminClient({
                     <button
                       disabled={busy}
                       onClick={() => run("make_admin", { user_id: u.id, is_admin: !u.is_admin }, u.is_admin ? "Admin removed" : "Admin granted")}
-                      className="self-center rounded-xl border border-[#dbe7f8] px-3 py-2 text-xs font-bold text-[#5a6d91] hover:border-[#38bdf8]"
+                      className="self-center rounded-xl border border-[#d9e6d3] px-3 py-2 text-xs font-bold text-[#5c7863] hover:border-[#d4af37]"
                     >
                       {u.is_admin ? "Remove admin" : "Make admin"}
                     </button>
@@ -273,7 +273,7 @@ export default function AdminClient({
               </div>
             );
           })}
-          {profiles.length === 0 && <div className="card p-6 text-sm text-[#5a6d91]">No users yet.</div>}
+          {profiles.length === 0 && <div className="card p-6 text-sm text-[#5c7863]">No users yet.</div>}
         </div>
       )}
 
@@ -307,9 +307,9 @@ export default function AdminClient({
 
 function StatCard({ label, value, hi }: { label: string; value: number; hi?: boolean }) {
   return (
-    <div className={`card p-4 ${hi && value > 0 ? "border-[#38bdf8] ring-2 ring-[#38bdf8]/30" : ""}`}>
-      <div className={`text-2xl font-black ${hi && value > 0 ? "text-[#0284c7]" : "text-[#142a56]"}`}>{value}</div>
-      <div className="text-xs text-[#5a6d91]">{label}</div>
+    <div className={`card p-4 ${hi && value > 0 ? "border-[#d4af37] ring-2 ring-[#d4af37]/30" : ""}`}>
+      <div className={`text-2xl font-black ${hi && value > 0 ? "text-[#15803d]" : "text-[#16331f]"}`}>{value}</div>
+      <div className="text-xs text-[#5c7863]">{label}</div>
     </div>
   );
 }
@@ -333,20 +333,20 @@ function PaymentCard({
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {/* Receipt */}
         <div>
-          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#5a6d91]">Receipt</div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#5c7863]">Receipt</div>
           {p.receipt_url ? (
             <a href={p.receipt_url} target="_blank" rel="noopener noreferrer">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.receipt_url} alt="Payment receipt" className="max-h-56 rounded-xl border border-[#dbe7f8] object-contain transition hover:opacity-90" />
+              <img src={p.receipt_url} alt="Payment receipt" className="max-h-56 rounded-xl border border-[#d9e6d3] object-contain transition hover:opacity-90" />
             </a>
           ) : (
-            <div className="rounded-xl bg-[#eef2f7] p-6 text-center text-sm text-[#93a4c0]">No screenshot</div>
+            <div className="rounded-xl bg-[#eef2f7] p-6 text-center text-sm text-[#94a896]">No screenshot</div>
           )}
         </div>
 
         {/* Details */}
         <div className="space-y-2 text-sm">
-          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#5a6d91]">Details</div>
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#5c7863]">Details</div>
           <Row k="User" v={p.profile?.email || p.user_id} />
           <Row k="Name" v={p.profile?.full_name || "—"} />
           <Row k="Track" v={<span className={`rounded-full px-2 py-0.5 text-xs font-bold ${trackPill(p.track)}`}>{p.track}</span>} />
@@ -389,13 +389,13 @@ function PaymentCard({
                 >
                   Confirm reject
                 </button>
-                <button onClick={() => setShowReject(false)} className="rounded-xl border border-[#dbe7f8] px-4 text-sm text-[#5a6d91]">
+                <button onClick={() => setShowReject(false)} className="rounded-xl border border-[#d9e6d3] px-4 text-sm text-[#5c7863]">
                   Cancel
                 </button>
               </div>
             </div>
           )}
-          <p className="text-center text-xs text-[#93a4c0]">Check: amount + centavos, reference number, and name on the receipt.</p>
+          <p className="text-center text-xs text-[#94a896]">Check: amount + centavos, reference number, and name on the receipt.</p>
         </div>
       </div>
     </div>
@@ -405,8 +405,8 @@ function PaymentCard({
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-3">
-      <span className="text-[#5a6d91]">{k}</span>
-      <span className="text-right text-[#142a56]">{v}</span>
+      <span className="text-[#5c7863]">{k}</span>
+      <span className="text-right text-[#16331f]">{v}</span>
     </div>
   );
 }
@@ -441,7 +441,7 @@ function ContentTab({
               key={t}
               onClick={() => { setTrack(t); setSelectedTopic(null); }}
               className={`rounded-xl px-5 py-2 text-sm font-bold transition ${
-                track === t ? (t === "CSE" ? "bg-[#0ea5e9] text-white" : "bg-[#8b5cf6] text-white") : "border border-[#dbe7f8] bg-white text-[#5a6d91]"
+                track === t ? (t === "CSE" ? "bg-[#16a34a] text-white" : "bg-[#ca8a04] text-white") : "border border-[#d9e6d3] bg-white text-[#5c7863]"
               }`}
             >
               {t === "CSE" ? "🏛️ CSE" : "🍎 LET"}
@@ -463,18 +463,18 @@ function ContentTab({
             <div
               key={t.id}
               onClick={() => setSelectedTopic(t.id)}
-              className={`card cursor-pointer p-4 transition ${selectedTopic === t.id ? "ring-2 ring-[#38bdf8]" : "card-hover"}`}
+              className={`card cursor-pointer p-4 transition ${selectedTopic === t.id ? "ring-2 ring-[#d4af37]" : "card-hover"}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="font-bold text-[#142a56]">{t.title}</div>
-                  <div className="text-xs text-[#5a6d91]">
+                  <div className="font-bold text-[#16331f]">{t.title}</div>
+                  <div className="text-xs text-[#5c7863]">
                     {lessons.filter((l) => l.topic_id === t.id).length} lessons · order {t.order_index}
                     {!t.is_published && " · 🫥 draft"}
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-1">
-                  <button onClick={(e) => { e.stopPropagation(); setTopicModal(t); }} className="rounded-md bg-[#e0f2fe] px-2 py-1 text-xs font-bold text-[#0284c7]">Edit</button>
+                  <button onClick={(e) => { e.stopPropagation(); setTopicModal(t); }} className="rounded-md bg-[#dcfce7] px-2 py-1 text-xs font-bold text-[#15803d]">Edit</button>
                   <button
                     disabled={busy}
                     onClick={(e) => { e.stopPropagation(); if (confirm(`Delete topic "${t.title}" and all its lessons?`)) run("delete_topic", { id: t.id }, "Topic deleted"); }}
@@ -486,7 +486,7 @@ function ContentTab({
               </div>
             </div>
           ))}
-          {trackTopics.length === 0 && <div className="card p-6 text-center text-sm text-[#5a6d91]">No topics in {track} yet.</div>}
+          {trackTopics.length === 0 && <div className="card p-6 text-center text-sm text-[#5c7863]">No topics in {track} yet.</div>}
         </div>
 
         {/* Lessons of selected topic */}
@@ -494,12 +494,12 @@ function ContentTab({
           {selectedTopic ? (
             <div>
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-bold text-[#142a56]">
+                <h3 className="font-bold text-[#16331f]">
                   Lessons · {topics.find((t) => t.id === selectedTopic)?.title}
                 </h3>
                 <button
                   onClick={() => setLessonModal({ topic_id: selectedTopic, order_index: topicLessons.length + 1 })}
-                  className="rounded-xl bg-gradient-to-br from-[#0ea5e9] to-[#38bdf8] px-4 py-2 text-xs font-bold text-white shadow"
+                  className="rounded-xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] px-4 py-2 text-xs font-bold text-white shadow"
                 >
                   + New Lesson
                 </button>
@@ -508,15 +508,15 @@ function ContentTab({
                 {topicLessons.map((l) => (
                   <div key={l.id} className="card flex items-center justify-between gap-3 p-4">
                     <div>
-                      <div className="font-semibold text-[#142a56]">{l.title}</div>
-                      <div className="text-xs text-[#5a6d91]">
+                      <div className="font-semibold text-[#16331f]">{l.title}</div>
+                      <div className="text-xs text-[#5c7863]">
                         order {l.order_index}
                         {l.is_free ? " · 🎁 free" : " · 🔒 paid"}
                         {!l.is_published && " · 🫥 draft"}
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => setLessonModal(l)} className="rounded-md bg-[#e0f2fe] px-2 py-1 text-xs font-bold text-[#0284c7]">Edit</button>
+                      <button onClick={() => setLessonModal(l)} className="rounded-md bg-[#dcfce7] px-2 py-1 text-xs font-bold text-[#15803d]">Edit</button>
                       <button
                         disabled={busy}
                         onClick={() => { if (confirm(`Delete lesson "${l.title}"?`)) run("delete_lesson", { id: l.id }, "Lesson deleted"); }}
@@ -527,11 +527,11 @@ function ContentTab({
                     </div>
                   </div>
                 ))}
-                {topicLessons.length === 0 && <div className="card p-6 text-center text-sm text-[#5a6d91]">No lessons yet. Click &quot;+ New Lesson&quot;.</div>}
+                {topicLessons.length === 0 && <div className="card p-6 text-center text-sm text-[#5c7863]">No lessons yet. Click &quot;+ New Lesson&quot;.</div>}
               </div>
             </div>
           ) : (
-            <div className="card flex h-full items-center justify-center p-10 text-sm text-[#5a6d91]">
+            <div className="card flex h-full items-center justify-center p-10 text-sm text-[#5c7863]">
               ← Pick a topic to see its lessons
             </div>
           )}
@@ -712,7 +712,7 @@ function ExamsTab({
 
       {(["CSE", "LET"] as Track[]).map((t) => (
         <section key={t}>
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#5a6d91]">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#5c7863]">
             {t === "CSE" ? "🏛️ CSE Exams" : "🍎 LET Exams"}
           </h3>
           <div className="space-y-3">
@@ -733,7 +733,7 @@ function ExamsTab({
               />
             ))}
             {(t === "CSE" ? cse : letx).length === 0 && (
-              <div className="card p-6 text-center text-sm text-[#5a6d91]">No {t} exams yet.</div>
+              <div className="card p-6 text-center text-sm text-[#5c7863]">No {t} exams yet.</div>
             )}
           </div>
         </section>
@@ -769,7 +769,7 @@ function ExamsTab({
       {/* Import modal */}
       {importExam && (
         <Modal title="Bulk Import Questions" onClose={() => { setImportExam(null); setImportErr(null); }} wide>
-          <p className="mb-3 rounded-xl bg-[#e0f2fe] px-4 py-3 text-xs leading-relaxed text-[#0284c7]">
+          <p className="mb-3 rounded-xl bg-[#dcfce7] px-4 py-3 text-xs leading-relaxed text-[#15803d]">
             One question per block (separate by a blank line). Format:
             <br />
             <code>1. Question here{'\n'}A. choice{'\n'}B. choice{'\n'}C. choice{'\n'}D. choice{'\n'}ANSWER: B{'\n'}EXPLANATION: bakit</code>
@@ -836,21 +836,21 @@ function ExamRow({
     <div className="card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div>
-          <div className="flex items-center gap-2 font-bold text-[#142a56]">
+          <div className="flex items-center gap-2 font-bold text-[#16331f]">
             {e.is_free_preview && <span className="badge badge-approved">FREE</span>}
             {!e.is_active && <span className="badge badge-expired">INACTIVE</span>}
             {e.title}
           </div>
-          <div className="text-xs text-[#5a6d91]">
+          <div className="text-xs text-[#5c7863]">
             {e.mode} · {e.duration_minutes} min · {count} questions{e.topic ? ` · ${e.topic}` : ""}
           </div>
         </div>
         <div className="flex flex-wrap gap-1">
-          <button onClick={onToggle} className="rounded-md bg-[#e0f2fe] px-3 py-1.5 text-xs font-bold text-[#0284c7]">
+          <button onClick={onToggle} className="rounded-md bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#15803d]">
             {isOpen ? "Hide" : "Questions"}
           </button>
-          <button onClick={onImport} className="rounded-md bg-[#e0f2fe] px-3 py-1.5 text-xs font-bold text-[#0369a1]">Import</button>
-          <button onClick={onEdit} className="rounded-md bg-[#e0f2fe] px-3 py-1.5 text-xs font-bold text-[#0284c7]">Edit</button>
+          <button onClick={onImport} className="rounded-md bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#0369a1]">Import</button>
+          <button onClick={onEdit} className="rounded-md bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#15803d]">Edit</button>
           <button
             disabled={busy}
             onClick={() => { if (confirm(`Delete exam "${e.title}" and all its questions?`)) void run("delete_exam", { id: e.id }, "Exam deleted"); }}
@@ -903,25 +903,25 @@ function QuestionList({
   }, [examId]);
 
   return (
-    <div className="border-t border-[#dbe7f8] bg-[#f5f8ff] p-4">
+    <div className="border-t border-[#d9e6d3] bg-[#f6faf4] p-4">
       <div className="mb-3 flex justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#5a6d91]">
+        <span className="text-xs font-bold uppercase tracking-wider text-[#5c7863]">
           {qs === null ? "Loading…" : `${qs.length} questions`}
         </span>
         <button onClick={onAdd} className="rounded-md bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#166534]">+ Add question</button>
       </div>
       <div className="max-h-96 space-y-2 overflow-y-auto">
         {(qs || []).map((q, i) => (
-          <div key={q.id} className="rounded-xl border border-[#dbe7f8] bg-white p-3 text-sm">
+          <div key={q.id} className="rounded-xl border border-[#d9e6d3] bg-white p-3 text-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <strong>{i + 1}.</strong> {q.question_text}
-                <div className="mt-1 text-xs text-[#5a6d91]">
+                <div className="mt-1 text-xs text-[#5c7863]">
                   ✓ {q.correct_choice} · {q.choice_a} / {q.choice_b} / {q.choice_c} / {q.choice_d}
                 </div>
               </div>
               <div className="flex shrink-0 gap-1">
-                <button onClick={() => onEdit(q)} className="rounded bg-[#e0f2fe] px-2 py-1 text-xs font-bold text-[#0284c7]">Edit</button>
+                <button onClick={() => onEdit(q)} className="rounded bg-[#dcfce7] px-2 py-1 text-xs font-bold text-[#15803d]">Edit</button>
                 <button
                   disabled={busy}
                   onClick={async () => {
@@ -939,7 +939,7 @@ function QuestionList({
           </div>
         ))}
         {qs !== null && qs.length === 0 && (
-          <div className="p-4 text-center text-sm text-[#5a6d91]">No questions yet — add or import some!</div>
+          <div className="p-4 text-center text-sm text-[#5c7863]">No questions yet — add or import some!</div>
         )}
       </div>
     </div>
@@ -1053,7 +1053,7 @@ function QuestionForm({
                 onClick={() => set("correct_choice", c.toUpperCase())}
                 title="Mark as correct"
                 className={`shrink-0 rounded-xl px-3 text-sm font-bold ${
-                  f.correct_choice === c.toUpperCase() ? "bg-[#22c55e] text-white" : "bg-[#e0f2fe] text-[#0284c7]"
+                  f.correct_choice === c.toUpperCase() ? "bg-[#22c55e] text-white" : "bg-[#dcfce7] text-[#15803d]"
                 }`}
               >
                 ✓
@@ -1090,14 +1090,14 @@ function SettingsTab({
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div className="card p-6">
-        <h3 className="mb-4 font-bold text-[#142a56]">📱 GCash Details</h3>
+        <h3 className="mb-4 font-bold text-[#16331f]">📱 GCash Details</h3>
         <div className="space-y-4">
           <SettingField label="GCash Number" value={get("gcash_number")} onSave={(v) => run("save_setting", { key: "gcash_number", value: v }, "GCash number saved")} busy={busy} />
           <SettingField label="GCash Account Name" value={get("gcash_name")} onSave={(v) => run("save_setting", { key: "gcash_name", value: v }, "GCash name saved")} busy={busy} />
         </div>
       </div>
       <div className="card p-6">
-        <h3 className="mb-4 font-bold text-[#142a56]">🏦 Bank Details</h3>
+        <h3 className="mb-4 font-bold text-[#16331f]">🏦 Bank Details</h3>
         <div className="space-y-4">
           <SettingField label="Bank Name" value={get("bank_name")} onSave={(v) => run("save_setting", { key: "bank_name", value: v }, "Bank name saved")} busy={busy} />
           <SettingField label="Account Name" value={get("bank_account_name")} onSave={(v) => run("save_setting", { key: "bank_account_name", value: v }, "Account name saved")} busy={busy} />
@@ -1105,7 +1105,7 @@ function SettingsTab({
         </div>
       </div>
       <div className="card p-6 lg:col-span-2">
-        <h3 className="mb-4 font-bold text-[#142a56]">📋 Payment Instructions (shown to users in the payment modal)</h3>
+        <h3 className="mb-4 font-bold text-[#16331f]">📋 Payment Instructions (shown to users in the payment modal)</h3>
         <SettingField
           label="Instructions"
           textarea
@@ -1135,7 +1135,7 @@ function SettingField({
   const dirty = v !== value;
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-[#3f4d78]">{label}</label>
+      <label className="mb-1.5 block text-sm font-semibold text-[#3d5c44]">{label}</label>
       <div className="flex gap-2">
         {textarea ? (
           <textarea className="input-warm" rows={3} value={v} onChange={(e) => setV(e.target.value)} />
@@ -1145,7 +1145,7 @@ function SettingField({
         <button
           disabled={busy || !dirty}
           onClick={() => void onSave(v)}
-          className="shrink-0 self-stretch rounded-xl bg-gradient-to-br from-[#0ea5e9] to-[#38bdf8] px-4 text-sm font-bold text-white disabled:opacity-40"
+          className="shrink-0 self-stretch rounded-xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] px-4 text-sm font-bold text-white disabled:opacity-40"
         >
           Save
         </button>
@@ -1159,7 +1159,7 @@ function SettingField({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-semibold text-[#3f4d78]">{label}</label>
+      <label className="mb-1.5 block text-sm font-semibold text-[#3d5c44]">{label}</label>
       {children}
     </div>
   );
@@ -1173,8 +1173,8 @@ function Modal({ title, children, onClose, wide }: { title: string; children: Re
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-lg font-extrabold text-[#142a56]">{title}</h3>
-          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-[#5a6d91] hover:bg-[#e0f2fe]">✕</button>
+          <h3 className="text-lg font-extrabold text-[#16331f]">{title}</h3>
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-[#5c7863] hover:bg-[#dcfce7]">✕</button>
         </div>
         {children}
       </div>
