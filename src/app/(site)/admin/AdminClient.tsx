@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { peso, fmtDate, fmtDateTime } from "@/lib/format";
-import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial } from "@/lib/types";
 import type { AdminProfile, LessonMeta } from "./page";
 
 /* ================= helpers ================= */
@@ -77,6 +78,7 @@ const TABS = [
   { id: "users", label: "👥 Users" },
   { id: "content", label: "📚 Lessons" },
   { id: "exams", label: "⏱️ Exams" },
+  { id: "testimonials", label: "💬 Testimonials" },
   { id: "settings", label: "⚙️ Settings" },
 ] as const;
 
@@ -91,6 +93,7 @@ export default function AdminClient({
   lessons,
   exams,
   settings,
+  testimonials,
 }: {
   stats: Record<string, number>;
   payments: (PaymentRequest & { profile?: { email: string; full_name: string } })[];
@@ -100,6 +103,7 @@ export default function AdminClient({
   lessons: LessonMeta[];
   exams: (ExamWithCount & { exam_questions?: { count: number }[] })[];
   settings: SiteSettings[];
+  testimonials: Testimonial[];
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("payments");
@@ -295,6 +299,11 @@ export default function AdminClient({
           busy={busy}
           run={run}
         />
+      )}
+
+      {/* ============ TESTIMONIALS ============ */}
+      {tab === "testimonials" && (
+        <TestimonialsTab testimonials={testimonials} busy={busy} run={run} />
       )}
 
       {/* ============ SETTINGS ============ */}
@@ -1076,6 +1085,426 @@ function QuestionForm({
 }
 
 /* ---------- Settings tab ---------- */
+
+/* ---------- testimonials ---------- */
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40) || "reviewee";
+
+/**
+ * Prepare a photo for upload: shrink huge phone photos (keeps the site fast)
+ * and reject formats the browser can't render (iPhone HEIC).
+ */
+async function preparePhoto(
+  file: File
+): Promise<{ data: Blob; contentType: string; ext: string }> {
+  let bitmap: ImageBitmap | null = null;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    bitmap = null;
+  }
+
+  const ext0 = (file.type.split("/")[1] || "jpg").toLowerCase();
+
+  if (!bitmap) {
+    const safe = ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+    if (!safe) {
+      throw new Error(
+        "This photo can't be read by browsers (iPhone HEIC?). Save it as JPG/PNG first, or take a screenshot of it."
+      );
+    }
+    return { data: file, contentType: file.type, ext: ext0 };
+  }
+
+  const maxSide = 1200;
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  if (scale === 1 && file.size <= 1_200_000 && file.type !== "image/gif") {
+    return { data: file, contentType: file.type || "image/jpeg", ext: ext0 };
+  }
+
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { data: file, contentType: file.type || "image/jpeg", ext: ext0 };
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", 0.88));
+  if (!blob) return { data: file, contentType: file.type || "image/jpeg", ext: ext0 };
+  return { data: blob, contentType: "image/jpeg", ext: "jpg" };
+}
+
+function MiniStars({ rating }: { rating: number }) {
+  return (
+    <span className="text-sm leading-none text-[#d4af37]" aria-label={`${rating} out of 5`}>
+      {"★".repeat(rating)}
+      <span className="text-[#e2e8f0]">{"★".repeat(5 - rating)}</span>
+    </span>
+  );
+}
+
+function TestimonialsTab({
+  testimonials,
+  busy,
+  run,
+}: {
+  testimonials: Testimonial[];
+  busy: boolean;
+  run: (action: string, payload: Record<string, unknown>, okMsg: string) => Promise<void>;
+}) {
+  const [filter, setFilter] = useState<"ALL" | Track>("ALL");
+  const [modal, setModal] = useState<Partial<Testimonial> | null>(null);
+
+  const shown = testimonials.filter((t) => filter === "ALL" || t.track === filter);
+  const published = testimonials.filter((t) => t.is_published).length;
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex gap-2">
+          {(["ALL", "CSE", "LET"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+                filter === f
+                  ? f === "CSE"
+                    ? "bg-[#16a34a] text-white"
+                    : f === "LET"
+                      ? "bg-[#ca8a04] text-white"
+                      : "bg-[#16331f] text-white"
+                  : "border border-[#d9e6d3] bg-white text-[#5c7863]"
+              }`}
+            >
+              {f === "ALL" ? "All" : f}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() =>
+            setModal({
+              track: "CSE",
+              rating: 5,
+              is_published: true,
+              sort_order: testimonials.length + 1,
+            })
+          }
+          className="btn-primary px-5 py-2.5 text-sm"
+        >
+          + New Testimonial
+        </button>
+      </div>
+
+      <p className="mb-4 text-xs text-[#5c7863]">
+        {published} testimonial{published === 1 ? "" : "s"} showing on the landing page ·{" "}
+        {testimonials.length - published} hidden draft{testimonials.length - published === 1 ? "" : "s"}
+      </p>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {shown.map((t) => (
+          <div key={t.id} className="card flex flex-col p-5">
+            <div className="mb-3 flex items-start gap-3">
+              {t.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={t.photo_url}
+                  alt={t.name}
+                  className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-[#d9e6d3]"
+                />
+              ) : (
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-sm font-bold text-white">
+                  {t.name.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-bold text-[#16331f]">{t.name}</div>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${trackPill(t.track)}`}>
+                    {t.track}
+                  </span>
+                  <MiniStars rating={t.rating} />
+                </div>
+                <div className="truncate text-[11px] text-[#5c7863]">{t.role || "—"}</div>
+              </div>
+            </div>
+            <p className="mb-4 line-clamp-4 flex-1 text-xs leading-relaxed text-[#3d5c44]">{t.quote}</p>
+            <div className="flex items-center justify-between gap-2 border-t border-[#d9e6d3] pt-3">
+              <div className="text-[10px] text-[#5c7863]">
+                order {t.sort_order} ·{" "}
+                {t.is_published ? (
+                  <span className="font-bold text-[#15803d]">✅ published</span>
+                ) : (
+                  <span className="font-bold text-[#b45309]">🫥 hidden</span>
+                )}
+                {!t.photo_url && <span className="ml-1">· 📷 no photo</span>}
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  onClick={() => setModal(t)}
+                  className="rounded-md bg-[#dcfce7] px-2 py-1 text-xs font-bold text-[#15803d]"
+                >
+                  Edit
+                </button>
+                <button
+                  disabled={busy}
+                  onClick={() => {
+                    if (confirm(`Delete the testimonial from "${t.name}"?`))
+                      void run("delete_testimonial", { id: t.id }, "Testimonial deleted");
+                  }}
+                  className="rounded-md bg-[#fee2e2] px-2 py-1 text-xs font-bold text-[#991b1b]"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {shown.length === 0 && (
+        <div className="card p-8 text-center text-sm text-[#5c7863]">
+          No testimonials {filter === "ALL" ? "yet" : `in ${filter} yet`}. Click &quot;+ New
+          Testimonial&quot; to add a real one — picture, name, and message.
+        </div>
+      )}
+
+      {modal && (
+        <Modal
+          title={modal.id ? "Edit Testimonial" : "New Testimonial"}
+          onClose={() => setModal(null)}
+        >
+          <TestimonialForm
+            initial={modal}
+            busy={busy}
+            onSave={async (payload) => {
+              await run("save_testimonial", payload, "Testimonial saved — check the landing page!");
+              setModal(null);
+            }}
+          />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function TestimonialForm({
+  initial,
+  busy,
+  onSave,
+}: {
+  initial: Partial<Testimonial>;
+  busy: boolean;
+  onSave: (payload: Record<string, unknown>) => Promise<void>;
+}) {
+  const [name, setName] = useState(initial.name ?? "");
+  const [track, setTrack] = useState<Track>(initial.track ?? "CSE");
+  const [role, setRole] = useState(initial.role ?? "");
+  const [quote, setQuote] = useState(initial.quote ?? "");
+  const [rating, setRating] = useState(initial.rating ?? 5);
+  const [sortOrder, setSortOrder] = useState(initial.sort_order ?? 0);
+  const [isPublished, setIsPublished] = useState(initial.is_published !== false);
+  const [photoUrl, setPhotoUrl] = useState(initial.photo_url ?? "");
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const pickFile = async (file: File | undefined) => {
+    if (!file) return;
+    setErr(null);
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const { data, contentType, ext } = await preparePhoto(file);
+      const path = `${Date.now()}-${slugify(name || "reviewee")}.${ext}`;
+      const { error } = await supabase.storage.from("testimonials").upload(path, data, {
+        contentType,
+        upsert: false,
+        cacheControl: "31536000",
+      });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("testimonials").getPublicUrl(path);
+      setPhotoUrl(urlData.publicUrl);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Photo upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!name.trim()) {
+      setErr("Please enter the name of the reviewee.");
+      return;
+    }
+    if (!quote.trim()) {
+      setErr("Please enter their testimonial message.");
+      return;
+    }
+    setErr(null);
+    setSaving(true);
+    try {
+      await onSave({
+        id: initial.id,
+        name,
+        track,
+        role,
+        quote,
+        rating,
+        sort_order: sortOrder,
+        is_published: isPublished,
+        photo_url: photoUrl,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {err && (
+        <div className="rounded-xl bg-[#fee2e2] px-4 py-3 text-sm text-[#991b1b]">✕ {err}</div>
+      )}
+
+      {/* Photo */}
+      <div>
+        <label className="mb-1.5 block text-sm font-semibold text-[#3d5c44]">Photo</label>
+        <div className="flex items-center gap-4">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt="preview"
+              className="h-20 w-20 rounded-full object-cover ring-4 ring-[#dcfce7]"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f1f5f1] text-2xl">
+              📷
+            </div>
+          )}
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => void pickFile(e.target.files?.[0])}
+              className="block text-xs text-[#5c7863] file:mr-3 file:rounded-lg file:border-0 file:bg-[#dcfce7] file:px-3 file:py-2 file:text-xs file:font-bold file:text-[#15803d]"
+            />
+            <div className="text-[11px] text-[#5c7863]">
+              {uploading ? "Uploading…" : "JPG or PNG. Big phone photos are resized automatically."}
+            </div>
+            {photoUrl && (
+              <button
+                onClick={() => setPhotoUrl("")}
+                className="rounded-md bg-[#fee2e2] px-2 py-1 text-[11px] font-bold text-[#991b1b]"
+              >
+                Remove photo
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Name">
+          <input
+            className="input-warm"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Maria Santos"
+          />
+        </Field>
+        <Field label="Track">
+          <div className="flex gap-2">
+            {(["CSE", "LET"] as Track[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTrack(t)}
+                className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold transition ${
+                  track === t
+                    ? t === "CSE"
+                      ? "bg-[#16a34a] text-white"
+                      : "bg-[#ca8a04] text-white"
+                    : "border border-[#d9e6d3] bg-white text-[#5c7863]"
+                }`}
+              >
+                {t === "CSE" ? "🏛️ CSE" : "🍎 LET"}
+              </button>
+            ))}
+          </div>
+        </Field>
+      </div>
+
+      <Field label="Role / result line (optional)">
+        <input
+          className="input-warm"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          placeholder="e.g. CSE Professional passer"
+        />
+      </Field>
+
+      <Field label="Testimonial message">
+        <textarea
+          className="input-warm"
+          rows={5}
+          value={quote}
+          onChange={(e) => setQuote(e.target.value)}
+          placeholder="Paste exactly what they said — Tagalog is fine."
+        />
+      </Field>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Stars">
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                onClick={() => setRating(n)}
+                aria-label={`${n} stars`}
+                className={`text-2xl leading-none transition ${
+                  n <= rating ? "text-[#d4af37]" : "text-[#e2e8f0]"
+                }`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        </Field>
+        <Field label="Order (lower shows first)">
+          <input
+            type="number"
+            className="input-warm"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
+          />
+        </Field>
+      </div>
+
+      <label className="flex items-center gap-2 text-sm font-semibold text-[#3d5c44]">
+        <input
+          type="checkbox"
+          checked={isPublished}
+          onChange={(e) => setIsPublished(e.target.checked)}
+          className="h-4 w-4"
+        />
+        Show on the landing page
+      </label>
+
+      <button
+        onClick={() => void submit()}
+        disabled={busy || saving || uploading}
+        className="btn-primary w-full py-3 disabled:opacity-40"
+      >
+        {busy || saving ? "Saving…" : "Save testimonial"}
+      </button>
+    </div>
+  );
+}
 
 function SettingsTab({
   settings,

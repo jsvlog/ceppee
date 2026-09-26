@@ -92,6 +92,19 @@ export interface SiteSettings {
   updated_at?: string;
 }
 
+export interface Testimonial {
+  id: string;
+  name: string;
+  track: Track;
+  role: string | null;
+  quote: string;
+  rating: number;
+  photo_url: string | null;
+  is_published: boolean;
+  sort_order: number;
+  created_at?: string;
+}
+
 export interface ExamAttempt {
   id: string;
   user_id: string;

@@ -219,6 +219,45 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, count: rows.length });
       }
 
+      /* ---------- TESTIMONIALS ---------- */
+      case "save_testimonial": {
+        const row = {
+          id: payload.id as string | undefined,
+          name: String(payload.name || "").trim(),
+          track: (payload.track as string) === "LET" ? "LET" : "CSE",
+          role: ((payload.role as string) || "").trim() || null,
+          quote: String(payload.quote || "").trim(),
+          rating: Math.min(5, Math.max(1, Number(payload.rating) || 5)),
+          photo_url: ((payload.photo_url as string) || "").trim() || null,
+          is_published: payload.is_published !== false,
+          sort_order: Number(payload.sort_order) || 0,
+        };
+        if (!row.name) throw new Error("Name is required");
+        if (!row.quote) throw new Error("The testimonial message is required");
+        const { error } = row.id
+          ? await admin.from("testimonials").update(row).eq("id", row.id)
+          : await admin.from("testimonials").insert(row);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+      case "delete_testimonial": {
+        const { data: existing } = await admin
+          .from("testimonials")
+          .select("photo_url")
+          .eq("id", payload.id)
+          .maybeSingle();
+        const { error } = await admin.from("testimonials").delete().eq("id", payload.id);
+        if (error) throw error;
+        // Clean up the photo in storage too (best effort — never block the delete)
+        const url = existing?.photo_url as string | undefined;
+        const marker = "/object/public/testimonials/";
+        if (url && url.includes(marker)) {
+          const path = decodeURIComponent(url.split(marker)[1] ?? "");
+          if (path) await admin.storage.from("testimonials").remove([path]);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
       /* ---------- SETTINGS ---------- */
       case "save_setting": {
         const { error } = await admin

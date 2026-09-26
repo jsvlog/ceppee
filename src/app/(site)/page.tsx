@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSiteStats } from "@/lib/queries";
+import { getSiteStats, getPublicTestimonials } from "@/lib/queries";
 import { TRACK_LABEL } from "@/lib/format";
 import Testimonials from "@/components/Testimonials";
 
@@ -66,7 +66,10 @@ const faqs = [
 ];
 
 export default async function HomePage() {
-  const stats = await getSiteStats();
+  const [stats, testimonials] = await Promise.all([
+    getSiteStats(),
+    getPublicTestimonials(),
+  ]);
 
   return (
     <div>
@@ -231,7 +234,7 @@ export default async function HomePage() {
       </section>
 
       {/* ===== TESTIMONIALS ===== */}
-      <Testimonials />
+      <Testimonials items={testimonials} />
 
       {/* ===== FAQ ===== */}
       <section id="faq" className="w-full py-16">

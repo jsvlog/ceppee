@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import type { Subscription, Track } from "@/lib/types";
+import type { Subscription, Testimonial, Track } from "@/lib/types";
 
 export interface SiteStats {
   lessons: number;
@@ -26,6 +26,29 @@ export async function getSiteStats(): Promise<SiteStats> {
     };
   } catch {
     return { lessons: 0, questions: 0, exams: 0 };
+  }
+}
+
+/**
+ * Published testimonials for the landing page, newest/most important first.
+ * Anonymous visitors can read these (RLS: is_published = true), so the anon
+ * client is enough. Returns [] if the table does not exist yet, which makes the
+ * landing page fall back to its built-in placeholder quotes.
+ */
+export async function getPublicTestimonials(): Promise<Testimonial[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("testimonials")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false })
+      .limit(60);
+    if (error) return [];
+    return (data as Testimonial[]) ?? [];
+  } catch {
+    return [];
   }
 }
 

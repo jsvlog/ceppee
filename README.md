@@ -26,6 +26,22 @@ Stack: Next.js 16 · Tailwind CSS 4 · Supabase (auth, DB, storage) · Vercel
 4. **Auth settings**: Supabase Dashboard → Authentication → disable "Confirm email" (or configure SMTP).
 5. **Payment details**: Admin → Settings tab — set the real GCash number/name and bank details.
 
+## Testimonials (real reviewee photos + messages)
+
+The landing page carousel is powered by the `testimonials` table and managed
+from the site — no code editing needed.
+
+1. One-time: run `supabase/testimonials.sql` in the Supabase SQL Editor
+   (creates the table + the public `testimonials` photo bucket). Already
+   included in `supabase/schema.sql` for fresh installs.
+2. Sign in as an admin → **Admin → 💬 Testimonials → + New Testimonial**.
+3. Upload the photo (big phone photos are auto-resized), type the name, pick
+   CSE/LET, paste their message, then Save. It appears on the landing page
+   immediately. Untick "Show on the landing page" to keep one hidden.
+
+If the table is empty, the landing page falls back to the built-in sample
+quotes in `src/components/Testimonials.tsx`.
+
 ## Dev
 
 ```bash

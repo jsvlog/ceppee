@@ -11,6 +11,7 @@ import type {
   ExamWithCount,
   Question,
   SiteSettings,
+  Testimonial,
 } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -49,6 +50,7 @@ export default async function AdminPage() {
     { data: lessons },
     { data: exams },
     { data: settings },
+    { data: testimonials },
   ] = await Promise.all([
     admin.rpc("admin_stats"),
     admin
@@ -74,6 +76,11 @@ export default async function AdminPage() {
       .order("track")
       .order("title"),
     admin.from("site_settings").select("*"),
+    admin
+      .from("testimonials")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false }),
   ]);
 
   return (
@@ -86,6 +93,7 @@ export default async function AdminPage() {
       lessons={(lessons as LessonMeta[]) || []}
       exams={(exams as unknown as (ExamWithCount & { exam_questions?: { count: number }[] })[]) || []}
       settings={(settings as SiteSettings[]) || []}
+      testimonials={(testimonials as Testimonial[]) || []}
     />
   );
 }
