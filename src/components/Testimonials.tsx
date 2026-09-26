@@ -164,6 +164,7 @@ export default function Testimonials({ items }: { items?: Testimonial[] }) {
 
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const next = useCallback(() => setIndex((i) => (i + 1) % count), [count]);
   const prev = useCallback(
@@ -240,36 +241,57 @@ export default function Testimonials({ items }: { items?: Testimonial[] }) {
                           t.track === "cse" ? "bg-[#16a34a]/10" : "bg-[#ca8a04]/10"
                         }`}
                       />
-                      <div className="relative flex flex-col items-center text-center sm:min-h-[280px] sm:justify-center">
-                        <span className="mb-4 text-5xl leading-none text-[#d4af37]/30">
-                          &#8220;
-                        </span>
-                        <Stars rating={t.rating} />
-                        <blockquote className="my-6 text-base leading-relaxed text-[#3d5c44] sm:text-lg">
-                          {t.quote}
-                        </blockquote>
-                        <figcaption className="mt-2">
+                      <div className="relative flex flex-col items-center text-center sm:min-h-[280px]">
+                        {/* Identity first: photo, name, badge */}
+                        <figcaption className="flex flex-col items-center">
                           {t.photo ? (
                             <img
                               src={t.photo}
                               alt={t.name}
                               loading="lazy"
-                              className={`mx-auto mb-3 h-20 w-20 rounded-full object-cover shadow-md ring-4 ${s.ring}`}
+                              className={`mb-3 h-24 w-24 rounded-full object-cover shadow-md ring-4 ${s.ring}`}
                             />
                           ) : (
                             <div
-                              className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br text-lg font-bold text-white shadow-md ${s.avatar}`}
+                              className={`mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br text-2xl font-bold text-white shadow-md ${s.avatar}`}
                             >
                               {initials(t.name)}
                             </div>
                           )}
-                          <div className="text-base font-bold text-[#16331f]">{t.name}</div>
+                          <div className="text-lg font-bold text-[#16331f]">{t.name}</div>
                           <div
                             className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${s.badge}`}
                           >
                             ✓ {t.role}
                           </div>
                         </figcaption>
+
+                        {/* Divider with the stars in the middle */}
+                        <div className="my-5 flex w-full items-center gap-3">
+                          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#d9e6d3]" />
+                          <Stars rating={t.rating} />
+                          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#d9e6d3]" />
+                        </div>
+
+                        {/* Message at the bottom */}
+                        <blockquote className="flex-1 text-base leading-relaxed text-[#3d5c44] sm:text-lg">
+                          <span className={expanded[t.id] ? undefined : "line-clamp-8"}>
+                            <span className="mr-1 text-2xl leading-none align-top text-[#d4af37]/40">
+                              &#8220;
+                            </span>
+                            {t.quote}
+                          </span>
+                          {t.quote.length > 320 && (
+                            <button
+                              onClick={() =>
+                                setExpanded((e) => ({ ...e, [t.id]: !e[t.id] }))
+                              }
+                              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-4 py-1.5 text-xs font-bold text-[#15803d] transition hover:bg-[#bbf7d0]"
+                            >
+                              {expanded[t.id] ? "Show less ▲" : "Read more ▼"}
+                            </button>
+                          )}
+                        </blockquote>
                       </div>
                     </figure>
                   </div>
