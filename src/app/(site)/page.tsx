@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSiteStats, getPublicTestimonials } from "@/lib/queries";
 import { TRACK_LABEL } from "@/lib/format";
 import Testimonials from "@/components/Testimonials";
+import TestimonialHighlight from "@/components/TestimonialHighlight";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +106,9 @@ export default async function HomePage() {
               <span>✓ {stats.exams} mock & practice exams</span>
               <span>✓ GCash / bank — no credit card needed</span>
             </div>
+
+            {/* Social proof, one line, right under the CTAs */}
+            <TestimonialHighlight items={testimonials} />
           </div>
         </div>
       </section>
