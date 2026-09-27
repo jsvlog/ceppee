@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import LogoMark from "@/components/LogoMark";
 
 function LoginInner() {
   const router = useRouter();
@@ -70,9 +71,7 @@ function LoginInner() {
       <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-xl font-black text-white shadow-lg">
-              C
-            </span>
+            <LogoMark size="md" shadow={false} className="shadow-lg" />
             <span className="text-2xl font-extrabold text-[#16331f]">
               Teacher Ceppee<span className="gradient-text"> Review</span>
             </span>

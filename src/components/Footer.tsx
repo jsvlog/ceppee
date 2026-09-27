@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 
 export default function Footer() {
   return (
@@ -7,9 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="mb-3 flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-lg font-black text-white">
-                C
-              </span>
+              <LogoMark size="sm" shadow={false} />
               <span className="text-lg font-extrabold text-[#16331f]">
                 Teacher Ceppee<span className="gradient-text"> Review</span>
               </span>

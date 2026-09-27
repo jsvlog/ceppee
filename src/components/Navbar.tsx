@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Track } from "@/lib/types";
+import LogoMark from "@/components/LogoMark";
 
 const trackLink = (track: Track) => `/review/${track.toLowerCase()}`;
 
@@ -88,9 +89,7 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
       <nav className="sticky top-0 z-50 border-b border-[#d9e6d3]/80 bg-[#f6faf4]/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-lg font-black text-white shadow-md">
-              C
-            </span>
+            <LogoMark size="sm" />
             <span className="text-lg font-extrabold tracking-tight text-[#16331f]">
               Teacher Ceppee<span className="gradient-text"> Review</span>
             </span>

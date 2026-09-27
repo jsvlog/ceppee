@@ -3,6 +3,7 @@ import { getSiteStats, getPublicTestimonials } from "@/lib/queries";
 import { TRACK_LABEL } from "@/lib/format";
 import Testimonials from "@/components/Testimonials";
 import TestimonialHighlight from "@/components/TestimonialHighlight";
+import LogoMark from "@/components/LogoMark";
 
 export const dynamic = "force-dynamic";
 
@@ -187,9 +188,7 @@ export default async function HomePage() {
             <div className="orb orb-gold -right-16 -bottom-16 opacity-60" />
             <div className="relative grid grid-cols-1 items-center gap-10 md:grid-cols-3">
               <div className="flex justify-center">
-                <div className="flex h-36 w-36 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-6xl font-black text-white shadow-xl">
-                  C
-                </div>
+                <LogoMark size="xl" className="shadow-xl" />
               </div>
               <div className="md:col-span-2">
                 <h2 className="mb-3 text-2xl font-extrabold text-[#16331f] sm:text-3xl">
