@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PaymentModal from "@/components/PaymentModal";
 import { peso, daysUntil, fmtDate, fmtDateTime, TRACK_LABEL } from "@/lib/format";
-import type { Track, PaymentRequest, Subscription, ExamAttempt, Exam, ExamWithCount } from "@/lib/types";
+import type { Track, PaymentRequest, Subscription, ExamAttempt, Exam, ExamWithCount, SubjectProgress } from "@/lib/types";
 
 const PRICE = 500;
 
@@ -20,12 +20,14 @@ export default function DashboardClient({
   requests,
   attempts,
   freeExams,
+  mastery,
 }: {
   userName: string;
   subs: Subscription[];
   requests: PaymentRequest[];
   attempts: (ExamAttempt & { exam?: Exam })[];
   freeExams: ExamWithCount[];
+  mastery: { track: Track; rows: SubjectProgress[] }[];
 }) {
   const router = useRouter();
   const [payTrack, setPayTrack] = useState<Track | null>(null);
@@ -96,6 +98,80 @@ export default function DashboardClient({
         })}
       </div>
 
+      {/* Study now */}
+      {subs.filter((s) => s.status === "active" && new Date(s.expires_at) > new Date()).length > 0 && (
+        <div className="mb-10">
+          <h2 className="mb-4 text-xl font-bold text-[#16331f]">🚀 Study now</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {subs
+              .filter((s) => s.status === "active" && new Date(s.expires_at) > new Date())
+              .map((s) => {
+                const t = s.track;
+                const base = `/study/${t.toLowerCase()}`;
+                const hub = `/review/${t.toLowerCase()}`;
+                return (
+                  <div key={s.id} className="card p-5">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="font-bold text-[#16331f]">
+                        {trackMeta[t].emoji} {trackMeta[t].label}
+                      </span>
+                      <Link href={hub} className="text-xs font-bold text-[#15803d]">
+                        Open hub →
+                      </Link>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link href={`${base}/drill`} className="rounded-xl bg-[#dcfce7] px-3 py-2.5 text-center text-xs font-bold text-[#166534]">
+                        🎯 Subject drill
+                      </Link>
+                      <Link href={`${base}/flashcards`} className="rounded-xl bg-[#dcfce7] px-3 py-2.5 text-center text-xs font-bold text-[#166534]">
+                        🃏 Flashcards
+                      </Link>
+                      <Link href={`${base}/mistakes`} className="rounded-xl bg-[#fffbeb] px-3 py-2.5 text-center text-xs font-bold text-[#b45309]">
+                        🔁 Retry mistakes
+                      </Link>
+                      <Link href={`${hub}#mocks`} className="rounded-xl bg-[#f1f5f9] px-3 py-2.5 text-center text-xs font-bold text-[#475569]">
+                        ⏱️ Full mock
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          {mastery.map((m) => (
+            <div key={m.track} className="card mt-4 p-5">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#5c7863]">
+                {trackMeta[m.track].emoji} {m.track} — mastery by section
+              </h3>
+              <div className="space-y-3">
+                {m.rows.map((r) => (
+                  <div key={r.subject}>
+                    <div className="mb-1 flex items-center justify-between text-sm">
+                      <span className="font-semibold text-[#16331f]">{r.subject}</span>
+                      <span className="text-xs text-[#5c7863]">
+                        {r.correct}/{r.answered} · {r.pct}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-[#d9e6d3]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${r.pct}%`,
+                          background: r.pct >= 80 ? "#16a34a" : r.pct >= 60 ? "#eab308" : "#ef4444",
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-[#94a896]">
+                Based on your last answer for each item — a section you fix stops dragging you down.
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Free previews */}
       {freeExams.length > 0 && (
         <div className="mb-10">
@@ -122,23 +198,27 @@ export default function DashboardClient({
 
       {/* Recent attempts */}
       <div className="mb-10">
-        <h2 className="mb-4 text-xl font-bold text-[#16331f]">📊 Recent exam results</h2>
+        <h2 className="mb-4 text-xl font-bold text-[#16331f]">📊 Recent results</h2>
         {attempts.length === 0 ? (
           <div className="card p-6 text-sm text-[#5c7863]">
-            You haven’t finished an exam yet. Once you take one, your results will show up here.
+            You haven’t finished a mock or a drill yet. Once you take one, your results will show up here.
           </div>
         ) : (
           <div className="card divide-y divide-[#d9e6d3]">
             {attempts.map((a) => {
               const pct = a.total > 0 ? Math.round((a.score / a.total) * 100) : 0;
+              const kindLabel = a.kind === "drill" ? "🎯 Drill" : a.kind === "flashcards" ? "🃏 Flashcards" : "⏱️ Mock exam";
               return (
                 <div key={a.id} className="flex items-center justify-between gap-4 p-4">
-                  <div>
-                    <div className="font-semibold text-[#16331f]">{a.exam?.title || "Exam"}</div>
-                    <div className="text-xs text-[#5c7863]">{fmtDateTime(a.completed_at)}</div>
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold text-[#16331f]">{a.label || a.exam?.title || "Practice"}</div>
+                    <div className="text-xs text-[#5c7863]">
+                      {kindLabel}
+                      {a.level && a.level !== "both" ? ` · ${a.level}` : ""} · {fmtDateTime(a.completed_at)}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-lg font-black ${pct >= 80 ? "text-[#16a34a]" : pct >= 50 ? "text-[#f59e0b]" : "text-[#ef4444]"}`}>
+                  <div className="shrink-0 text-right">
+                    <div className={`text-lg font-black ${pct >= 80 ? "text-[#16a34a]" : pct >= 60 ? "text-[#f59e0b]" : "text-[#ef4444]"}`}>
                       {pct}%
                     </div>
                     <div className="text-xs text-[#5c7863]">{a.score}/{a.total} correct</div>

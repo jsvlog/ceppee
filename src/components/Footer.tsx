@@ -35,6 +35,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-[#3d5c44]">
               <li><Link href="/review/cse" className="hover:text-[#15803d]">CSE Review</Link></li>
               <li><Link href="/review/let" className="hover:text-[#ca8a04]">LET Review</Link></li>
+              <li><Link href="/coaches" className="hover:text-[#d4af37]">Our Coaches</Link></li>
               <li><Link href="/pricing" className="hover:text-[#16331f]">Pricing</Link></li>
             </ul>
           </div>

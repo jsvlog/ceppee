@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      /* ---------- EXAMS ---------- */
+      /* ---------- EXAMS (blueprint papers) ---------- */
       case "save_exam": {
         const row = {
           id: payload.id as string | undefined,
@@ -150,10 +150,18 @@ export async function POST(request: NextRequest) {
           description: (payload.description as string) || null,
           mode: payload.mode || "mock",
           topic: (payload.topic as string) || null,
+          level: (payload.level as string) || "both",
+          specialization: (payload.specialization as string) || null,
+          subjects: Array.isArray(payload.subjects) && payload.subjects.length ? payload.subjects : null,
+          question_count: Number(payload.question_count) || 0,
+          difficulty: Number(payload.difficulty) || 0,
+          passing_pct: Number(payload.passing_pct) || (payload.track === "LET" ? 75 : 80),
           duration_minutes: Number(payload.duration_minutes) || 60,
+          order_index: Number(payload.order_index) || 0,
           is_free_preview: !!payload.is_free_preview,
           is_active: payload.is_active !== false,
         };
+        if (!row.title) throw new Error("Exam title is required");
         const { error } = row.id
           ? await admin.from("exams").update(row).eq("id", row.id)
           : await admin.from("exams").insert(row);
@@ -166,57 +174,95 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      /* ---------- QUESTIONS ---------- */
+      /* ---------- QUESTIONS (question bank) ----------
+       * All writes go through SECURITY DEFINER RPCs called with the ADMIN's own
+       * session, because the prompt lives in exam_questions and the answer key
+       * lives in question_keys — the RPC keeps them in sync atomically. */
       case "save_question": {
-        const row = {
-          id: payload.id as string | undefined,
-          exam_id: payload.exam_id,
-          order_index: Number(payload.order_index) || 0,
-          question_text: payload.question_text as string,
-          choice_a: payload.choice_a,
-          choice_b: payload.choice_b,
-          choice_c: payload.choice_c,
-          choice_d: payload.choice_d,
-          correct_choice: payload.correct_choice,
-          explanation: (payload.explanation as string) || null,
-        };
-        const { error } = row.id
-          ? await admin.from("exam_questions").update(row).eq("id", row.id)
-          : await admin.from("exam_questions").insert(row);
+        const { data, error } = await supabase.rpc("admin_save_question", {
+          p: {
+            id: payload.id ?? null,
+            exam_id: payload.exam_id ?? null,
+            order_index: Number(payload.order_index) || 0,
+            question_text: String(payload.question_text || "").trim(),
+            choice_a: String(payload.choice_a || ""),
+            choice_b: String(payload.choice_b || ""),
+            choice_c: String(payload.choice_c || ""),
+            choice_d: String(payload.choice_d || ""),
+            correct_choice: String(payload.correct_choice || "A").toUpperCase(),
+            explanation: (payload.explanation as string) || null,
+            track: payload.track || null,
+            level: payload.level || null,
+            subject: payload.subject || null,
+            subtopic: payload.subtopic || null,
+            specialization: payload.specialization || null,
+            difficulty: Number(payload.difficulty) || 2,
+            is_free: !!payload.is_free,
+            is_active: payload.is_active !== false,
+            source: payload.source || null,
+          },
+        });
         if (error) throw error;
-        return NextResponse.json({ ok: true });
+        return NextResponse.json({ ok: true, id: data });
       }
       case "delete_question": {
-        const { error } = await admin.from("exam_questions").delete().eq("id", payload.id);
+        const { data, error } = await supabase.rpc("admin_delete_questions", {
+          p_ids: [payload.id as string],
+        });
         if (error) throw error;
-        return NextResponse.json({ ok: true });
+        return NextResponse.json({ ok: true, deleted: data });
       }
-      case "bulk_import_questions": {
-        // payload.questions: array of question objects for one exam
+      case "delete_questions": {
+        const ids = (payload.ids as string[]) ?? [];
+        if (ids.length === 0) throw new Error("No questions selected");
+        const { data, error } = await supabase.rpc("admin_delete_questions", { p_ids: ids });
+        if (error) throw error;
+        return NextResponse.json({ ok: true, deleted: data });
+      }
+      case "clear_bank": {
+        const { data, error } = await supabase.rpc("admin_clear_bank", {
+          p_track: (payload.track as string) || null,
+        });
+        if (error) throw error;
+        return NextResponse.json({ ok: true, deleted: data });
+      }
+      // Same RPC as import_questions — kept so older admin UI builds keep working.
+      case "bulk_import_questions":
+      case "import_questions": {
         const qs = payload.questions as Array<Record<string, unknown>>;
-        if (!Array.isArray(qs) || qs.length === 0) throw new Error("No questions were imported");
+        if (!Array.isArray(qs) || qs.length === 0) throw new Error("No questions were parsed");
+        if (qs.length > 500) throw new Error("Max 500 questions per batch — split the paste and import again.");
+
+        // Defaults can come from the import target (exam or bank position).
+        const defaults = (payload.defaults as Record<string, unknown>) ?? {};
         const rows = qs.map((q, i) => ({
-          exam_id: payload.exam_id,
+          exam_id: (defaults.exam_id as string) || null,
           order_index: Number(q.order_index) || i + 1,
           question_text: String(q.question_text || "").trim(),
-          choice_a: String(q.choice_a || ""),
-          choice_b: String(q.choice_b || ""),
-          choice_c: String(q.choice_c || ""),
-          choice_d: String(q.choice_d || ""),
-          correct_choice: String(q.correct_choice || "A").toUpperCase(),
+          choice_a: String(q.choice_a || "").trim(),
+          choice_b: String(q.choice_b || "").trim(),
+          choice_c: String(q.choice_c || "").trim(),
+          choice_d: String(q.choice_d || "").trim(),
+          correct_choice: String(q.correct_choice || defaults.correct_choice || "A").toUpperCase(),
           explanation: (q.explanation as string) || null,
+          track: (q.track as string) || (defaults.track as string) || "CSE",
+          level: (q.level as string) || (defaults.level as string) || "both",
+          subject: (q.subject as string) || (defaults.subject as string) || null,
+          subtopic: (q.subtopic as string) || (defaults.subtopic as string) || null,
+          specialization: (q.specialization as string) || (defaults.specialization as string) || null,
+          difficulty: Number(q.difficulty) || Number(defaults.difficulty) || 2,
+          is_free: q.is_free === true || defaults.is_free === true,
+          source: (q.source as string) || (defaults.source as string) || null,
         }));
-        for (const r of rows) {
-          if (!r.question_text || !r.choice_a || !r.choice_b || !r.choice_c || !r.choice_d) {
-            throw new Error(`Missing field in question #${r.order_index}`);
-          }
-          if (!["A", "B", "C", "D"].includes(r.correct_choice)) {
-            throw new Error(`Invalid correct_choice sa question #${r.order_index}`);
-          }
-        }
-        const { error } = await admin.from("exam_questions").insert(rows);
+
+        const bad = rows.find(
+          (r) => !r.question_text || !r.choice_a || !r.choice_b || !r.choice_c || !r.choice_d
+        );
+        if (bad) throw new Error(`Question #${bad.order_index} is missing its text or one of the A-D choices.`);
+
+        const { data, error } = await supabase.rpc("admin_import_questions", { p_rows: rows });
         if (error) throw error;
-        return NextResponse.json({ ok: true, count: rows.length });
+        return NextResponse.json({ ok: true, count: data ?? rows.length });
       }
 
       /* ---------- TESTIMONIALS ---------- */
@@ -254,6 +300,49 @@ export async function POST(request: NextRequest) {
         if (url && url.includes(marker)) {
           const path = decodeURIComponent(url.split(marker)[1] ?? "");
           if (path) await admin.storage.from("testimonials").remove([path]);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
+      /* ---------- COACHES ---------- */
+      case "save_coach": {
+        const fbRaw = ((payload.facebook_url as string) || "").trim();
+        const row = {
+          id: payload.id as string | undefined,
+          name: String(payload.name || "").trim(),
+          title: ((payload.title as string) || "").trim() || null,
+          subjects: ((payload.subjects as string) || "").trim() || null,
+          bio: ((payload.bio as string) || "").trim() || null,
+          photo_url: ((payload.photo_url as string) || "").trim() || null,
+          // Admins usually paste "facebook.com/xyz" without the scheme.
+          facebook_url: fbRaw ? (fbRaw.startsWith("http") ? fbRaw : `https://${fbRaw}`) : null,
+          track: ["CSE", "LET", "BOTH"].includes(String(payload.track))
+            ? (String(payload.track) as "CSE" | "LET" | "BOTH")
+            : "BOTH",
+          sort_order: Number(payload.sort_order) || 0,
+          is_active: payload.is_active !== false,
+        };
+        if (!row.name) throw new Error("Coach name is required");
+        const { error } = row.id
+          ? await admin.from("coaches").update(row).eq("id", row.id)
+          : await admin.from("coaches").insert(row);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+      case "delete_coach": {
+        const { data: existingCoach } = await admin
+          .from("coaches")
+          .select("photo_url")
+          .eq("id", payload.id)
+          .maybeSingle();
+        const { error } = await admin.from("coaches").delete().eq("id", payload.id);
+        if (error) throw error;
+        // Clean up the photo in storage too (best effort — never block the delete)
+        const coachUrl = existingCoach?.photo_url as string | undefined;
+        const coachMarker = "/object/public/coaches/";
+        if (coachUrl && coachUrl.includes(coachMarker)) {
+          const path = decodeURIComponent(coachUrl.split(coachMarker)[1] ?? "");
+          if (path) await admin.storage.from("coaches").remove([path]);
         }
         return NextResponse.json({ ok: true });
       }

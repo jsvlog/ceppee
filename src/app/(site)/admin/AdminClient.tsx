@@ -4,81 +4,31 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { peso, fmtDate, fmtDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
-import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial } from "@/lib/types";
+import { postAdmin } from "@/lib/admin-api";
+import { parseBulkQuestions } from "@/lib/bulk-import";
+import { MATERIAL, subjectsFor, subjectIcon, passingPctFor } from "@/lib/exam";
+import QuestionBank from "./QuestionBank";
+import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial, Coach, CoachTrack } from "@/lib/types";
 import type { AdminProfile, LessonMeta } from "./page";
 
 /* ================= helpers ================= */
 
-async function postAdmin(action: string, payload: Record<string, unknown>) {
-  const res = await fetch("/api/admin", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, payload }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Something went wrong");
-  return data;
-}
-
 const trackPill = (t: Track) =>
   t === "CSE" ? "bg-[#dcfce7] text-[#15803d]" : "bg-[#fef9c3] text-[#b45309]";
 
-/* ================= bulk question parser ================= */
-
-function parseBulk(text: string): Array<Record<string, unknown>> {
-  const blocks = text
-    .split(/\n\s*\n/)
-    .map((b) => b.trim())
-    .filter(Boolean);
-  if (blocks.length === 0) throw new Error("No questions parsed.");
-  return blocks.map((block, i) => {
-    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
-    const qText = lines[0].replace(/^\d+[.)]\s*/, "");
-    let correct = "";
-    let explanation = "";
-    const choices: Record<string, string> = {};
-    for (const line of lines.slice(1)) {
-      const m = line.match(/^([A-Da-d])[.)]\s*(.+)$/);
-      if (m) {
-        choices[m[1].toUpperCase()] = m[2];
-        continue;
-      }
-      const ans = line.match(/^(?:ANSWER|SAGOT)\s*[:=-]\s*([A-Da-d])/i);
-      if (ans) {
-        correct = ans[1].toUpperCase();
-        continue;
-      }
-      const exp = line.match(/^(?:EXPLANATION|EXPL)\s*[:=-]\s*(.+)$/i);
-      if (exp) {
-        explanation = exp[1];
-        continue;
-      }
-    }
-    if (!qText || !choices.A || !choices.B || !choices.C || !choices.D) {
-      throw new Error(`Block ${i + 1}: missing question or four choices (A-D).`);
-    }
-    if (!correct) throw new Error(`Block ${i + 1}: no ANSWER line (e.g. "ANSWER: B")`);
-    return {
-      order_index: i + 1,
-      question_text: qText,
-      choice_a: choices.A,
-      choice_b: choices.B,
-      choice_c: choices.C,
-      choice_d: choices.D,
-      correct_choice: correct,
-      explanation,
-    };
-  });
-}
+/* ================= bulk question parser =================
+ * Lives in @/lib/bulk-import (shared with the Question Bank tab). */
 
 /* ================= main ================= */
 
 const TABS = [
   { id: "payments", label: "💰 Payments" },
   { id: "users", label: "👥 Users" },
+  { id: "bank", label: "🧠 Question Bank" },
   { id: "content", label: "📚 Lessons" },
-  { id: "exams", label: "⏱️ Exams" },
+  { id: "exams", label: "⏱️ Mocks & Exams" },
   { id: "testimonials", label: "💬 Testimonials" },
+  { id: "coaches", label: "🧑‍🏫 Coaches" },
   { id: "settings", label: "⚙️ Settings" },
 ] as const;
 
@@ -94,6 +44,7 @@ export default function AdminClient({
   exams,
   settings,
   testimonials,
+  coaches,
 }: {
   stats: Record<string, number>;
   payments: (PaymentRequest & { profile?: { email: string; full_name: string } })[];
@@ -104,6 +55,7 @@ export default function AdminClient({
   exams: (ExamWithCount & { exam_questions?: { count: number }[] })[];
   settings: SiteSettings[];
   testimonials: Testimonial[];
+  coaches: Coach[];
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("payments");
@@ -281,6 +233,9 @@ export default function AdminClient({
         </div>
       )}
 
+      {/* ============ QUESTION BANK ============ */}
+      {tab === "bank" && <QuestionBank />}
+
       {/* ============ CONTENT (topics + lessons) ============ */}
       {tab === "content" && (
         <ContentTab
@@ -305,6 +260,9 @@ export default function AdminClient({
       {tab === "testimonials" && (
         <TestimonialsTab testimonials={testimonials} busy={busy} run={run} />
       )}
+
+      {/* ============ COACHES ============ */}
+      {tab === "coaches" && <CoachesTab coaches={coaches} busy={busy} run={run} />}
 
       {/* ============ SETTINGS ============ */}
       {tab === "settings" && <SettingsTab settings={settings} busy={busy} run={run} />}
@@ -707,14 +665,33 @@ function ExamsTab({
   const loadQuestions = async (examId: string): Promise<Question[]> => {
     const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
-    const { data } = await supabase.from("exam_questions").select("*").eq("exam_id", examId).order("order_index");
-    return (data as Question[]) || [];
+    const { data } = await supabase
+      .from("exam_questions")
+      .select("*")
+      .eq("exam_id", examId)
+      .order("order_index");
+    const rows = (data as Question[]) || [];
+    if (rows.length === 0) return rows;
+    // The answer key lives in question_keys (admins can read it directly).
+    const { data: keys } = await supabase
+      .from("question_keys")
+      .select("question_id, correct_choice, explanation")
+      .in("question_id", rows.map((r) => r.id));
+    const byId = new Map((keys ?? []).map((k: { question_id: string; correct_choice: string; explanation: string | null }) => [k.question_id, k]));
+    return rows.map((r) => ({
+      ...r,
+      correct_choice: (byId.get(r.id)?.correct_choice as "A" | "B" | "C" | "D") ?? "A",
+      explanation: byId.get(r.id)?.explanation ?? null,
+    }));
   };
 
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
-        <button onClick={() => setExamModal({ track: "CSE", mode: "mock", duration_minutes: 60 })} className="btn-primary px-5 py-2.5 text-sm">
+        <button
+          onClick={() => setExamModal({ track: "CSE", mode: "mock", duration_minutes: 60, level: "both", subjects: [], question_count: 0, difficulty: 0, passing_pct: 80, order_index: 0 })}
+          className="btn-primary px-5 py-2.5 text-sm"
+        >
           + New Exam
         </button>
       </div>
@@ -775,40 +752,93 @@ function ExamsTab({
         </Modal>
       )}
 
-      {/* Import modal */}
+      {/* Import modal — pins questions straight to this exam (curated paper) */}
       {importExam && (
-        <Modal title="Bulk Import Questions" onClose={() => { setImportExam(null); setImportErr(null); }} wide>
-          <p className="mb-3 rounded-xl bg-[#dcfce7] px-4 py-3 text-xs leading-relaxed text-[#15803d]">
-            One question per block (separate by a blank line). Format:
-            <br />
-            <code>1. Question here{'\n'}A. choice{'\n'}B. choice{'\n'}C. choice{'\n'}D. choice{'\n'}ANSWER: B{'\n'}EXPLANATION: bakit</code>
-          </p>
-          <textarea
-            className="input-warm font-mono text-xs"
-            rows={14}
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            placeholder={"1. What is 2+2?\nA. 3\nB. 4\nC. 5\nD. 6\nANSWER: B\nEXPLANATION: Basic addition.\n\n2. ..."}
-          />
-          {importErr && <div className="mt-3 rounded-xl bg-[#fee2e2] px-4 py-3 text-sm text-[#991b1b]">{importErr}</div>}
-          <button
-            disabled={busy || !importText.trim()}
-            onClick={async () => {
-              setImportErr(null);
+        <Modal title="Import Questions into this Exam" onClose={() => { setImportExam(null); setImportErr(null); }} wide>
+          {(() => {
+            const target = exams.find((x) => x.id === importExam);
+            let parsedCount = 0;
+            let warnings: string[] = [];
+            let parseError: string | null = null;
+            if (importText.trim()) {
               try {
-                const questions = parseBulk(importText);
-                await run("bulk_import_questions", { exam_id: importExam, questions }, `${questions.length} questions imported!`);
-                setImportExam(null);
-                setImportText("");
-                router.refresh();
+                const batch = parseBulkQuestions(importText);
+                parsedCount = batch.questions.length;
+                warnings = batch.warnings;
               } catch (e) {
-                setImportErr(e instanceof Error ? e.message : "Parse error");
+                parseError = e instanceof Error ? e.message : "Parse error";
               }
-            }}
-            className="btn-primary mt-4 w-full py-3 text-sm"
-          >
-            Import Questions
-          </button>
+            }
+            return (
+              <>
+                <p className="mb-3 rounded-xl bg-[#dcfce7] px-4 py-3 text-xs leading-relaxed text-[#15803d]">
+                  Use this only when you want a <strong>hand-picked paper</strong> (the exact items, in this order).
+                  For everyday content, put the questions in the <strong>🧠 Question Bank</strong> tab instead — mocks
+                  and drills then draw from it automatically.
+                  <br />
+                  Paste format: one block per question, blank line between them —
+                  <code className="mt-1 block whitespace-pre-wrap">
+                    {"1. Question here\nA) choice\nB) choice\nC) choice\nD) choice\nANSWER: B\nEXPLANATION: bakit"}
+                  </code>
+                  Tag lines (SUBJECT:, LEVEL:, SUBTOPIC:, DIFFICULTY:, SPECIALIZATION:, FREE:) are read too.
+                  Excel/Sheets paste also works if you put question, A, B, C, D, ANSWER in the columns.
+                </p>
+                <textarea
+                  className="input-warm font-mono text-xs"
+                  rows={14}
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  placeholder={"1. What is 2+2?\nA) 3\nB) 4\nC) 5\nD) 6\nANSWER: B\nEXPLANATION: Basic addition.\n\n2. ..."}
+                />
+                {parseError && (
+                  <div className="mt-3 rounded-xl bg-[#fee2e2] px-4 py-3 text-sm text-[#991b1b]">✕ {parseError}</div>
+                )}
+                {!parseError && parsedCount > 0 && (
+                  <div className="mt-3 rounded-xl bg-[#dcfce7] px-4 py-3 text-sm text-[#166534]">
+                    ✅ {parsedCount} questions ready to pin to “{target?.title ?? "this exam"}”.
+                    {warnings.length > 0 && (
+                      <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+                        {warnings.slice(0, 6).map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+                {importErr && <div className="mt-3 rounded-xl bg-[#fee2e2] px-4 py-3 text-sm text-[#991b1b]">{importErr}</div>}
+                <button
+                  disabled={busy || !importText.trim() || parsedCount === 0}
+                  onClick={async () => {
+                    setImportErr(null);
+                    try {
+                      const batch = parseBulkQuestions(importText);
+                      await run(
+                        "import_questions",
+                        {
+                          questions: batch.questions,
+                          defaults: {
+                            track: target?.track ?? "CSE",
+                            level: target?.level ?? "both",
+                            subject: target?.subjects?.[0] ?? null,
+                            exam_id: importExam,
+                          },
+                        },
+                        `${batch.questions.length} questions imported into this exam!`
+                      );
+                      setImportExam(null);
+                      setImportText("");
+                      router.refresh();
+                    } catch (e) {
+                      setImportErr(e instanceof Error ? e.message : "Parse error");
+                    }
+                  }}
+                  className="btn-primary mt-4 w-full py-3 text-sm disabled:opacity-50"
+                >
+                  Pin {parsedCount || ""} questions to this exam
+                </button>
+              </>
+            );
+          })()}
         </Modal>
       )}
     </div>
@@ -840,7 +870,7 @@ function ExamRow({
   onEditQuestion: (q: Question) => void;
   loadQuestions: (examId: string) => Promise<Question[]>;
 }) {
-  const count = e.exam_questions?.[0]?.count ?? e.question_count ?? 0;
+  const pinned = e.exam_questions?.[0]?.count ?? 0;
   return (
     <div className="card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -851,8 +881,12 @@ function ExamRow({
             {e.title}
           </div>
           <div className="text-xs text-[#5c7863]">
-            {e.mode} · {e.duration_minutes} min · {count} questions{e.topic ? ` · ${e.topic}` : ""}
+            {e.mode} · {e.level} · {e.duration_minutes} min · {e.passing_pct}% to pass ·{" "}
+            {pinned > 0 ? `${pinned} pinned items` : `draws ${e.question_count || "all"} from the bank`}
           </div>
+          {e.subjects && e.subjects.length > 0 && (
+            <div className="mt-0.5 text-xs text-[#94a896]">{e.subjects.join(" · ")}</div>
+          )}
         </div>
         <div className="flex flex-wrap gap-1">
           <button onClick={onToggle} className="rounded-md bg-[#dcfce7] px-3 py-1.5 text-xs font-bold text-[#15803d]">
@@ -972,35 +1006,118 @@ function ExamForm({
     description: initial.description || "",
     mode: initial.mode || "mock",
     topic: initial.topic || "",
+    level: (initial.level as string) || "both",
+    subjects: (initial.subjects as string[] | null) ?? [],
+    question_count: initial.question_count ?? 0,
+    difficulty: initial.difficulty ?? 0,
+    passing_pct: initial.passing_pct ?? (initial.track === "LET" ? 75 : 80),
     duration_minutes: initial.duration_minutes ?? 60,
+    order_index: initial.order_index ?? 0,
     is_free_preview: initial.is_free_preview === true,
     is_active: initial.is_active !== false,
   });
   const trackTopics = topics.filter((t) => t.track === f.track);
+  const levelChoices = MATERIAL[f.track];
+  const subjectChoices = subjectsFor(f.track, f.level === "both" ? "both" : f.level).map((s) => s.key);
+
+  const toggleSubject = (s: string) =>
+    setF((prev) => ({
+      ...prev,
+      subjects: prev.subjects.includes(s) ? prev.subjects.filter((x) => x !== s) : [...prev.subjects, s],
+    }));
+
   return (
     <form onSubmit={(e) => { e.preventDefault(); void onSave({ ...f, id: initial.id }); }} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <Field label="Track">
-          <select className="input-warm" value={f.track} onChange={(e) => setF({ ...f, track: e.target.value as Track, topic: "" })}>
+          <select
+            className="input-warm"
+            value={f.track}
+            onChange={(e) => setF({ ...f, track: e.target.value as Track, topic: "", subjects: [], level: "both", passing_pct: e.target.value === "LET" ? 75 : 80 })}
+          >
             <option value="CSE">CSE</option>
             <option value="LET">LET</option>
           </select>
         </Field>
         <Field label="Mode">
           <select className="input-warm" value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value as "mock" | "practice" })}>
-            <option value="mock">Mock (timed, one-shot)</option>
+            <option value="mock">Mock (timed, no answers until submit)</option>
             <option value="practice">Practice (instant explanation)</option>
           </select>
         </Field>
       </div>
+
       <Field label="Title">
         <input className="input-warm" required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
       </Field>
+
       <Field label="Description">
         <textarea className="input-warm" rows={2} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
       </Field>
+
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Topic label (optional)">
+        <Field label="Which paper? (level)">
+          <select className="input-warm" value={f.level} onChange={(e) => setF({ ...f, level: e.target.value, subjects: [] })}>
+            <option value="both">Both levels</option>
+            {levelChoices.map((l) => (
+              <option key={l.key} value={l.key}>
+                {l.short}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Passing mark (%)">
+          <input type="number" className="input-warm" value={f.passing_pct} onChange={(e) => setF({ ...f, passing_pct: Number(e.target.value) })} />
+        </Field>
+      </div>
+
+      <Field label="Sections this paper draws from">
+        <div className="flex flex-wrap gap-2">
+          {subjectChoices.map((s) => (
+            <button
+              type="button"
+              key={s}
+              onClick={() => toggleSubject(s)}
+              className={`rounded-xl border-2 px-3 py-2 text-xs font-bold transition ${
+                f.subjects.includes(s) ? "border-[#16a34a] bg-[#dcfce7] text-[#16331f]" : "border-[#d9e6d3] bg-white text-[#3d5c44]"
+              }`}
+            >
+              {subjectIcon(f.track, s)} {s}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs text-[#94a896]">
+          Tick nothing to draw from the whole {f.track} bank for this level.
+        </p>
+      </Field>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Field label="Items to draw">
+          <input type="number" className="input-warm" value={f.question_count} onChange={(e) => setF({ ...f, question_count: Number(e.target.value) })} />
+        </Field>
+        <Field label="Duration (min)">
+          <input type="number" className="input-warm" value={f.duration_minutes} onChange={(e) => setF({ ...f, duration_minutes: Number(e.target.value) })} />
+        </Field>
+        <Field label="Difficulty">
+          <select className="input-warm" value={f.difficulty} onChange={(e) => setF({ ...f, difficulty: Number(e.target.value) })}>
+            <option value={0}>Mixed</option>
+            <option value={1}>Easy only</option>
+            <option value={2}>Average only</option>
+            <option value={3}>Hard only</option>
+          </select>
+        </Field>
+        <Field label="Sort order">
+          <input type="number" className="input-warm" value={f.order_index} onChange={(e) => setF({ ...f, order_index: Number(e.target.value) })} />
+        </Field>
+      </div>
+
+      <p className="rounded-xl bg-[#dcfce7] px-4 py-3 text-xs leading-relaxed text-[#15803d]">
+        Items to draw = how many questions the student gets, taken at random from the bank every attempt (0 = use the
+        questions pinned to this exam instead, in order). A question is pinned when you add it from inside this exam.
+      </p>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Legacy topic label (optional)">
           <input className="input-warm" list="topic-list" value={f.topic} onChange={(e) => setF({ ...f, topic: e.target.value })} placeholder="e.g. Mathematics" />
           <datalist id="topic-list">
             {trackTopics.map((t) => (
@@ -1008,20 +1125,18 @@ function ExamForm({
             ))}
           </datalist>
         </Field>
-        <Field label="Duration (minutes)">
-          <input type="number" className="input-warm" value={f.duration_minutes} onChange={(e) => setF({ ...f, duration_minutes: Number(e.target.value) })} />
-        </Field>
+        <div className="flex items-end gap-6 pb-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={f.is_free_preview} onChange={(e) => setF({ ...f, is_free_preview: e.target.checked })} />
+            🎁 Free preview
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} />
+            Active
+          </label>
+        </div>
       </div>
-      <div className="flex gap-6">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={f.is_free_preview} onChange={(e) => setF({ ...f, is_free_preview: e.target.checked })} />
-          🎁 Free preview (anyone can take it)
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} />
-          Active
-        </label>
-      </div>
+
       <button disabled={busy} className="btn-primary w-full py-3 text-sm">Save Exam</button>
     </form>
   );
@@ -1045,8 +1160,18 @@ function QuestionForm({
     choice_d: initial.choice_d || "",
     correct_choice: initial.correct_choice || "A",
     explanation: initial.explanation || "",
+    track: (initial.track as string) || "CSE",
+    level: (initial.level as string) || "both",
+    subject: (initial.subject as string) || "",
+    subtopic: (initial.subtopic as string) || "",
+    specialization: (initial.specialization as string) || "",
+    difficulty: initial.difficulty ?? 2,
+    is_free: initial.is_free === true,
+    is_active: initial.is_active !== false,
+    source: (initial.source as string) || "",
   });
-  const set = (k: string, v: string | number) => setF({ ...f, [k]: v });
+  const set = (k: string, v: string | number | boolean) => setF({ ...f, [k]: v });
+  const subjectChoices = subjectsFor(f.track as Track, f.level === "both" ? "both" : f.level).map((s) => s.key);
   return (
     <form onSubmit={(e) => { e.preventDefault(); void onSave(f); }} className="space-y-3">
       <Field label="Question">
@@ -1074,11 +1199,70 @@ function QuestionForm({
       <Field label="Explanation (shown to the user afterward)">
         <textarea className="input-warm" rows={2} value={f.explanation} onChange={(e) => set("explanation", e.target.value)} />
       </Field>
-      <div className="flex items-center justify-between">
-        <Field label="Order">
-          <input type="number" className="input-warm w-24" value={f.order_index} onChange={(e) => set("order_index", Number(e.target.value))} />
-        </Field>
+
+      <div className="rounded-2xl border border-[#d9e6d3] p-3">
+        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#5c7863]">
+          Bank tags — these decide which mocks, drills and flashcards use this item
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Field label="Track">
+            <select className="input-warm" value={f.track} onChange={(e) => setF({ ...f, track: e.target.value, subject: "" })}>
+              <option value="CSE">CSE</option>
+              <option value="LET">LET</option>
+            </select>
+          </Field>
+          <Field label="Level">
+            <select className="input-warm" value={f.level} onChange={(e) => setF({ ...f, level: e.target.value, subject: "" })}>
+              <option value="both">Shared by both levels</option>
+              {MATERIAL[f.track as Track].map((l) => (
+                <option key={l.key} value={l.key}>
+                  {l.short}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Subject">
+            <select className="input-warm" value={f.subject} onChange={(e) => set("subject", e.target.value)}>
+              <option value="">— none —</option>
+              {subjectChoices.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Subtopic (optional)">
+            <input className="input-warm" value={f.subtopic} onChange={(e) => set("subtopic", e.target.value)} placeholder="e.g. Fractions" />
+          </Field>
+          <Field label="Majorship (Specialization only)">
+            <input className="input-warm" value={f.specialization} onChange={(e) => set("specialization", e.target.value)} placeholder="e.g. Mathematics" />
+          </Field>
+          <Field label="Difficulty">
+            <select className="input-warm" value={f.difficulty} onChange={(e) => set("difficulty", Number(e.target.value))}>
+              <option value={1}>Easy</option>
+              <option value={2}>Average</option>
+              <option value={3}>Hard</option>
+            </select>
+          </Field>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-5">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={f.is_free} onChange={(e) => set("is_free", e.target.checked)} />
+            🎁 Free preview item
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={f.is_active} onChange={(e) => set("is_active", e.target.checked)} />
+            Active
+          </label>
+          <Field label="Source (optional)">
+            <input className="input-warm" value={f.source} onChange={(e) => set("source", e.target.value)} placeholder="e.g. CSE Reviewer Vol. 1" />
+          </Field>
+        </div>
       </div>
+
+      <Field label="Order (only matters for hand-pinned papers)">
+        <input type="number" className="input-warm w-24" value={f.order_index} onChange={(e) => set("order_index", Number(e.target.value))} />
+      </Field>
       <button disabled={busy} className="btn-primary w-full py-3 text-sm">Save Question</button>
     </form>
   );
@@ -1501,6 +1685,383 @@ function TestimonialForm({
         className="btn-primary w-full py-3 disabled:opacity-40"
       >
         {busy || saving ? "Saving…" : "Save testimonial"}
+      </button>
+    </div>
+  );
+}
+
+/* ================= coaches ================= */
+
+const coachBadge: Record<CoachTrack, string> = {
+  CSE: "bg-[#dcfce7] text-[#15803d]",
+  LET: "bg-[#fef9c3] text-[#b45309]",
+  BOTH: "bg-gradient-to-r from-[#dcfce7] to-[#fef9c3] text-[#15803d]",
+};
+
+const coachTrackLabel: Record<CoachTrack, string> = {
+  CSE: "🏛️ CSE",
+  LET: "🍎 LET",
+  BOTH: "🏛️🍎 CSE & LET",
+};
+
+function CoachesTab({
+  coaches,
+  busy,
+  run,
+}: {
+  coaches: Coach[];
+  busy: boolean;
+  run: (action: string, payload: Record<string, unknown>, okMsg: string) => Promise<void>;
+}) {
+  const [filter, setFilter] = useState<"ALL" | CoachTrack>("ALL");
+  const [modal, setModal] = useState<Partial<Coach> | null>(null);
+
+  const shown = coaches.filter((c) => filter === "ALL" || c.track === filter);
+  const active = coaches.filter((c) => c.is_active).length;
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex gap-2">
+          {(["ALL", "CSE", "LET", "BOTH"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition ${
+                filter === f
+                  ? f === "CSE"
+                    ? "bg-[#16a34a] text-white"
+                    : f === "LET"
+                      ? "bg-[#ca8a04] text-white"
+                      : "bg-[#16331f] text-white"
+                  : "border border-[#d9e6d3] bg-white text-[#5c7863]"
+              }`}
+            >
+              {f === "ALL" ? "All" : f === "BOTH" ? "Both tracks" : f}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() =>
+            setModal({
+              track: "BOTH",
+              is_active: true,
+              sort_order: coaches.length + 1,
+            })
+          }
+          className="btn-primary px-5 py-2.5 text-sm"
+        >
+          + New Coach
+        </button>
+      </div>
+
+      <p className="mb-4 text-xs text-[#5c7863]">
+        {active} coach{active === 1 ? "" : "es"} showing on the site · {coaches.length - active}{" "}
+        hidden
+      </p>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {shown.map((c) => (
+          <div key={c.id} className="card flex flex-col p-5">
+            <div className="mb-3 flex items-start gap-3">
+              {c.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={c.photo_url}
+                  alt={c.name}
+                  className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-[#d9e6d3]"
+                />
+              ) : (
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-sm font-bold text-white">
+                  {c.name.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-bold text-[#16331f]">{c.name}</div>
+                <div className="mt-0.5">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${coachBadge[c.track]}`}>
+                    {coachTrackLabel[c.track]}
+                  </span>
+                </div>
+                <div className="truncate text-[11px] text-[#5c7863]">{c.title || "—"}</div>
+              </div>
+            </div>
+            <p className="mb-1 truncate text-[11px] font-semibold text-[#3d5c44]">
+              📚 {c.subjects || "no subjects listed"}
+            </p>
+            <p className="mb-4 line-clamp-3 flex-1 text-xs leading-relaxed text-[#5c7863]">
+              {c.bio || "No bio yet."}
+            </p>
+            <div className="flex items-center justify-between gap-2 border-t border-[#d9e6d3] pt-3">
+              <div className="text-[10px] text-[#5c7863]">
+                order {c.sort_order} ·{" "}
+                {c.is_active ? (
+                  <span className="font-bold text-[#15803d]">✅ showing</span>
+                ) : (
+                  <span className="font-bold text-[#b45309]">🫥 hidden</span>
+                )}
+                {!c.photo_url && <span className="ml-1">· 📷 no photo</span>}
+                {!c.facebook_url && <span className="ml-1">· no link</span>}
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  onClick={() => setModal(c)}
+                  className="rounded-md bg-[#dcfce7] px-2 py-1 text-xs font-bold text-[#15803d]"
+                >
+                  Edit
+                </button>
+                <button
+                  disabled={busy}
+                  onClick={() => {
+                    if (confirm(`Remove ${c.name} from the coaches list?`))
+                      void run("delete_coach", { id: c.id }, "Coach removed");
+                  }}
+                  className="rounded-md bg-[#fee2e2] px-2 py-1 text-xs font-bold text-[#991b1b]"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {shown.length === 0 && (
+        <div className="card p-8 text-center text-sm text-[#5c7863]">
+          No coaches {filter === "ALL" ? "yet" : `in ${filter} yet`}. Click &quot;+ New Coach&quot;
+          to add one — photo, name, subjects they teach, and their Facebook link.
+          <div className="mt-2 text-xs">
+            Coaches appear on the landing page (first 3) and on <b>/coaches</b>.
+          </div>
+        </div>
+      )}
+
+      {modal && (
+        <Modal title={modal.id ? "Edit Coach" : "New Coach"} onClose={() => setModal(null)}>
+          <CoachForm
+            initial={modal}
+            busy={busy}
+            onSave={async (payload) => {
+              await run("save_coach", payload, "Coach saved — check the site!");
+              setModal(null);
+            }}
+          />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function CoachForm({
+  initial,
+  busy,
+  onSave,
+}: {
+  initial: Partial<Coach>;
+  busy: boolean;
+  onSave: (payload: Record<string, unknown>) => Promise<void>;
+}) {
+  const [name, setName] = useState(initial.name ?? "");
+  const [title, setTitle] = useState(initial.title ?? "");
+  const [subjects, setSubjects] = useState(initial.subjects ?? "");
+  const [bio, setBio] = useState(initial.bio ?? "");
+  const [facebookUrl, setFacebookUrl] = useState(initial.facebook_url ?? "");
+  const [track, setTrack] = useState<CoachTrack>(initial.track ?? "BOTH");
+  const [sortOrder, setSortOrder] = useState(initial.sort_order ?? 0);
+  const [isActive, setIsActive] = useState(initial.is_active !== false);
+  const [photoUrl, setPhotoUrl] = useState(initial.photo_url ?? "");
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const pickFile = async (file: File | undefined) => {
+    if (!file) return;
+    setErr(null);
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const { data, contentType, ext } = await preparePhoto(file);
+      const path = `${Date.now()}-${slugify(name || "coach")}.${ext}`;
+      const { error } = await supabase.storage.from("coaches").upload(path, data, {
+        contentType,
+        upsert: false,
+        cacheControl: "31536000",
+      });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("coaches").getPublicUrl(path);
+      setPhotoUrl(urlData.publicUrl);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Photo upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!name.trim()) {
+      setErr("Please enter the coach's name.");
+      return;
+    }
+    setErr(null);
+    setSaving(true);
+    try {
+      await onSave({
+        id: initial.id,
+        name,
+        title,
+        subjects,
+        bio,
+        facebook_url: facebookUrl,
+        track,
+        sort_order: sortOrder,
+        is_active: isActive,
+        photo_url: photoUrl,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {err && (
+        <div className="rounded-xl bg-[#fee2e2] px-4 py-3 text-sm text-[#991b1b]">✕ {err}</div>
+      )}
+
+      {/* Photo */}
+      <div>
+        <label className="mb-1.5 block text-sm font-semibold text-[#3d5c44]">Photo</label>
+        <div className="flex items-center gap-4">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt="preview"
+              className="h-20 w-20 rounded-full object-cover ring-4 ring-[#dcfce7]"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f1f5f1] text-2xl">
+              📷
+            </div>
+          )}
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => void pickFile(e.target.files?.[0])}
+              className="block text-xs text-[#5c7863] file:mr-3 file:rounded-lg file:border-0 file:bg-[#dcfce7] file:px-3 file:py-2 file:text-xs file:font-bold file:text-[#15803d]"
+            />
+            <div className="text-[11px] text-[#5c7863]">
+              {uploading
+                ? "Uploading…"
+                : "Best: a square head-and-shoulders photo. Big phone photos are resized automatically."}
+            </div>
+            {photoUrl && (
+              <button
+                onClick={() => setPhotoUrl("")}
+                className="rounded-md bg-[#fee2e2] px-2 py-1 text-[11px] font-bold text-[#991b1b]"
+              >
+                Remove photo
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Name">
+          <input
+            className="input-warm"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Teacher Ceppee"
+          />
+        </Field>
+        <Field label="Title / role">
+          <input
+            className="input-warm"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Head Review Coach"
+          />
+        </Field>
+      </div>
+
+      <Field label="Subjects they teach (separate with commas)">
+        <input
+          className="input-warm"
+          value={subjects}
+          onChange={(e) => setSubjects(e.target.value)}
+          placeholder="e.g. Math, English, Filipino"
+        />
+      </Field>
+
+      <Field label="Short intro">
+        <textarea
+          className="input-warm"
+          rows={4}
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder="2-3 sentences. What do they teach best? What should a reviewee ask them?"
+        />
+      </Field>
+
+      <Field label="Facebook / Messenger link">
+        <input
+          className="input-warm"
+          value={facebookUrl}
+          onChange={(e) => setFacebookUrl(e.target.value)}
+          placeholder="facebook.com/teacherceppee"
+        />
+      </Field>
+
+      <Field label="Which track do they coach?">
+        <div className="flex gap-2">
+          {(["CSE", "LET", "BOTH"] as CoachTrack[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTrack(t)}
+              className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold transition ${
+                track === t
+                  ? t === "CSE"
+                    ? "bg-[#16a34a] text-white"
+                    : t === "LET"
+                      ? "bg-[#ca8a04] text-white"
+                      : "bg-gradient-to-r from-[#16a34a] to-[#d4af37] text-white"
+                  : "border border-[#d9e6d3] bg-white text-[#5c7863]"
+              }`}
+            >
+              {t === "BOTH" ? "Both" : t}
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      <Field label="Order (lower shows first)">
+        <input
+          type="number"
+          className="input-warm"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
+        />
+      </Field>
+
+      <label className="flex items-center gap-2 text-sm font-semibold text-[#3d5c44]">
+        <input
+          type="checkbox"
+          checked={isActive}
+          onChange={(e) => setIsActive(e.target.checked)}
+          className="h-4 w-4"
+        />
+        Show this coach on the site
+      </label>
+
+      <button
+        onClick={() => void submit()}
+        disabled={busy || saving || uploading}
+        className="btn-primary w-full py-3 disabled:opacity-40"
+      >
+        {busy || saving ? "Saving…" : "Save coach"}
       </button>
     </div>
   );

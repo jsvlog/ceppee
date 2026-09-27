@@ -47,6 +47,9 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
       <Link href={trackLink("LET")} className={linkCls(trackLink("LET"))}>
         LET Review
       </Link>
+      <Link href="/coaches" className={linkCls("/coaches")}>
+        Coaches
+      </Link>
       <Link href="/pricing" className={linkCls("/pricing")}>
         Pricing
       </Link>

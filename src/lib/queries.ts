@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import type { Subscription, Testimonial, Track } from "@/lib/types";
+import type { BankStat, Coach, Level, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
 
 export interface SiteStats {
   lessons: number;
@@ -52,6 +52,29 @@ export async function getPublicTestimonials(): Promise<Testimonial[]> {
   }
 }
 
+/**
+ * Active coaches for the "Meet the coaches" section and the /coaches page.
+ * Anonymous visitors can read these (RLS: is_active = true), so the anon
+ * client is enough. Returns [] if the table is missing, which hides the
+ * homepage section instead of breaking the page.
+ */
+export async function getPublicCoaches(): Promise<Coach[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("coaches")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(60);
+    if (error) return [];
+    return (data as Coach[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export interface UserContext {
   user: { id: string; email?: string } | null;
   profile: { id: string; full_name: string | null; is_admin: boolean } | null;
@@ -88,4 +111,40 @@ export function hasActiveSub(subs: Subscription[], track: Track): boolean {
 
 export function getActiveSub(subs: Subscription[], track: Track): Subscription | undefined {
   return subs.find((s) => s.track === track && s.status === "active" && new Date(s.expires_at) > new Date());
+}
+
+/**
+ * How many questions the bank holds for a track, per subject and level.
+ * Called with the USER's session so the RPC can decide what they may see:
+ * non-subscribers only get the free-preview counts.
+ */
+export async function getBankStats(track: Track): Promise<BankStat[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("bank_stats", { p_track: track });
+    if (error) return [];
+    return (data as BankStat[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Questions available to THIS user for a track+level (0 while the bank is empty). */
+export function countAvailable(stats: BankStat[], level: Level, subjects?: string[]): number {
+  return stats
+    .filter((s) => (level === "both" || s.level === "both" || s.level === level))
+    .filter((s) => !subjects || subjects.length === 0 || (s.subject && subjects.includes(s.subject)))
+    .reduce((sum, s) => sum + Number(s.accessible ?? 0), 0);
+}
+
+/** Per-subject mastery for the dashboard bars. */
+export async function getSubjectProgress(track: Track): Promise<SubjectProgress[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("subject_progress", { p_track: track });
+    if (error) return [];
+    return (data as SubjectProgress[]) ?? [];
+  } catch {
+    return [];
+  }
 }

@@ -1,6 +1,8 @@
 -- ============================================================
 -- CEPPEE REVIEW — Supabase schema
 -- Run this whole file in: Supabase Dashboard > SQL Editor > New query
+-- THEN run supabase/study-modes.sql (question bank, tag columns,
+-- blueprint catalogue and the study-mode RPCs).
 -- Safe to re-run (idempotent).
 -- ============================================================
 
@@ -436,6 +438,67 @@ create policy "testimonials_photos_admin_delete" on storage.objects
   for delete using (bucket_id = 'testimonials' and public.is_admin());
 
 -- ============================================================
+-- 10c. COACHES (the review team shown on the site)
+-- Also available standalone in supabase/coaches.sql
+-- ============================================================
+create table if not exists public.coaches (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  title text,
+  subjects text,
+  bio text,
+  photo_url text,
+  facebook_url text,
+  track text not null default 'BOTH' check (track in ('CSE', 'LET', 'BOTH')),
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists coaches_public_idx
+  on public.coaches (is_active, sort_order, created_at);
+
+alter table public.coaches enable row level security;
+
+drop policy if exists "coaches_public_read" on public.coaches;
+create policy "coaches_public_read" on public.coaches
+  for select using (is_active = true or public.is_admin());
+
+drop policy if exists "coaches_admin_all" on public.coaches;
+create policy "coaches_admin_all" on public.coaches
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- Storage bucket for coach photos (public = served on the landing page)
+insert into storage.buckets (id, name, public)
+values ('coaches', 'coaches', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "coaches_photos_admin_insert" on storage.objects;
+create policy "coaches_photos_admin_insert" on storage.objects
+  for insert with check (bucket_id = 'coaches' and public.is_admin());
+
+drop policy if exists "coaches_photos_admin_update" on storage.objects;
+create policy "coaches_photos_admin_update" on storage.objects
+  for update using (bucket_id = 'coaches' and public.is_admin());
+
+drop policy if exists "coaches_photos_admin_delete" on storage.objects;
+create policy "coaches_photos_admin_delete" on storage.objects
+  for delete using (bucket_id = 'coaches' and public.is_admin());
+
+-- Head coach seed so the site is never empty
+insert into public.coaches (name, title, subjects, bio, facebook_url, track, sort_order, is_active)
+select
+  'Teacher Ceppee',
+  'Head Review Coach',
+  'Math, English, Filipino, General Information',
+  'Years of experience teaching CSE and LET review. Thousands of Filipinos have already passed with his guidance — every lesson here comes from the review style he uses on his Facebook page.',
+  'https://www.facebook.com/teacherceppee',
+  'BOTH',
+  1,
+  true
+where not exists (select 1 from public.coaches);
+
+-- ============================================================
 -- 11. SEED — topics, lessons, exams, questions (sample content)
 -- Fixed UUIDs so references work; safe to re-run.
 -- ============================================================
@@ -480,33 +543,12 @@ insert into public.lessons (id, topic_id, title, is_free, content, order_index, 
    1, true)
 on conflict (id) do nothing;
 
--- --- Exams ---
--- CSE free preview practice
-insert into public.exams (id, track, title, description, mode, topic, duration_minutes, is_free_preview, is_active) values
-  ('d1000000-0000-0000-0000-000000000001', 'CSE', 'Free Preview: Math Basics Drill', 'Sample ng practice mode — 5 questions, walang time pressure. Try it before subscribing!', 'practice', 'Mathematics', 10, true, true),
-  ('d1000000-0000-0000-0000-000000000002', 'CSE', 'CSE Mock Exam 1 — Professional', 'Full mock exam simulating the Professional level. Timed — parang totohanan.', 'mock', null, 170, false, true),
-  ('d1000000-0000-0000-0000-000000000003', 'CSE', 'Practice: Number Sequences', 'Drill sa number sequences and series.', 'practice', 'Clerical & Reasoning', 15, false, true),
-  ('d1000000-0000-0000-0000-000000000004', 'LET', 'Free Preview: Gen Ed Mixed Drill', 'Sample ng LET question styles — 5 questions, walang time pressure.', 'practice', null, 10, true, true),
-  ('d1000000-0000-0000-0000-000000000005', 'LET', 'LET Mock Exam 1 — Professional Education', 'Timed mock exam focused on Professional Education (40% of the LET).', 'mock', 'Professional Education', 150, false, true)
-on conflict (id) do nothing;
-
--- --- Questions for free preview CSE exam ---
-insert into public.exam_questions (exam_id, order_index, question_text, choice_a, choice_b, choice_c, choice_d, correct_choice, explanation) values
-  ('d1000000-0000-0000-0000-000000000001', 1, 'Simplify: 3/4 + 1/8', '7/12', '7/8', '4/12', '1/2', 'B', 'LCD of 4 and 8 is 8. 3/4 = 6/8, then 6/8 + 1/8 = 7/8.'),
-  ('d1000000-0000-0000-0000-000000000001', 2, 'What is 15% of 240?', '36', '32', '40', '24', 'A', '10% of 240 = 24, 5% = 12, so 15% = 24 + 12 = 36.'),
-  ('d1000000-0000-0000-0000-000000000001', 3, 'If 3x - 7 = 14, what is x?', '5', '6', '7', '8', 'C', '3x = 14 + 7 = 21, so x = 7.'),
-  ('d1000000-0000-0000-0000-000000000001', 4, 'A shirt costs ₱450 after a 25% discount. What was the original price?', '₱562.50', '₱600', '₱337.50', '₱575', 'B', '₱450 is 75% of the original. 450 ÷ 0.75 = ₱600.'),
-  ('d1000000-0000-0000-0000-000000000001', 5, 'The ratio of men to women in an office is 3:5. If there are 40 employees, how many are women?', '15', '20', '24', '25', 'D', 'Total parts = 8. One part = 5. Women = 5 × 5 = 25.')
-on conflict (id) do nothing;
-
--- --- Questions for free preview LET exam ---
-insert into public.exam_questions (exam_id, order_index, question_text, choice_a, choice_b, choice_c, choice_d, correct_choice, explanation) values
-  ('d1000000-0000-0000-0000-000000000004', 1, 'A teacher wants to develop critical thinking. Which activity is BEST?', 'Memorization drills', 'Group problem-solving discussion', 'Copying notes', 'Silent reading', 'B', 'Problem-solving discussions require students to analyze, evaluate, and justify — core critical thinking skills.'),
-  ('d1000000-0000-0000-0000-000000000004', 2, 'Which is the FIRST step in the curriculum development process?', 'Implementation', 'Evaluation', 'Planning/objectives', 'Feedback', 'C', 'Curriculum development starts with identifying objectives — what learners should achieve.'),
-  ('d1000000-0000-0000-0000-000000000004', 3, 'Solve: If a car travels 240 km in 4 hours, what is its average speed?', '50 kph', '55 kph', '60 kph', '65 kph', 'C', 'Speed = distance ÷ time = 240 ÷ 4 = 60 kph.'),
-  ('d1000000-0000-0000-0000-000000000004', 4, 'Which organelle is known as the powerhouse of the cell?', 'Nucleus', 'Mitochondrion', 'Ribosome', 'Golgi body', 'B', 'Mitochondria produce ATP, the cell''s energy currency.'),
-  ('d1000000-0000-0000-0000-000000000004', 5, 'Choose the word closest in meaning to "prudent":', 'Reckless', 'Cautious', 'Generous', 'Loud', 'B', 'Prudent means acting with care and thought for the future — cautious.')
-on conflict (id) do nothing;
+-- --- Exams & questions are NOT seeded here ---
+-- The exam catalogue (CSE Professional/Sub-Professional mocks, LET Elementary
+-- and Secondary mocks, free samplers) is created by supabase/study-modes.sql,
+-- together with the tagged question bank, the locked answer key and the study
+-- mode RPCs. Real questions are uploaded from the admin panel
+-- (Admin > Question Bank), never from this file.
 
 -- ============================================================
 -- DONE! Next steps:

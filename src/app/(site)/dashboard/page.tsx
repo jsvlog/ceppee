@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import { getUserContext } from "@/lib/queries";
+import { getUserContext, hasActiveSub, getSubjectProgress } from "@/lib/queries";
 import { redirect } from "next/navigation";
 import DashboardClient from "./DashboardClient";
-import type { PaymentRequest, Subscription, ExamAttempt, Exam, ExamWithCount } from "@/lib/types";
+import type { PaymentRequest, Subscription, ExamAttempt, Exam, ExamWithCount, SubjectProgress, Track } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ export default async function DashboardPage() {
   let requests: PaymentRequest[] = [];
   let attempts: (ExamAttempt & { exam?: Exam })[] = [];
   let freeExams: ExamWithCount[] = [];
+  let mastery: { track: Track; rows: SubjectProgress[] }[] = [];
 
   try {
     const admin = getAdminClient();
@@ -35,8 +36,13 @@ export default async function DashboardPage() {
     requests = (payReqs as PaymentRequest[]) ?? [];
     attempts = (myAttempts as (ExamAttempt & { exam?: Exam })[]) ?? [];
     freeExams = ((previews as unknown as (ExamWithCount & { exam_questions?: { count: number }[] })[]) ?? []).map(
-      (e) => ({ ...e, question_count: e.exam_questions?.[0]?.count ?? 0 })
+      (e) => ({ ...e, pinned_count: e.exam_questions?.[0]?.count ?? 0 })
     );
+
+    // Per-subject mastery, only for the tracks this user can actually study.
+    const activeTracks = (["CSE", "LET"] as Track[]).filter((t) => hasActiveSub(subs, t));
+    const loaded = await Promise.all(activeTracks.map(async (t) => ({ track: t, rows: await getSubjectProgress(t) })));
+    mastery = loaded.filter((m) => m.rows.length > 0);
   } catch (e) {
     console.error("dashboard data error", e);
   }
@@ -48,6 +54,7 @@ export default async function DashboardPage() {
       requests={requests}
       attempts={attempts}
       freeExams={freeExams}
+      mastery={mastery}
     />
   );
 }

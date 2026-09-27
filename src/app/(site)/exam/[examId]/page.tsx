@@ -3,8 +3,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext, hasActiveSub } from "@/lib/queries";
-import ExamClient from "./ExamClient";
-import type { Exam, Question } from "@/lib/types";
+import { levelLabel, passingPctFor } from "@/lib/exam";
+import StudyRunner from "@/components/study/StudyRunner";
+import { LockedCard, EmptyBank, RunnerShell } from "@/components/study/States";
+import type { BankQuestion, Exam, PracticeQuestion, Track } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,7 @@ export const metadata: Metadata = { title: "Mock Exam" };
 
 export default async function ExamPage({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
-  const { user, subs } = await getUserContext();
+  const { user, subs, isAdmin } = await getUserContext();
   if (!user) redirect(`/login?next=/exam/${examId}`);
 
   const supabase = await createClient();
@@ -20,69 +22,81 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
 
   if (!exam) {
     return (
-      <Shell>
-        <Locked title="Exam not found" msg="It may have been removed or isn’t available to you yet." />
-      </Shell>
+      <RunnerShell>
+        <LockedCard
+          title="Exam not found"
+          msg="It may have been removed or isn't available to you yet."
+          backHref="/"
+          backLabel="Home"
+          loginHref="/"
+        />
+      </RunnerShell>
     );
   }
+
   const e = exam as Exam;
-  const backHref = `/review/${e.track.toLowerCase()}`;
+  const track = e.track as Track;
+  const backHref = `/review/${track.toLowerCase()}`;
+  const subscribed = isAdmin || hasActiveSub(subs, track);
 
-  // Gate: free preview or subscriber only
-  if (!e.is_free_preview && !hasActiveSub(subs, e.track)) {
+  if (!e.is_free_preview && !subscribed) {
     return (
-      <Shell>
-        <Locked
+      <RunnerShell>
+        <LockedCard
           title="This exam is locked 🔒"
-          msg={`"${e.title}" is for ${e.track} subscribers. Subscribe from your dashboard to unlock all mock exams and drills.`}
+          msg={`"${e.title}" is for ${track} subscribers. Subscribe for ₱500 to unlock all mock exams, drills and flashcards.`}
+          backHref={backHref}
+          backLabel="Back to reviewer"
+          loginHref="/dashboard"
         />
-      </Shell>
+      </RunnerShell>
     );
   }
 
-  // Questions — RLS also blocks these for non-subscribers on paid exams
-  const { data: questions } = await supabase
-    .from("exam_questions")
-    .select("*")
-    .eq("exam_id", examId)
-    .order("order_index");
+  const isPractice = e.mode === "practice";
+  const rpc = isPractice ? "start_practice_exam" : "start_mock";
+  const { data, error } = await supabase.rpc(rpc, { p_exam_id: e.id });
+  if (error) console.error(`exam ${rpc}`, error.message);
+  const questions = (data as (BankQuestion | PracticeQuestion)[]) ?? [];
 
-  if (!questions || questions.length === 0) {
+  if (questions.length === 0) {
     return (
-      <Shell>
-        <Locked
-          title="This exam has no questions yet"
-          msg="Teacher Ceppee is still adding the questions to this exam. Check back soon!"
-        />
-      </Shell>
+      <RunnerShell>
+        <EmptyBank what={`questions for "${e.title}"`} backHref={backHref} backLabel="Back to reviewer" />
+      </RunnerShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      <ExamClient exam={e} questions={questions as Question[]} backHref={backHref} />
-    </div>
-  );
-}
+    <RunnerShell>
+      <StudyRunner
+        kind={isPractice ? "drill" : "mock"}
+        attemptKind={isPractice ? "drill" : "exam"}
+        track={track}
+        level={e.level}
+        title={(isPractice ? "🎁 " : "⏱️ ") + e.title}
+        subtitle={levelLabel(track, e.level) + (e.is_free_preview ? " · free preview" : "")}
+        description={e.description}
+        backHref={backHref}
+        backLabel="Back to reviewer"
+        label={e.title}
+        passingPct={e.passing_pct || passingPctFor(track)}
+        examId={e.id}
+        questions={questions}
+        durationMinutes={isPractice ? undefined : e.duration_minutes}
+      />
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-md px-4 py-24 text-center">{children}</div>;
-}
+      {e.subjects && e.subjects.length > 0 && (
+        <p className="mt-6 text-center text-xs text-[#94a896]">
+          Sections drawn for this paper: {e.subjects.join(" · ")} · questions are shuffled every attempt
+        </p>
+      )}
 
-function Locked({ title, msg }: { title: string; msg: string }) {
-  return (
-    <>
-      <div className="mb-4 text-6xl">🔒</div>
-      <h1 className="mb-2 text-2xl font-black text-[#16331f]">{title}</h1>
-      <p className="mb-6 text-sm text-[#5c7863]">{msg}</p>
-      <div className="flex justify-center gap-3">
-        <Link href="/dashboard" className="btn-primary px-6 py-3 text-sm">
-          Go to Dashboard
-        </Link>
-        <Link href="/" className="rounded-xl border border-[#d9e6d3] bg-white px-6 py-3 text-sm font-semibold text-[#3d5c44]">
-          Home
+      <div className="mt-6 text-center">
+        <Link href={backHref} className="text-sm text-[#5c7863] hover:text-[#16331f]">
+          ← Back to the {track} reviewer
         </Link>
       </div>
-    </>
+    </RunnerShell>
   );
 }

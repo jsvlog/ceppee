@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { getSiteStats, getPublicTestimonials } from "@/lib/queries";
+import { getSiteStats, getPublicTestimonials, getPublicCoaches } from "@/lib/queries";
 import { TRACK_LABEL } from "@/lib/format";
 import Testimonials from "@/components/Testimonials";
 import TestimonialHighlight from "@/components/TestimonialHighlight";
+import CoachesSection from "@/components/CoachesSection";
 import LogoMark from "@/components/LogoMark";
 
 export const dynamic = "force-dynamic";
@@ -68,9 +69,10 @@ const faqs = [
 ];
 
 export default async function HomePage() {
-  const [stats, testimonials] = await Promise.all([
+  const [stats, testimonials, coaches] = await Promise.all([
     getSiteStats(),
     getPublicTestimonials(),
+    getPublicCoaches(),
   ]);
 
   return (
@@ -235,6 +237,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===== COACHES ===== */}
+      <CoachesSection coaches={coaches} limit={3} />
 
       {/* ===== TESTIMONIALS ===== */}
       <Testimonials items={testimonials} />
