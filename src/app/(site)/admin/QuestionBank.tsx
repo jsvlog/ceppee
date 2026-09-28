@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { postAdmin } from "@/lib/admin-api";
 import { parseBulkQuestions, ALL_SUBJECTS } from "@/lib/bulk-import";
-import { MATERIAL } from "@/lib/exam";
+import { MATERIAL, SPECIALIZATIONS } from "@/lib/exam";
 import { subjectIcon } from "@/lib/exam";
 import type { Track } from "@/lib/types";
 
@@ -52,6 +52,7 @@ export default function QuestionBank({ onFlash }: { onFlash?: (ok: boolean, msg:
   const [track, setTrack] = useState<Track>("CSE");
   const [level, setLevel] = useState("");
   const [subject, setSubject] = useState("");
+  const [major, setMajor] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
 
@@ -79,6 +80,7 @@ export default function QuestionBank({ onFlash }: { onFlash?: (ok: boolean, msg:
       p_track: track || null,
       p_level: level || null,
       p_subject: subject || null,
+      p_specialization: major || null,
       p_search: search || null,
       p_limit: PAGE_SIZE + 1,
       p_offset: page * PAGE_SIZE,
@@ -92,7 +94,7 @@ export default function QuestionBank({ onFlash }: { onFlash?: (ok: boolean, msg:
     setHasMore(list.length > PAGE_SIZE);
     setRows(list.slice(0, PAGE_SIZE));
     setPicked([]);
-  }, [page, search, subject, level, supabase, track]);
+  }, [page, search, subject, level, major, supabase, track]);
 
   const loadStats = useCallback(async () => {
     const [cse, letx] = await Promise.all([
@@ -164,13 +166,18 @@ export default function QuestionBank({ onFlash }: { onFlash?: (ok: boolean, msg:
   };
 
   const clearBank = async () => {
-    const scope = level || subject ? "the current filter" : `the whole ${track} bank`;
+    const scope = level || subject || major ? "the current filter" : `the whole ${track} bank`;
     if (!confirm(`This deletes EVERY question in ${scope}. The real reviewer content included. Continue?`)) return;
     if (!confirm("Last chance — this cannot be undone. Delete?")) return;
     setBusy(true);
     try {
-      const res = await postAdmin("clear_bank", { track });
-      say(true, `Cleared ${res.deleted ?? 0} question(s) from ${track}.`);
+      const res = await postAdmin("clear_bank", {
+        track,
+        level: level || undefined,
+        subject: subject || undefined,
+        specialization: major || undefined,
+      });
+      say(true, `Cleared ${res.deleted ?? 0} question(s) from ${scope}.`);
       await Promise.all([load(), loadStats()]);
     } catch (e) {
       say(false, e instanceof Error ? e.message : "Clear failed");
@@ -328,6 +335,7 @@ export default function QuestionBank({ onFlash }: { onFlash?: (ok: boolean, msg:
                 setTrack(e.target.value as Track);
                 setSubject("");
                 setLevel("");
+                setMajor("");
                 setPage(0);
               }}
             >
@@ -367,6 +375,24 @@ export default function QuestionBank({ onFlash }: { onFlash?: (ok: boolean, msg:
               {subjectOptions.map((s) => (
                 <option key={s} value={s}>
                   {s}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block font-semibold text-[#3d5c44]">Majorship</span>
+            <select
+              className="input-warm"
+              value={major}
+              onChange={(e) => {
+                setMajor(e.target.value);
+                setPage(0);
+              }}
+            >
+              <option value="">All majorships</option>
+              {SPECIALIZATIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
                 </option>
               ))}
             </select>

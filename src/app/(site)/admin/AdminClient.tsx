@@ -6,7 +6,7 @@ import { peso, fmtDate, fmtDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { postAdmin } from "@/lib/admin-api";
 import { parseBulkQuestions } from "@/lib/bulk-import";
-import { MATERIAL, subjectsFor, subjectIcon, passingPctFor } from "@/lib/exam";
+import { MATERIAL, subjectsFor, subjectIcon, passingPctFor, SPECIALIZATIONS } from "@/lib/exam";
 import QuestionBank from "./QuestionBank";
 import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial, Coach, CoachTrack } from "@/lib/types";
 import type { AdminProfile, LessonMeta } from "./page";
@@ -1235,7 +1235,22 @@ function QuestionForm({
             <input className="input-warm" value={f.subtopic} onChange={(e) => set("subtopic", e.target.value)} placeholder="e.g. Fractions" />
           </Field>
           <Field label="Majorship (Specialization only)">
-            <input className="input-warm" value={f.specialization} onChange={(e) => set("specialization", e.target.value)} placeholder="e.g. Mathematics" />
+            <select
+              className="input-warm"
+              value={f.specialization}
+              onChange={(e) => set("specialization", e.target.value)}
+            >
+              <option value="">— none (Gen Ed / Prof Ed / CSE) —</option>
+              {SPECIALIZATIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-[11px] text-[#5c7863]">
+              Only for LET Secondary Specialization items. Must match the major the student picked, so
+              choose from this list rather than typing.
+            </span>
           </Field>
           <Field label="Difficulty">
             <select className="input-warm" value={f.difficulty} onChange={(e) => set("difficulty", Number(e.target.value))}>

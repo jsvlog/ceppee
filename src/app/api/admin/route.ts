@@ -222,6 +222,9 @@ export async function POST(request: NextRequest) {
       case "clear_bank": {
         const { data, error } = await supabase.rpc("admin_clear_bank", {
           p_track: (payload.track as string) || null,
+          p_level: (payload.level as string) || null,
+          p_subject: (payload.subject as string) || null,
+          p_specialization: (payload.specialization as string) || null,
         });
         if (error) throw error;
         return NextResponse.json({ ok: true, deleted: data });

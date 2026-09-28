@@ -687,11 +687,14 @@ begin
 end $$;
 
 -- ---- 8l. ADMIN: browse the bank with keys, and bulk delete ----
+-- p_specialization filters by majorship (LET Secondary's Specialization subtest).
+drop function if exists public.admin_bank_list(text, text, text, text, text, int, int);
 drop function if exists public.admin_bank_list(text, text, text, text, int, int);
 create function public.admin_bank_list(
   p_track text default null,
   p_level text default null,
   p_subject text default null,
+  p_specialization text default null,
   p_search text default null,
   p_limit int default 50,
   p_offset int default 0
@@ -715,6 +718,7 @@ begin
      where (p_track is null or q.track = p_track)
        and (p_level is null or q.level = p_level)
        and (p_subject is null or q.subject = p_subject)
+       and (p_specialization is null or q.specialization = p_specialization)
        and (p_search is null or p_search = '' or q.question_text ilike '%' || p_search || '%')
      order by q.created_at desc
      limit greatest(1, least(coalesce(p_limit, 50), 200))
@@ -732,14 +736,27 @@ begin
   return n;
 end $$;
 
--- ---- 8m. ADMIN: wipe the whole bank (fresh start before a big upload) ----
+-- ---- 8m. ADMIN: wipe the bank (fresh start before a big upload) ----
+-- Honours the same filters as the bank browse, so "clear" removes what the admin
+-- is actually looking at. It used to delete the whole track regardless of the
+-- filters on screen while the UI warned "everything in the current filter".
+drop function if exists public.admin_clear_bank(text, text, text, text);
 drop function if exists public.admin_clear_bank(text);
-create function public.admin_clear_bank(p_track text default null)
+create function public.admin_clear_bank(
+  p_track text default null,
+  p_level text default null,
+  p_subject text default null,
+  p_specialization text default null
+)
 returns int language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
   if not public.is_admin() then raise exception 'Not authorized'; end if;
-  delete from public.exam_questions where p_track is null or track = p_track;
+  delete from public.exam_questions
+   where (p_track is null or track = p_track)
+     and (p_level is null or level = p_level)
+     and (p_subject is null or subject = p_subject)
+     and (p_specialization is null or specialization = p_specialization);
   get diagnostics n = row_count;
   return n;
 end $$;
@@ -844,9 +861,9 @@ revoke execute on function public.record_answer(uuid, boolean) from anon;
 revoke execute on function public.subject_progress(text) from anon;
 revoke execute on function public.admin_save_question(jsonb) from anon, authenticated;
 revoke execute on function public.admin_import_questions(jsonb) from anon, authenticated;
-revoke execute on function public.admin_bank_list(text, text, text, text, int, int) from anon, authenticated;
+revoke execute on function public.admin_bank_list(text, text, text, text, text, int, int) from anon, authenticated;
 revoke execute on function public.admin_delete_questions(uuid[]) from anon, authenticated;
-revoke execute on function public.admin_clear_bank(text) from anon, authenticated;
+revoke execute on function public.admin_clear_bank(text, text, text, text) from anon, authenticated;
 
 grant execute on function public.start_mock(uuid) to authenticated;
 grant execute on function public.start_practice_exam(uuid) to authenticated;
@@ -860,6 +877,6 @@ grant execute on function public.subject_progress(text) to authenticated;
 grant execute on function public.bank_stats(text) to anon, authenticated;
 grant execute on function public.admin_save_question(jsonb) to authenticated;
 grant execute on function public.admin_import_questions(jsonb) to authenticated;
-grant execute on function public.admin_bank_list(text, text, text, text, int, int) to authenticated;
+grant execute on function public.admin_bank_list(text, text, text, text, text, int, int) to authenticated;
 grant execute on function public.admin_delete_questions(uuid[]) to authenticated;
-grant execute on function public.admin_clear_bank(text) to authenticated;
+grant execute on function public.admin_clear_bank(text, text, text, text) to authenticated;

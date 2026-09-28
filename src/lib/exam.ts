@@ -133,6 +133,50 @@ export const SPECIALIZATIONS = [
   "Mother Tongue",
 ];
 
+/**
+ * Snap a typed or pasted majorship onto one of the official SPECIALIZATIONS.
+ *
+ * Students' drills filter with an EXACT match (`q.specialization = v.specialization`),
+ * so a question tagged "Math" instead of "Mathematics" is never shown to anyone and
+ * nothing reports it. Always run user/import input through this before saving.
+ * Returns null when the value is empty or unrecognised — callers should warn on the
+ * unrecognised case rather than store a name the bank will never match.
+ */
+const SPECIALIZATION_ALIASES: Record<string, string> = {
+  math: "Mathematics",
+  maths: "Mathematics",
+  mathematics: "Mathematics",
+  eng: "English",
+  english: "English",
+  fil: "Filipino",
+  filipino: "Filipino",
+  sci: "Science",
+  science: "Science",
+  "social studies": "Social Studies",
+  socialstudies: "Social Studies",
+  soscs: "Social Studies",
+  ap: "Araling Panlipunan",
+  "araling panlipunan": "Araling Panlipunan",
+  aralingpanlipunan: "Araling Panlipunan",
+  mapeh: "MAPEH",
+  tle: "TLE",
+  "values education": "Values Education",
+  values: "Values Education",
+  esp: "Values Education",
+  "mother tongue": "Mother Tongue",
+  mothertongue: "Mother Tongue",
+  mtb: "Mother Tongue",
+  mtb_mle: "Mother Tongue",
+};
+
+export function normalizeSpecialization(v: string | null | undefined): string | null {
+  const raw = String(v ?? "").trim();
+  if (!raw) return null;
+  const exact = SPECIALIZATIONS.find((s) => s.toLowerCase() === raw.toLowerCase());
+  if (exact) return exact;
+  return SPECIALIZATION_ALIASES[raw.toLowerCase().replace(/\.$/, "").replace(/[-\s]+/g, " ")] ?? null;
+}
+
 export function levelsFor(track: Track): LevelMeta[] {
   return MATERIAL[track];
 }

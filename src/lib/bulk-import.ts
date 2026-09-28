@@ -51,6 +51,10 @@ export interface ParsedQuestion {
   source?: string;
 }
 
+// Majorship names live in one place so the admin form, the importer and the student
+// drills cannot drift apart (a mismatched majorship hides a question from everyone).
+import { SPECIALIZATIONS, normalizeSpecialization } from "@/lib/exam";
+
 export interface ParsedBatch {
   defaults: Partial<ParsedQuestion>;
   questions: ParsedQuestion[];
@@ -67,6 +71,16 @@ export const CSE_SUBJECTS = [
 export const LET_SUBJECTS = ["General Education", "Professional Education", "Specialization"];
 export const ALL_SUBJECTS = [...CSE_SUBJECTS, ...LET_SUBJECTS];
 export const ALL_LEVELS = ["both", "professional", "subprofessional", "elementary", "secondary"];
+
+/**
+ * Majorship tag values are snapped onto the official SPECIALIZATIONS list.
+ * Same trap as subjects, but worse: a student's Specialization drill matches the
+ * majorship EXACTLY, so a question tagged "Math" instead of "Mathematics" is never
+ * served to anyone and nothing reports it. Unrecognised values are dropped with a
+ * warning rather than stored, so the gap shows up as an obvious "no majorship"
+ * rather than as a plausible-looking tag that silently matches nothing.
+ */
+
 
 const TRACK_ALIASES: Record<string, string> = {
   cse: "CSE",
@@ -193,7 +207,12 @@ function applyTag(target: Partial<ParsedQuestion>, key: string, value: string, w
   } else if (k === "SUBTOPIC" || k === "SUB TOPIC" || k === "SUBTOPIC ") {
     target.subtopic = v;
   } else if (k === "SPECIALIZATION" || k === "MAJOR") {
-    target.specialization = v;
+    const s = normalizeSpecialization(v);
+    if (!s) {
+      warnings.push(
+        `${where}: unrecognised MAJORSHIP "${v}" — dropped, so this question will not appear in any Specialization drill. Use one of: ${SPECIALIZATIONS.join(", ")}.`
+      );
+    } else target.specialization = s;
   } else if (k === "DIFFICULTY") {
     const d = DIFFICULTY_ALIASES[v.toLowerCase()];
     if (!d) warnings.push(`${where}: unrecognised DIFFICULTY "${v}" (use easy/average/hard) — ignored.`);
