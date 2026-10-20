@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getUserContext, hasActiveSub, getBankStats, countAvailable } from "@/lib/queries";
 import { peso } from "@/lib/format";
-import { levelsFor, levelMeta, subjectsFor, STUDY_MODES, specializationsFor, levelLabel } from "@/lib/exam";
+import { levelsFor, subjectsFor, STUDY_MODES, specializationsFor, levelLabel } from "@/lib/exam";
 import MajorshipPicker from "@/components/study/MajorshipPicker";
 import type { Track, Topic, Exam, ExamWithCount, Level, BankStat } from "@/lib/types";
 
@@ -56,7 +56,6 @@ export default async function TrackPage({
 
   const levelOptions = levelsFor(trackKey);
   const levelKey = (levelOptions.find((l) => l.key === sp.level)?.key ?? levelOptions[0].key) as Level;
-  const level = levelMeta(trackKey, levelKey)!;
   const hasMajorPicker = trackKey === "LET" && (levelKey === "secondary" || levelKey === "elementary");
   const majorOptions = specializationsFor(levelKey);
   const major = hasMajorPicker ? (majorOptions.includes(sp.major ?? "") ? (sp.major as string) : null) : null;
@@ -305,36 +304,22 @@ export default async function TrackPage({
             </div>
           )}
 
-          {/* Specialization mock — built from the student's major */}
-          {hasMajorPicker && (
-            <div className="card mt-4 flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
+          {/* Set mocks — every set is a real 150-item paper */}
+          {trackKey === "LET" && (
+            <div className="card mt-4 flex flex-col items-start justify-between gap-4 border-[#fde68a] bg-gradient-to-br from-[#fffbeb] to-white p-5 sm:flex-row sm:items-center">
               <div>
-                <div className="font-bold text-[#16331f]">
-                  {!subscribed && "🔒 "}
-                  {level.label} — Specialization Mock
-                </div>
+                <div className="font-bold text-[#16331f]">📚 Set Mocks — full 150-item papers</div>
                 <div className="mt-1 text-xs text-[#5c7863]">
-                  150 items · 3 hrs 30 min · {major ? `majorship: ${major}` : `choose your majorship above${majorRequired ? "" : " (optional)"}`}
+                  Every set is one complete paper, timed like the real subtest
+                  {major ? ` · ${major}` : ""}. No shortened practice runs.
                 </div>
               </div>
-              {!major ? (
-                <span className="rounded-xl bg-[#fef9c3] px-4 py-2 text-sm font-bold text-[#b45309]">
-                  {majorRequired ? "Pick majorship 👆" : "Optional 👆"}
-                </span>
-              ) : (
-                <Link
-                  href={
-                    subscribed
-                      ? study("drill", { subjects: "Specialization", count: "150", timed: "1", tlabel: `${level.label} Specialization — ${major}` })
-                      : user
-                        ? "/dashboard"
-                        : "/login?next=/dashboard"
-                  }
-                  className="rounded-xl bg-[#ca8a04] px-5 py-2.5 text-sm font-bold text-white"
-                >
-                  Start →
-                </Link>
-              )}
+              <Link
+                href={`/review/${track}/sets?level=${levelKey}${major ? `&major=${encodeURIComponent(major)}` : ""}`}
+                className="btn-gold shrink-0 px-5 py-2.5 text-sm"
+              >
+                Choose a set →
+              </Link>
             </div>
           )}
 

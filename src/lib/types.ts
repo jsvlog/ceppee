@@ -116,6 +116,33 @@ export interface BankStat {
   accessible: number;
 }
 
+/**
+ * One set in the set picker (supabase/set-catalog.sql). `live` is what the set
+ * really holds today; when it is under 150 the paper still serves 150 — the
+ * difference is drawn from other sets of the same subject, which is why the
+ * picker shows `missing` instead of pretending every set is complete.
+ */
+export interface SetCatalogRow {
+  id: string;
+  track: Track;
+  subject: string | null;
+  specialization: string | null;
+  level: Level;
+  set_no: number;
+  title: string;
+  target: number;
+  live: number;
+  missing: number;
+  easy: number;
+  medium_hard: number;
+  extremely_hard: number;
+  pedagogical: number;
+  shape_easy: number;
+  shape_medium_hard: number;
+  shape_extremely_hard: number;
+  shape_pedagogical: number;
+}
+
 export interface SubjectProgress {
   subject: string;
   answered: number;
