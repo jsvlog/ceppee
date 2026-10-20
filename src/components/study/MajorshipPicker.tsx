@@ -7,18 +7,23 @@ export default function MajorshipPicker({
   options,
   basePath,
   level,
+  optional = false,
 }: {
   current: string | null;
   options: string[];
   /** e.g. "/review/let" — the picker builds the ?level=&major= URL itself. */
   basePath: string;
   level: string;
+  /** Elementary: the specialization paper only applies to BSNEd / BECEd takers. */
+  optional?: boolean;
 }) {
   const router = useRouter();
 
   return (
     <label className="card flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4">
-      <span className="text-sm font-bold text-[#16331f]">📚 Your majorship (Specialization)</span>
+      <span className="text-sm font-bold text-[#16331f]">
+        📚 Your majorship (Specialization){optional ? " — optional" : ""}
+      </span>
       <select
         value={current ?? ""}
         onChange={(e) => {
@@ -35,7 +40,11 @@ export default function MajorshipPicker({
         ))}
       </select>
       <span className="text-xs text-[#5c7863]">
-        {current ? "Used for your Specialization mock and drills." : "Needed before the Specialization subtest."}
+        {current
+          ? "Used for your Specialization mock and drills."
+          : optional
+            ? "Only BSNEd / BECEd takers sit the Specialization subtest. BEEd: skip this."
+            : "Needed before the Specialization subtest."}
       </span>
     </label>
   );

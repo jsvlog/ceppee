@@ -41,7 +41,7 @@ export const MATERIAL: Record<Track, LevelMeta[]> = {
       key: "elementary",
       label: "LET Elementary",
       short: "Elementary (Grades 1–6)",
-      blurb: "General Education 40% + Professional Education 60%.",
+      blurb: "BEEd: General Education 40% + Professional Education 60%. With specialization (BSNEd / BECEd): 20% + 40% + 40%.",
       facts: { items: "150 items per subtest", time: "3–3.5 hrs per subtest", passing: "75% average" },
       defaultSubjects: ["General Education", "Professional Education"],
     },
@@ -113,11 +113,24 @@ export const SUBJECTS: Record<Track, SubjectMeta[]> = {
     {
       key: "Specialization",
       icon: "📚",
-      note: "Your declared major — Secondary takers only.",
-      levels: ["secondary"],
+      note: "Your declared major. Secondary takers always have it; elementary only with specialization (BSNEd / BECEd).",
+      levels: ["secondary", "elementary"],
     },
   ],
 };
+
+/**
+ * LET majors, by level.
+ *
+ * Per the PRC-CHED JMC (in force from the September 2025 LEPT):
+ *  - BEEd graduates sit Gen Ed + Prof Ed only, no specialization.
+ *  - BSNEd and BECEd graduates sit Gen Ed + Prof Ed + their specialization, so
+ *    Special Needs Education and Early Childhood Education exist at ELEMENTARY.
+ *  - Secondary: English, Filipino, Mathematics, Science, Social Science, Values,
+ *    Araling Panlipunan, Mother Tongue, and TLE / Physical Education / Culture and
+ *    Arts Education (the last two replaced the old MAPEH split).
+ */
+export const ELEMENTARY_SPECIALIZATIONS = ["Special Needs Education", "Early Childhood Education"];
 
 /** Secondary LET majors (the Specialization subtest you filed for). */
 export const SPECIALIZATIONS = [
@@ -126,15 +139,21 @@ export const SPECIALIZATIONS = [
   "Mathematics",
   "Science",
   "Social Science",
-  "MAPEH",
+  "Physical Education",
+  "Culture and Arts Education",
   "TLE",
   "Values Education",
   "Araling Panlipunan",
   "Mother Tongue",
-  "BEED",
-  "SNED",
-  "BCAED",
+  "Special Needs Education",
+  "Early Childhood Education",
 ];
+
+/** Every major offered at a level — elementary only has the two specialization papers. */
+export function specializationsFor(level: string | null | undefined): string[] {
+  if (level === "elementary") return ELEMENTARY_SPECIALIZATIONS;
+  return SPECIALIZATIONS;
+}
 
 /**
  * Snap a typed or pasted majorship onto one of the official SPECIALIZATIONS.
@@ -164,10 +183,15 @@ const SPECIALIZATION_ALIASES: Record<string, string> = {
   ap: "Araling Panlipunan",
   "araling panlipunan": "Araling Panlipunan",
   aralingpanlipunan: "Araling Panlipunan",
-  mapeh: "MAPEH",
-  pe: "MAPEH",
-  "physical education": "MAPEH",
-  physicaleducation: "MAPEH",
+  mapeh: "Physical Education",
+  pe: "Physical Education",
+  "physical education": "Physical Education",
+  physicaleducation: "Physical Education",
+  bped: "Physical Education",
+  cae: "Culture and Arts Education",
+  "culture and arts education": "Culture and Arts Education",
+  cultureandarts: "Culture and Arts Education",
+  bcaed: "Culture and Arts Education",
   tle: "TLE",
   "values education": "Values Education",
   values: "Values Education",
@@ -176,13 +200,19 @@ const SPECIALIZATION_ALIASES: Record<string, string> = {
   mothertongue: "Mother Tongue",
   mtb: "Mother Tongue",
   mtb_mle: "Mother Tongue",
-  beed: "BEED",
-  beced: "BEED",
-  sned: "SNED",
-  sped: "SNED",
-  "special needs education": "SNED",
-  specialneedseducation: "SNED",
-  bcaed: "BCAED",
+  // Elementary specializations (BSNEd / BECEd). "BEED" is the plain BEEd degree,
+  // which has no specialization paper — the BEED folder holds the BECEd items, so
+  // that name maps onto Early Childhood Education.
+  beed: "Early Childhood Education",
+  beced: "Early Childhood Education",
+  ece: "Early Childhood Education",
+  "early childhood education": "Early Childhood Education",
+  earlychildhoodeducation: "Early Childhood Education",
+  sned: "Special Needs Education",
+  sne: "Special Needs Education",
+  sped: "Special Needs Education",
+  "special needs education": "Special Needs Education",
+  specialneedseducation: "Special Needs Education",
 };
 
 export function normalizeSpecialization(v: string | null | undefined): string | null {

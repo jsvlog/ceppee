@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getUserContext, hasActiveSub, getBankStats, countAvailable } from "@/lib/queries";
 import { peso } from "@/lib/format";
-import { levelsFor, levelMeta, subjectsFor, STUDY_MODES, SPECIALIZATIONS, levelLabel } from "@/lib/exam";
+import { levelsFor, levelMeta, subjectsFor, STUDY_MODES, specializationsFor, levelLabel } from "@/lib/exam";
 import MajorshipPicker from "@/components/study/MajorshipPicker";
 import type { Track, Topic, Exam, ExamWithCount, Level, BankStat } from "@/lib/types";
 
@@ -57,8 +57,12 @@ export default async function TrackPage({
   const levelOptions = levelsFor(trackKey);
   const levelKey = (levelOptions.find((l) => l.key === sp.level)?.key ?? levelOptions[0].key) as Level;
   const level = levelMeta(trackKey, levelKey)!;
-  const wantsMajor = trackKey === "LET" && levelKey === "secondary";
-  const major = wantsMajor ? (SPECIALIZATIONS.includes(sp.major ?? "") ? (sp.major as string) : null) : null;
+  const hasMajorPicker = trackKey === "LET" && (levelKey === "secondary" || levelKey === "elementary");
+  const majorOptions = specializationsFor(levelKey);
+  const major = hasMajorPicker ? (majorOptions.includes(sp.major ?? "") ? (sp.major as string) : null) : null;
+  // Elementary is only a 3-paper exam for BSNEd / BECEd graduates, so there the
+  // majorship is optional; secondary cannot be practised without one.
+  const majorRequired = trackKey === "LET" && levelKey === "secondary";
 
   const supabase = await createClient();
   const admin = getAdminClient();
@@ -150,7 +154,7 @@ export default async function TrackPage({
           <p className="mb-4 text-sm text-[#5c7863]">
             {trackKey === "CSE"
               ? "Professional and Sub-Professional are different papers — verbal, numerical and general information are shared, but the fourth section differs."
-              : "Elementary and Secondary are different papers. Secondary also has your Specialization (majorship) subtest."}
+              : "Elementary and Secondary are different papers. Elementary with specialization (BSNEd / BECEd) and Secondary both add a Specialization (majorship) subtest."}
           </p>
           <div className="flex flex-wrap gap-3">
             {levelOptions.map((l) => {
@@ -177,13 +181,14 @@ export default async function TrackPage({
               );
             })}
           </div>
-          {wantsMajor && (
+          {hasMajorPicker && (
             <div className="mt-4">
               <MajorshipPicker
                 current={major}
-                options={SPECIALIZATIONS}
+                options={majorOptions}
                 basePath={base}
-                level="secondary"
+                level={levelKey}
+                optional={!majorRequired}
               />
             </div>
           )}
@@ -236,7 +241,8 @@ export default async function TrackPage({
           {subjects.map((s) => {
             const count = subjectCount(s.key);
             const isMajor = s.key === "Specialization";
-            const needsMajor = isMajor && wantsMajor && !major;
+            const needsMajor = isMajor && majorRequired && !major;
+            const wantsMajorHint = isMajor && !majorRequired && !major;
             const drillHref = study("drill", { subjects: s.key });
             return (
               <div key={s.key} className="card flex flex-col p-5">
@@ -248,6 +254,10 @@ export default async function TrackPage({
                 <p className="mb-4 flex-1 text-xs leading-relaxed text-[#5c7863]">{s.note}</p>
                 {needsMajor ? (
                   <p className="text-xs font-semibold text-[#b45309]">👆 Pick your majorship first</p>
+                ) : wantsMajorHint ? (
+                  <p className="text-xs font-semibold text-[#b45309]">
+                    👆 Optional — pick BSNEd / BECEd above if you're taking it with specialization
+                  </p>
                 ) : count === 0 ? (
                   <p className="text-xs font-semibold text-[#94a896]">Coming soon — items being uploaded</p>
                 ) : !subscribed ? (
@@ -295,25 +305,27 @@ export default async function TrackPage({
             </div>
           )}
 
-          {/* Specialization mock (LET Secondary) — built from the student's major */}
-          {wantsMajor && (
+          {/* Specialization mock — built from the student's major */}
+          {hasMajorPicker && (
             <div className="card mt-4 flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
               <div>
                 <div className="font-bold text-[#16331f]">
                   {!subscribed && "🔒 "}
-                  LET Secondary — Specialization Mock
+                  {level.label} — Specialization Mock
                 </div>
                 <div className="mt-1 text-xs text-[#5c7863]">
-                  150 items · 3 hrs 30 min · {major ? `majorship: ${major}` : "choose your majorship above"}
+                  150 items · 3 hrs 30 min · {major ? `majorship: ${major}` : `choose your majorship above${majorRequired ? "" : " (optional)"}`}
                 </div>
               </div>
               {!major ? (
-                <span className="rounded-xl bg-[#fef9c3] px-4 py-2 text-sm font-bold text-[#b45309]">Pick majorship 👆</span>
+                <span className="rounded-xl bg-[#fef9c3] px-4 py-2 text-sm font-bold text-[#b45309]">
+                  {majorRequired ? "Pick majorship 👆" : "Optional 👆"}
+                </span>
               ) : (
                 <Link
                   href={
                     subscribed
-                      ? study("drill", { subjects: "Specialization", count: "150", timed: "1", tlabel: `LET Secondary Specialization — ${major}` })
+                      ? study("drill", { subjects: "Specialization", count: "150", timed: "1", tlabel: `${level.label} Specialization — ${major}` })
                       : user
                         ? "/dashboard"
                         : "/login?next=/dashboard"
