@@ -287,7 +287,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                 type="button"
                 onClick={() => applySelection(l.key, major)}
                 aria-pressed={l.key === levelKey}
-                className={`rounded-xl px-4 py-2 text-xs font-extrabold transition sm:text-sm ${
+                className={`flex-1 rounded-xl px-4 py-2 text-center text-xs font-extrabold transition sm:flex-none sm:text-sm ${
                   l.key === levelKey
                     ? "bg-[#16331f] text-white shadow-sm"
                     : "border border-[#d9e6d3] bg-[#f6faf4] text-[#3d5c44] hover:border-[#d4af37]"
@@ -439,13 +439,13 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                   href={subscribed ? studyHref("drill", { subjects: activeSubject, count: "20" }) : gateHref}
                   className="btn-arcade-green px-5 py-2.5 text-xs sm:text-sm"
                 >
-                  🎯 20-item drill
+                  {subscribed ? "🎯 20-item drill" : "🔒 20-item drill"}
                 </Link>
                 <Link
                   href={subscribed ? studyHref("flashcards", { subjects: activeSubject, count: "30" }) : gateHref}
                   className="btn-arcade-surface px-4 py-2.5 text-xs sm:text-sm"
                 >
-                  🃏 30 cards
+                  {subscribed ? "🃏 30 cards" : "🔒 30 cards"}
                 </Link>
               </div>
             </div>
@@ -789,17 +789,22 @@ function CampaignNodeRow({
                 best {bestPct}% · {attemptsCount}×
               </span>
             )}
-            <span className="text-xs leading-none" aria-label={`${stars} of 3 stars`}>
-              {[1, 2, 3].map((n) => (
-                <span key={n} className={n <= stars ? "text-[#eab308]" : "text-[#d9e6d3]"}>
-                  ★
-                </span>
-              ))}
-            </span>
+            {bestPct !== null && (
+              <span className="text-xs leading-none" aria-label={`${stars} of 3 stars`}>
+                {[1, 2, 3].map((n) => (
+                  <span key={n} className={n <= stars ? "text-[#eab308]" : "text-[#d9e6d3]"}>
+                    ★
+                  </span>
+                ))}
+              </span>
+            )}
           </div>
           <p className="mt-1 text-xs text-[#5c7863]">
-            {s.live} live · 150 served · ⏱ {timedMinutes(150, track)} min · {s.shape_easy}E / {s.shape_medium_hard}M /{" "}
-            {s.shape_extremely_hard}H / {s.shape_pedagogical}P · {passingPct}% to clear
+            {s.live} live · 150 served · ⏱ {timedMinutes(150, track)} min · {passingPct}% to clear
+          </p>
+          <p className="mt-0.5 text-[11px] text-[#94a896]">
+            Mix: {s.shape_easy} easy · {s.shape_medium_hard} medium · {s.shape_extremely_hard} hard ·{" "}
+            {s.shape_pedagogical} situational
           </p>
         </div>
       </div>
@@ -860,7 +865,7 @@ function BlueprintMocks({
                 className="game-card game-card-interactive flex items-center justify-between gap-4 p-5"
               >
                 <div>
-                  <div className={`mb-1 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-extrabold ${"bg-[#dcfce7] text-[#15803d]"}`}>
+                  <div className="mb-1 inline-flex rounded-full bg-[#dcfce7] px-2.5 py-0.5 text-[11px] font-extrabold text-[#15803d]">
                     Stage {idx + 1} · boss mock
                   </div>
                   <div className="text-base font-black text-[#16331f]">
