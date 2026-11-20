@@ -74,16 +74,17 @@ export default async function ReaderPage({
   if (!Number.isFinite(orderIndex)) notFound();
 
   const supabase = await createClient();
-  const { user, subs, isAdmin } = await getUserContext();
+  const [userCtx, bookRes, tocRes] = await Promise.all([
+    getUserContext(),
+    supabase.from("reading_books").select("id, title, slug, section_count, track").eq("slug", slug).maybeSingle(),
+    supabase.rpc("reading_toc", { p_slug: slug }),
+  ]);
+
+  const { user, subs, isAdmin } = userCtx;
   const subscribed = isAdmin || hasActiveSub(subs, "LET");
 
-  const { data: bookRow } = await supabase
-    .from("reading_books")
-    .select("id, title, slug, section_count, track")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (!bookRow) notFound();
-  const book = bookRow as Book;
+  if (!bookRes.data) notFound();
+  const book = bookRes.data as Book;
 
   // RLS decides: a locked section simply is not returned.
   const { data: secRow } = await supabase
@@ -93,7 +94,7 @@ export default async function ReaderPage({
     .eq("order_index", orderIndex)
     .maybeSingle();
 
-  const { data: tocData } = await supabase.rpc("reading_toc", { p_slug: slug });
+  const tocData = tocRes.data;
   const toc = (tocData ?? []) as TocRow[];
   const current = toc.findIndex((r) => r.order_index === orderIndex);
   const prev = current > 0 ? toc[current - 1] : null;

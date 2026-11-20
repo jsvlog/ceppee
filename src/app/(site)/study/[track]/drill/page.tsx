@@ -30,14 +30,16 @@ export default async function DrillPage({
   const trackKey = TRACKS[track];
   if (!trackKey) notFound();
 
-  const { user, subs, isAdmin } = await getUserContext();
-  const backHref = `/review/${track}`;
   const p = parseStudyParams(trackKey, sp);
+  const backHref = `/review/${track}?level=${p.level}${p.major ? `&major=${encodeURIComponent(p.major)}` : ""}`;
+
+  // Identity and bank stats in one wave instead of two serial round-trips.
+  const [userCtx, stats] = await Promise.all([getUserContext(), getBankStats(trackKey)]);
+  const { user, subs, isAdmin } = userCtx;
 
   if (!user) redirect(`/login?next=${encodeURIComponent(backHref)}`);
 
   const subscribed = isAdmin || hasActiveSub(subs, trackKey);
-  const stats = await getBankStats(trackKey);
   const subjectsMeta = subjectsFor(trackKey, p.level).map((s) => ({
     key: s.key,
     icon: s.icon,

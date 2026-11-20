@@ -14,11 +14,16 @@ export const metadata: Metadata = { title: "Mock Exam" };
 
 export default async function ExamPage({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
-  const { user, subs, isAdmin } = await getUserContext();
+  const supabase = await createClient();
+  const [userCtx, examRes] = await Promise.all([
+    getUserContext(),
+    supabase.from("exams").select("*").eq("id", examId).maybeSingle(),
+  ]);
+
+  const { user, subs, isAdmin } = userCtx;
   if (!user) redirect(`/login?next=/exam/${examId}`);
 
-  const supabase = await createClient();
-  const { data: exam } = await supabase.from("exams").select("*").eq("id", examId).maybeSingle();
+  const exam = examRes.data;
 
   if (!exam) {
     return (

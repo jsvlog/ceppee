@@ -43,21 +43,26 @@ function readTime(words: number) {
 export default async function BookPage({ params }: { params: Promise<{ book: string }> }) {
   const { book: slug } = await params;
   const supabase = await createClient();
-  const { subs, isAdmin } = await getUserContext();
-  const subscribed = isAdmin || hasActiveSub(subs, "LET");
 
-  const { data: bookRow } = await supabase
-    .from("reading_books")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (!bookRow) notFound();
-  const book = bookRow as Book;
-
-  const [{ data: tocData }, { data: accessData }] = await Promise.all([
+  // One parallel wave: identity, the book, its table of contents, what the caller
+  // may open, and this reader's finished sections. It used to be five serial
+  // round-trips before the first byte of HTML.
+  const [userCtx, bookRes, tocRes, accessRes, doneRes] = await Promise.all([
+    getUserContext(),
+    supabase.from("reading_books").select("*").eq("slug", slug).maybeSingle(),
     supabase.rpc("reading_toc", { p_slug: slug }),
     supabase.rpc("reading_access", { p_slug: slug }),
+    supabase.from("reading_progress").select("section_id, completed_at").not("completed_at", "is", null),
   ]);
+
+  const { subs, isAdmin } = userCtx;
+  const subscribed = isAdmin || hasActiveSub(subs, "LET");
+
+  if (!bookRes.data) notFound();
+  const book = bookRes.data as Book;
+  const tocData = tocRes.data;
+  const accessData = accessRes.data;
+  const doneRows = doneRes.data;
   const toc = (tocData ?? []) as TocRow[];
   const access = (accessData?.[0] ?? { total: toc.length, readable: toc.length, completed: 0 }) as {
     total: number;
@@ -66,10 +71,6 @@ export default async function BookPage({ params }: { params: Promise<{ book: str
   };
 
   // completed sections of this book, to tick them off in the list
-  const { data: doneRows } = await supabase
-    .from("reading_progress")
-    .select("section_id, completed_at")
-    .not("completed_at", "is", null);
   const done = new Set((doneRows ?? []).map((r) => r.section_id as string));
 
   const parts: { no: number; title: string; rows: TocRow[] }[] = [];
