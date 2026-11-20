@@ -127,8 +127,13 @@ export const SUBJECTS: Record<Track, SubjectMeta[]> = {
  *  - BSNEd and BECEd graduates sit Gen Ed + Prof Ed + their specialization, so
  *    Special Needs Education and Early Childhood Education exist at ELEMENTARY.
  *  - Secondary: English, Filipino, Mathematics, Science, Social Science, Values,
- *    Araling Panlipunan, Mother Tongue, and TLE / Physical Education / Culture and
- *    Arts Education (the last two replaced the old MAPEH split).
+ *    TLE, Physical Education, Culture and Arts Education (the last two replaced the
+ *    old MAPEH split), plus the two elementary papers.
+ *
+ * Araling Panlipunan is NOT a separate major here: the Social Science paper is the
+ * AP paper, and the SOC SCI source sets are what fill it. Mother Tongue is not
+ * offered as a majorship either. Old AP / MT input still snaps onto Social Science
+ * (see SPECIALIZATION_ALIASES) so a pasted tag never lands on a dead name.
  */
 export const ELEMENTARY_SPECIALIZATIONS = ["Special Needs Education", "Early Childhood Education"];
 
@@ -143,8 +148,6 @@ export const SPECIALIZATIONS = [
   "Culture and Arts Education",
   "TLE",
   "Values Education",
-  "Araling Panlipunan",
-  "Mother Tongue",
   "Special Needs Education",
   "Early Childhood Education",
 ];
@@ -180,9 +183,12 @@ const SPECIALIZATION_ALIASES: Record<string, string> = {
   socialscience: "Social Science",
   soscs: "Social Science",
   socsci: "Social Science",
-  ap: "Araling Panlipunan",
-  "araling panlipunan": "Araling Panlipunan",
-  aralingpanlipunan: "Araling Panlipunan",
+  "soc sci": "Social Science",
+  "soc. sci": "Social Science",
+  ap: "Social Science",
+  "araling panlipunan": "Social Science",
+  aralingpanlipunan: "Social Science",
+  araling: "Social Science",
   mapeh: "Physical Education",
   pe: "Physical Education",
   "physical education": "Physical Education",
@@ -196,10 +202,6 @@ const SPECIALIZATION_ALIASES: Record<string, string> = {
   "values education": "Values Education",
   values: "Values Education",
   esp: "Values Education",
-  "mother tongue": "Mother Tongue",
-  mothertongue: "Mother Tongue",
-  mtb: "Mother Tongue",
-  mtb_mle: "Mother Tongue",
   // Elementary specializations (BSNEd / BECEd). "BEED" is the plain BEEd degree,
   // which has no specialization paper — the BEED folder holds the BECEd items, so
   // that name maps onto Early Childhood Education.
