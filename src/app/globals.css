@@ -210,3 +210,32 @@ body {
   color: #15803d;
   font-style: italic;
 }
+
+/* Prose for the reading library: denser than a lesson, built for long sessions */
+.read-content { font-size: 1.02rem; }
+.read-content h3 {
+  font-size: 1.18rem; font-weight: 800; color: #16331f;
+  margin: 1.8rem 0 0.6rem; padding-top: 0.9rem; border-top: 1px solid #e7efe1;
+}
+.read-content h3:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.read-content h4 {
+  font-size: 0.98rem; font-weight: 700; color: #2f4a37;
+  margin: 1.2rem 0 0.4rem;
+}
+.read-content p { margin: 0.55rem 0; line-height: 1.78; color: var(--text-strong); }
+.read-content ul { margin: 0.5rem 0 0.9rem 1.15rem; list-style: disc; }
+.read-content li { margin: 0.28rem 0; line-height: 1.7; color: var(--text-strong); }
+.read-content table {
+  width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.92rem;
+}
+.read-content th, .read-content td {
+  border: 1px solid #dfe9d8; padding: 7px 10px; text-align: left; vertical-align: top;
+}
+.read-content th { background: #f1f7ec; font-weight: 700; color: #16331f; }
+.read-content tr:nth-child(even) td { background: #fafcf8; }
+
+/* Reader typography toggle (data-size on the article) */
+.reader[data-size="sm"] .read-content { font-size: 0.95rem; }
+.reader[data-size="lg"] .read-content { font-size: 1.12rem; }
+.reader-scroll { scroll-behavior: smooth; }
+
