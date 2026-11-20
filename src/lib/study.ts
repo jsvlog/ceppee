@@ -1,4 +1,4 @@
-import { levelsFor, levelShort, subjectsFor, SPECIALIZATIONS, timedMinutes } from "@/lib/exam";
+import { levelsFor, levelShort, subjectsFor, specializationsFor, timedMinutes } from "@/lib/exam";
 import type { Level, Track } from "@/lib/types";
 
 export interface StudyParams {
@@ -23,9 +23,13 @@ export function parseStudyParams(track: Track, raw: RawParams, defaultCount = 20
   const wantedLevel = first(raw.level);
   const level = (levels.find((l) => l.key === wantedLevel)?.key ?? levels[0].key) as Level;
 
+  // The majorship filter used to be allowed only at `secondary`, which silently
+  // dropped the Specialization paper for BSNEd / BECEd (elementary-with-major)
+  // takers, so their drill matched nothing. Validate against the level's own list
+  // instead: secondary has the 11 majors, elementary only the two specialization papers.
   const majorRaw = first(raw.major);
-  const major =
-    track === "LET" && level === "secondary" && majorRaw && SPECIALIZATIONS.includes(majorRaw) ? majorRaw : null;
+  const allowedMajors = track === "LET" ? specializationsFor(level) : [];
+  const major = majorRaw && allowedMajors.includes(majorRaw) ? majorRaw : null;
 
   const allowed = subjectsFor(track, level).map((s) => s.key);
   const subjects = (first(raw.subjects) ?? "")
