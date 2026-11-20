@@ -6,7 +6,7 @@ import { getUserContext, hasActiveSub } from "@/lib/queries";
 import { levelLabel, passingPctFor, timedMinutes } from "@/lib/exam";
 import StudyRunner from "@/components/study/StudyRunner";
 import { LockedCard, EmptyBank, RunnerShell } from "@/components/study/States";
-import type { BankQuestion, Level, Track } from "@/lib/types";
+import type { BankQuestion, Level, PracticeQuestion, Track } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -30,29 +30,45 @@ interface SetRow {
 /**
  * A whole paper served from one set (supabase/set-mocks.sql).
  *
- * The set may hold fewer than 150 live items; start_set_mock tops the paper up from
- * other sets of the same subject AND the same difficulty bucket, so the paper is
- * always 150 and its composition stays what the set was built with.
+ * `?mode=practice` sits the SAME paper untimed with the answer and explanation
+ * after every item — `start_set_mock` already takes `p_practice` and returns the
+ * key for exactly that, so practice mode needed no new SQL.
+ *
+ * The set may hold fewer than 150 live items; start_set_mock tops the paper up
+ * from other sets of the same subject AND the same difficulty bucket.
  */
-export default async function SetMockPage({ params }: { params: Promise<{ setId: string }> }) {
-  const { setId } = await params;
-  const { user, subs, isAdmin } = await getUserContext();
-  if (!user) redirect(`/login?next=/exam/set/${setId}`);
+export default async function SetMockPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ setId: string }>;
+  searchParams: Promise<{ mode?: string }>;
+}) {
+  const [{ setId }, sp] = await Promise.all([params, searchParams]);
+  const isPractice = sp.mode === "practice";
 
   const supabase = await createClient();
-  const { data: set } = await supabase
-    .from("question_sets")
-    .select("id, track, subject, specialization, level, set_no, title, item_count, shape_easy, shape_medium_hard, shape_extremely_hard, shape_pedagogical")
-    .eq("id", setId)
-    .maybeSingle();
+  const [userCtx, setRes] = await Promise.all([
+    getUserContext(),
+    supabase
+      .from("question_sets")
+      .select(
+        "id, track, subject, specialization, level, set_no, title, item_count, shape_easy, shape_medium_hard, shape_extremely_hard, shape_pedagogical"
+      )
+      .eq("id", setId)
+      .maybeSingle(),
+  ]);
 
-  if (!set) {
+  const { user, subs, isAdmin } = userCtx;
+  if (!user) redirect(`/login?next=/exam/set/${setId}`);
+
+  if (!setRes.data) {
     return (
       <RunnerShell>
         <LockedCard
           title="Set not found"
           msg="This set may have been removed, or it isn't available yet."
-          backHref="/review/let/sets"
+          backHref="/review/let"
           backLabel="All sets"
           loginHref="/"
         />
@@ -60,10 +76,10 @@ export default async function SetMockPage({ params }: { params: Promise<{ setId:
     );
   }
 
-  const s = set as SetRow;
+  const s = setRes.data as SetRow;
   const track = s.track;
   const trackSlug = track.toLowerCase();
-  const backHref = `/review/${trackSlug}/sets?level=${s.level === "both" ? "secondary" : s.level}${
+  const backHref = `/review/${trackSlug}?level=${s.level === "both" ? "secondary" : s.level}${
     s.specialization ? `&major=${encodeURIComponent(s.specialization)}` : ""
   }`;
   const subscribed = isAdmin || hasActiveSub(subs, track);
@@ -75,21 +91,21 @@ export default async function SetMockPage({ params }: { params: Promise<{ setId:
           title="This paper is locked 🔒"
           msg={`"${s.title}" is part of the ${track} bank. Subscribe for ₱500 to unlock every set mock, drill and flashcard.`}
           backHref={backHref}
-          backLabel="Back to the sets"
+          backLabel="Back to the campaign"
           loginHref="/dashboard"
         />
       </RunnerShell>
     );
   }
 
-  const { data, error } = await supabase.rpc("start_set_mock", { p_set_id: s.id, p_practice: false });
+  const { data, error } = await supabase.rpc("start_set_mock", { p_set_id: s.id, p_practice: isPractice });
   if (error) console.error("start_set_mock", error.message);
-  const questions = (data as BankQuestion[]) ?? [];
+  const questions = (data as (BankQuestion | PracticeQuestion)[]) ?? [];
 
   if (questions.length === 0) {
     return (
       <RunnerShell>
-        <EmptyBank what={`questions for "${s.title}"`} backHref={backHref} backLabel="Back to the sets" />
+        <EmptyBank what={`questions for "${s.title}"`} backHref={backHref} backLabel="Back to the campaign" />
       </RunnerShell>
     );
   }
@@ -104,20 +120,24 @@ export default async function SetMockPage({ params }: { params: Promise<{ setId:
   return (
     <RunnerShell>
       <StudyRunner
-        kind="mock"
-        attemptKind="exam"
+        kind={isPractice ? "drill" : "mock"}
+        attemptKind={isPractice ? "drill" : "exam"}
         track={track}
         level={s.level}
-        title={`⏱️ ${s.title}`}
+        title={`${isPractice ? "💡" : "⏱️"} ${s.title}`}
         subtitle={parts.join(" · ")}
-        description={`Set ${s.set_no} as a full 150-item paper — timed, shuffled, and reviewed item by item when you submit.`}
+        description={
+          isPractice
+            ? `Set ${s.set_no} in practice mode — untimed, with the correct answer and explanation right after every item.`
+            : `Set ${s.set_no} as a full 150-item paper — timed, shuffled, and reviewed item by item when you submit.`
+        }
         backHref={backHref}
-        backLabel="Back to the sets"
+        backLabel="Back to the campaign"
         label={`${s.title} (set mock)`}
         passingPct={passingPctFor(track)}
         examId={null}
         questions={questions}
-        durationMinutes={timedMinutes(questions.length, track)}
+        durationMinutes={isPractice ? undefined : timedMinutes(questions.length, track)}
       />
 
       <div className="mt-6 space-y-1 text-center text-xs text-[#94a896]">
@@ -135,7 +155,7 @@ export default async function SetMockPage({ params }: { params: Promise<{ setId:
 
       <div className="mt-4 text-center">
         <Link href={backHref} className="text-sm text-[#5c7863] hover:text-[#16331f]">
-          ← Back to the {track} sets
+          ← Back to the {track} campaign
         </Link>
       </div>
     </RunnerShell>
