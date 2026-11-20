@@ -239,3 +239,110 @@ body {
 .reader[data-size="lg"] .read-content { font-size: 1.12rem; }
 .reader-scroll { scroll-behavior: smooth; }
 
+/* ===== Tactile game UI (brand green + gold preserved) ===== */
+/* A game card is a card with a thick bottom edge: it reads as a physical tile
+   you can press, which is what makes the progression map feel like a game
+   instead of a dashboard. */
+.game-card {
+  background: var(--bg-surface);
+  border: 2px solid var(--border-default);
+  border-bottom-width: 5px;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(22, 51, 31, 0.06);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.game-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold-500);
+  box-shadow: 0 10px 26px rgba(22, 51, 31, 0.11);
+}
+.game-card-interactive:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.btn-arcade-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  font-weight: 800;
+  border-radius: 16px;
+  border: 2px solid #15803d;
+  border-bottom-width: 5px;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.28);
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+.btn-arcade-green:hover { filter: brightness(1.04); transform: translateY(-1px); }
+.btn-arcade-green:active { transform: translateY(3px); border-bottom-width: 2px; }
+.btn-arcade-green:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.btn-arcade-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #eab308 0%, #ca8a04 100%);
+  color: #ffffff;
+  font-weight: 800;
+  border-radius: 16px;
+  border: 2px solid #a16207;
+  border-bottom-width: 5px;
+  box-shadow: 0 4px 14px rgba(202, 138, 4, 0.28);
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+.btn-arcade-gold:hover { filter: brightness(1.04); transform: translateY(-1px); }
+.btn-arcade-gold:active { transform: translateY(3px); border-bottom-width: 2px; }
+.btn-arcade-gold:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.btn-arcade-surface {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  color: var(--text-primary);
+  font-weight: 700;
+  border-radius: 16px;
+  border: 2px solid var(--border-default);
+  border-bottom-width: 5px;
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.btn-arcade-surface:hover { border-color: var(--gold-500); background: #fcfdf9; }
+.btn-arcade-surface:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+@keyframes nodePulseGold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.45); }
+  50% { box-shadow: 0 0 0 10px rgba(234, 179, 8, 0); }
+}
+.node-pulse-gold { animation: nodePulseGold 2s infinite; }
+
+@keyframes nodePulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45); }
+  50% { box-shadow: 0 0 0 10px rgba(22, 163, 74, 0); }
+}
+.node-pulse-green { animation: nodePulseGreen 2s infinite; }
+
+@keyframes popIn {
+  0% { transform: scale(0.92); opacity: 0.5; }
+  60% { transform: scale(1.03); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-pop { animation: popIn 0.22s ease-out both; }
+
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.animate-shake { animation: wrongShake 0.25s ease-in-out; }
+
+/* Respect reduced-motion: the pulse and shake are decoration, not information. */
+@media (prefers-reduced-motion: reduce) {
+  .node-pulse-gold, .node-pulse-green, .animate-pop, .animate-shake, .animate-float, .animate-float-delayed {
+    animation: none;
+  }
+}
+

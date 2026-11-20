@@ -1,6 +1,7 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import type { BankStat, Coach, Level, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
+import type { BankStat, Coach, ExamAttempt, Level, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
 
 export interface SiteStats {
   lessons: number;
@@ -11,7 +12,11 @@ export interface SiteStats {
 // Public marketing stats. Uses the service-role client so the counts reflect the
 // FULL catalog — RLS would otherwise hide paid lessons/questions from anonymous
 // visitors and undercount these numbers on the homepage.
-export async function getSiteStats(): Promise<SiteStats> {
+//
+// Every reader below is wrapped in React `cache()`: the site layout AND the page
+// both ask for the same data in one render, and without the cache that meant two
+// identical `auth.getUser()` + `profiles` + `subscriptions` round-trips per click.
+export const getSiteStats = cache(async (): Promise<SiteStats> => {
   const admin = getAdminClient();
   try {
     const [lessons, questions, exams] = await Promise.all([
@@ -27,7 +32,7 @@ export async function getSiteStats(): Promise<SiteStats> {
   } catch {
     return { lessons: 0, questions: 0, exams: 0 };
   }
-}
+});
 
 /**
  * Published testimonials for the landing page, newest/most important first.
@@ -82,7 +87,7 @@ export interface UserContext {
   subs: Subscription[];
 }
 
-export async function getUserContext(): Promise<UserContext> {
+export const getUserContext = cache(async (): Promise<UserContext> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -103,7 +108,7 @@ export async function getUserContext(): Promise<UserContext> {
   } catch {
     return { user: { id: user.id, email: user.email }, profile: null, isAdmin: false, subs: [] };
   }
-}
+});
 
 export function hasActiveSub(subs: Subscription[], track: Track): boolean {
   return subs.some((s) => s.track === track && s.status === "active" && new Date(s.expires_at) > new Date());
@@ -118,7 +123,7 @@ export function getActiveSub(subs: Subscription[], track: Track): Subscription |
  * Called with the USER's session so the RPC can decide what they may see:
  * non-subscribers only get the free-preview counts.
  */
-export async function getBankStats(track: Track): Promise<BankStat[]> {
+export const getBankStats = cache(async (track: Track): Promise<BankStat[]> => {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("bank_stats", { p_track: track });
@@ -127,7 +132,7 @@ export async function getBankStats(track: Track): Promise<BankStat[]> {
   } catch {
     return [];
   }
-}
+});
 
 /** Questions available to THIS user for a track+level (0 while the bank is empty). */
 export function countAvailable(stats: BankStat[], level: Level, subjects?: string[]): number {
@@ -138,7 +143,7 @@ export function countAvailable(stats: BankStat[], level: Level, subjects?: strin
 }
 
 /** Per-subject mastery for the dashboard bars. */
-export async function getSubjectProgress(track: Track): Promise<SubjectProgress[]> {
+export const getSubjectProgress = cache(async (track: Track): Promise<SubjectProgress[]> => {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("subject_progress", { p_track: track });
@@ -147,4 +152,27 @@ export async function getSubjectProgress(track: Track): Promise<SubjectProgress[
   } catch {
     return [];
   }
-}
+});
+
+/**
+ * Recent finished papers for a user, newest first. Powers the campaign map's
+ * `✅ Cleared` nodes, star ratings, the XP / Rank / Streak HUD and the study
+ * streak — all derived from `exam_attempts`, so nothing has to be stored twice.
+ */
+export const getRecentTrackAttempts = cache(async (userId: string | null, track: Track): Promise<ExamAttempt[]> => {
+  if (!userId) return [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("exam_attempts")
+      .select("id, user_id, exam_id, kind, label, track, level, score, total, duration_used_seconds, answers, completed_at")
+      .eq("user_id", userId)
+      .eq("track", track)
+      .order("completed_at", { ascending: false })
+      .limit(120);
+    if (error) return [];
+    return (data as ExamAttempt[]) ?? [];
+  } catch {
+    return [];
+  }
+});
