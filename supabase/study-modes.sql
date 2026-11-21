@@ -340,7 +340,16 @@ begin
        and q.track = p_track
        and (p_level is null or p_level = 'both' or q.level = 'both' or q.level = p_level)
        and (p_subjects is null or cardinality(p_subjects) = 0 or q.subject = any(p_subjects))
-       and (p_specialization is null or q.specialization = p_specialization)
+       -- A majorship restricts the Specialization paper only: Gen Ed and Prof Ed
+       -- rows carry specialization = null because every LET taker sits them, so a
+       -- strict equality here emptied every shared-paper drill once a major was
+       -- picked. Other majors' Specialization items stay excluded, even on a mixed
+       -- draw where p_subjects is null.
+       and (
+         p_specialization is null
+         or q.specialization = p_specialization
+         or (q.specialization is null and q.subject <> 'Specialization')
+       )
        and (coalesce(p_difficulty, 0) = 0 or q.difficulty = p_difficulty)
      order by random()
      limit greatest(1, least(coalesce(p_limit, 50), 500));
@@ -371,7 +380,16 @@ begin
        and q.track = p_track
        and (p_level is null or p_level = 'both' or q.level = 'both' or q.level = p_level)
        and (p_subjects is null or cardinality(p_subjects) = 0 or q.subject = any(p_subjects))
-       and (p_specialization is null or q.specialization = p_specialization)
+       -- A majorship restricts the Specialization paper only: Gen Ed and Prof Ed
+       -- rows carry specialization = null because every LET taker sits them, so a
+       -- strict equality here emptied every shared-paper drill once a major was
+       -- picked. Other majors' Specialization items stay excluded, even on a mixed
+       -- draw where p_subjects is null.
+       and (
+         p_specialization is null
+         or q.specialization = p_specialization
+         or (q.specialization is null and q.subject <> 'Specialization')
+       )
        and (coalesce(p_difficulty, 0) = 0 or q.difficulty = p_difficulty)
      order by random()
      limit greatest(1, least(coalesce(p_limit, 20), 500));
@@ -407,7 +425,16 @@ begin
        and q.track = p_track
        and (p_level is null or p_level = 'both' or q.level = 'both' or q.level = p_level)
        and (p_subjects is null or cardinality(p_subjects) = 0 or q.subject = any(p_subjects))
-       and (p_specialization is null or q.specialization = p_specialization)
+       -- A majorship restricts the Specialization paper only: Gen Ed and Prof Ed
+       -- rows carry specialization = null because every LET taker sits them, so a
+       -- strict equality here emptied every shared-paper drill once a major was
+       -- picked. Other majors' Specialization items stay excluded, even on a mixed
+       -- draw where p_subjects is null.
+       and (
+         p_specialization is null
+         or q.specialization = p_specialization
+         or (q.specialization is null and q.subject <> 'Specialization')
+       )
        and (
          p_mode = 'all'
          or (p_mode = 'new' and sp.user_id is null)
