@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getAdminClient } from "@/lib/supabase/admin";
 import {
   getBankStats,
   getRecentTrackAttempts,
@@ -11,7 +10,7 @@ import {
 } from "@/lib/queries";
 import { levelsFor, specializationsFor } from "@/lib/exam";
 import TrackGameHub from "@/components/study/TrackGameHub";
-import type { Exam, Level, SetCatalogRow, Topic, Track } from "@/lib/types";
+import type { Exam, Level, SetCatalogRow, Track } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +39,6 @@ export default async function TrackPage({
   const major = trackKey === "LET" && majorOptions.includes(sp.major ?? "") ? (sp.major as string) : null;
 
   const supabase = await createClient();
-  const admin = getAdminClient();
 
   // ONE parallel wave. This page used to await five queries in series
   // (user -> bank stats -> topics -> every lesson row -> exams), which is what
@@ -49,12 +47,10 @@ export default async function TrackPage({
   // `set_catalog` is asked for the WHOLE track (no level / majorship filters) so
   // switching level, majorship or subject afterwards is pure client state — no
   // server round-trip at all.
-  const [userCtx, stats, catalogRes, topicsRes, lessonsRes, examsRes] = await Promise.all([
+  const [userCtx, stats, catalogRes, examsRes] = await Promise.all([
     getUserContext(),
     getBankStats(trackKey),
     supabase.rpc("set_catalog", { p_track: trackKey, p_level: null, p_specialization: null }),
-    supabase.from("topics").select("*").eq("track", trackKey).eq("is_published", true).order("order_index"),
-    admin.from("lessons").select("topic_id, is_free").eq("is_published", true),
     supabase.from("exams").select("*").eq("track", trackKey).eq("is_active", true).order("order_index"),
   ]);
 
@@ -64,13 +60,6 @@ export default async function TrackPage({
   const [mastery, attempts] = user
     ? await Promise.all([getSubjectProgress(trackKey), getRecentTrackAttempts(user.id, trackKey)])
     : [[], []];
-
-  const lessonCounts: Record<string, { total: number; free: number }> = {};
-  (lessonsRes.data ?? []).forEach((l: { topic_id: string; is_free: boolean }) => {
-    const entry = (lessonCounts[l.topic_id] ??= { total: 0, free: 0 });
-    entry.total += 1;
-    if (l.is_free) entry.free += 1;
-  });
 
   return (
     <TrackGameHub
@@ -85,8 +74,6 @@ export default async function TrackPage({
       attempts={attempts}
       mastery={mastery}
       exams={(examsRes.data as Exam[] | null) ?? []}
-      topics={(topicsRes.data as Topic[] | null) ?? []}
-      lessonCounts={lessonCounts}
     />
   );
 }

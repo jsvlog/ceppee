@@ -339,6 +339,30 @@ body {
 }
 .animate-shake { animation: wrongShake 0.25s ease-in-out; }
 
+/* ===== Flashcard 3D flip =====
+   The card is two faces stacked in one grid cell: the container's height is the
+   taller of the two, and the wrapper rotates so the answer side swings in. */
+.flip-scene { perspective: 1600px; }
+.flip-card {
+  display: grid;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.25, 1);
+  will-change: transform;
+}
+.flip-card.is-flipped { transform: rotateY(180deg); }
+.flip-face {
+  grid-area: 1 / 1;
+  min-width: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face-back { transform: rotateY(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-card { transition: none; }
+}
+
 /* Respect reduced-motion: the pulse and shake are decoration, not information. */
 @media (prefers-reduced-motion: reduce) {
   .node-pulse-gold, .node-pulse-green, .animate-pop, .animate-shake, .animate-float, .animate-float-delayed {

@@ -25,11 +25,10 @@ import type {
   Level,
   SetCatalogRow,
   SubjectProgress,
-  Topic,
   Track,
 } from "@/lib/types";
 
-type HubTab = "campaign" | "arena" | "codex";
+type HubTab = "campaign" | "arena";
 
 export interface TrackGameHubProps {
   trackKey: Track;
@@ -43,8 +42,6 @@ export interface TrackGameHubProps {
   attempts: ExamAttempt[];
   mastery: SubjectProgress[];
   exams: Exam[];
-  topics: Topic[];
-  lessonCounts: Record<string, { total: number; free: number }>;
 }
 
 const QUICK_COUNTS = [10, 20, 30, 50];
@@ -52,7 +49,7 @@ const QUICK_COUNTS = [10, 20, 30, 50];
 export default function TrackGameHub(props: TrackGameHubProps) {
   const {
     trackKey, trackSlug, initialLevel, initialMajor, subscribed, isSignedIn,
-    stats, allSets, attempts, mastery, exams, topics, lessonCounts,
+    stats, allSets, attempts, mastery, exams,
   } = props;
 
   const isLET = trackKey === "LET";
@@ -200,7 +197,6 @@ export default function TrackGameHub(props: TrackGameHubProps) {
   const TABS: { id: HubTab; icon: string; label: string; badge: string }[] = [
     { id: "campaign", icon: "🗺️", label: "Campaign Map", badge: isLET ? `${visibleSets.length} sets` : `${mocks.length} mocks` },
     { id: "arena", icon: "⚡", label: "Quick Arena", badge: "Drills" },
-    { id: "codex", icon: "📖", label: "Study Codex", badge: "Notes" },
   ];
 
   return (
@@ -228,11 +224,18 @@ export default function TrackGameHub(props: TrackGameHubProps) {
               </p>
             </div>
 
-            {!subscribed && (
-              <Link href={gateHref} className="btn-arcade-surface shrink-0 px-6 py-3 text-sm text-[#16331f]">
-                🔓 Unlock the full campaign — {peso(500)}
-              </Link>
-            )}
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {isLET && (
+                <Link href="/read" className="btn-arcade-surface px-5 py-3 text-sm">
+                  📖 Reading library
+                </Link>
+              )}
+              {!subscribed && (
+                <Link href={gateHref} className="btn-arcade-surface px-6 py-3 text-sm text-[#16331f]">
+                  🔓 Unlock — {peso(500)}
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Player HUD */}
@@ -278,46 +281,82 @@ export default function TrackGameHub(props: TrackGameHubProps) {
 
       {/* ==================== LEVEL / MAJORSHIP CONTROL BAR ==================== */}
       <section className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
-        <div className="game-card flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">1. Division</span>
-            {levelOptions.map((l) => (
-              <button
-                key={l.key}
-                type="button"
-                onClick={() => applySelection(l.key, major)}
-                aria-pressed={l.key === levelKey}
-                className={`flex-1 rounded-xl px-4 py-2 text-center text-xs font-extrabold transition sm:flex-none sm:text-sm ${
-                  l.key === levelKey
-                    ? "bg-[#16331f] text-white shadow-sm"
-                    : "border border-[#d9e6d3] bg-[#f6faf4] text-[#3d5c44] hover:border-[#d4af37]"
-                }`}
-              >
-                {l.short}
-              </button>
-            ))}
-          </div>
-
-          {majorOptions.length > 0 && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">
-                2. Majorship{majorRequired ? "" : " (BSNEd / BECEd)"}
-              </span>
-              <select
-                aria-label="Choose your majorship"
-                value={major ?? ""}
-                onChange={(e) => applySelection(levelKey, e.target.value || null)}
-                className="input-warm max-w-xs font-bold"
-              >
-                <option value="">{majorRequired ? "— Pick your majorship —" : "— Plain BEEd (no major) —"}</option>
-                {majorOptions.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+        <div className="game-card p-4 sm:p-5">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">1. Division</span>
+                <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ${accentSoft} ${accentText}`}>
+                  ✓ {levelLabel(trackKey, levelKey)} — selected
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                {levelOptions.map((l) => {
+                  const active = l.key === levelKey;
+                  return (
+                    <button
+                      key={l.key}
+                      type="button"
+                      onClick={() => applySelection(l.key, major)}
+                      aria-pressed={active}
+                      className={`relative flex flex-col items-start gap-0.5 rounded-2xl px-4 py-3 text-left transition sm:min-w-[190px] ${
+                        active
+                          ? "border-2 border-[#0b1f13] border-b-[6px] bg-[#16331f] text-white shadow-lg"
+                          : "border-2 border-[#d9e6d3] border-b-[6px] bg-white text-[#3d5c44] hover:border-[#16a34a] hover:bg-[#f6faf4]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5 text-sm font-black">
+                        <span
+                          className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
+                            active ? "bg-[#4ade80] text-[#0b1f13]" : "bg-[#eef4ea] text-[#94a896]"
+                          }`}
+                        >
+                          {active ? "✓" : l.key === "elementary" ? "1" : "2"}
+                        </span>
+                        {l.key === "elementary" ? "Elementary" : "Secondary"}
+                      </span>
+                      <span className={`text-[11px] font-semibold ${active ? "text-[#bbf7d0]" : "text-[#94a896]"}`}>
+                        {active ? "You are studying this" : "Tap to switch"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
+
+            {majorOptions.length > 0 && (
+              <div className="flex w-full max-w-xs flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">
+                    2. Majorship{majorRequired ? "" : " (optional)"}
+                  </span>
+                  {!major && majorRequired && (
+                    <span className="rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-black uppercase text-[#92400e]">
+                      not picked yet
+                    </span>
+                  )}
+                </div>
+                <select
+                  aria-label="Choose your majorship"
+                  value={major ?? ""}
+                  onChange={(e) => applySelection(levelKey, e.target.value || null)}
+                  className="input-warm font-bold"
+                >
+                  <option value="">{majorRequired ? "— Pick your majorship —" : "— Plain BEEd (no major) —"}</option>
+                  {majorOptions.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[11px] leading-snug text-[#5c7863]">
+                  {majorRequired
+                    ? "Each majorship is a separate 150-item paper."
+                    : "Only BSNEd / BECEd takers sit a specialization paper."}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -678,52 +717,6 @@ export default function TrackGameHub(props: TrackGameHubProps) {
         </section>
       )}
 
-      {/* ============================== CODEX ============================== */}
-      {tab === "codex" && (
-        <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-          {isLET && (
-            <div className="game-card mb-8 flex flex-col items-start justify-between gap-4 border-[#eab308] bg-gradient-to-br from-[#fffbeb] to-white p-6 sm:flex-row sm:items-center">
-              <div>
-                <div className="mb-1 inline-flex rounded-full bg-[#fef9c3] px-3 py-0.5 text-xs font-extrabold text-[#b45309]">
-                  📖 15 books · 3,801 sections
-                </div>
-                <h2 className="text-xl font-black text-[#16331f]">The full LET reading library</h2>
-                <p className="mt-1 max-w-xl text-xs text-[#5c7863]">
-                  The long version of General Education, Professional Education and every majorship — read before
-                  you battle the 150-item sets.
-                </p>
-              </div>
-              <Link href="/read" className="btn-arcade-gold shrink-0 px-6 py-3 text-sm">
-                Open reading library →
-              </Link>
-            </div>
-          )}
-
-          <h3 className="mb-4 text-lg font-black text-[#16331f]">📚 Topic lessons</h3>
-          {topics.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {topics.map((t) => (
-                <Link key={t.id} href={`/review/${trackSlug}/topic/${t.id}`} className="game-card game-card-interactive p-5">
-                  <div className={`mb-2 inline-flex rounded-lg px-2.5 py-0.5 text-xs font-extrabold ${accentSoft} ${accentText}`}>
-                    Topic
-                  </div>
-                  <h4 className="font-black text-[#16331f]">{t.title}</h4>
-                  <p className="mb-4 mt-1 text-xs text-[#5c7863]">{t.description}</p>
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-[#5c7863]">📖 {lessonCounts[t.id]?.total ?? 0} lessons</span>
-                    <span className={accentText}>Read →</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="game-card p-8 text-center text-sm text-[#5c7863]">
-              Lessons are still being added for this track — the reading library and the question bank are already
-              live.
-            </div>
-          )}
-        </section>
-      )}
     </div>
   );
 }

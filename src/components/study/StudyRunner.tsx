@@ -293,45 +293,73 @@ export default function StudyRunner(props: StudyRunnerProps) {
           progress={((index + 1) / Math.max(1, deck.length)) * 100}
         />
 
-        <div className="game-card min-h-[320px] p-6 sm:p-8">
-          {card.subject && (
-            <p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-[#94a896]">
-              {subjectIcon(track, card.subject)}
-              {card.subtopic ? ` · ${card.subtopic}` : ` · ${card.subject}`}
-            </p>
-          )}
-          <h2 className="mb-6 text-lg font-black leading-relaxed text-[#16331f]">{card.question_text}</h2>
+        <div className="flip-scene">
+          <div className={`flip-card ${revealed ? "is-flipped" : ""}`}>
+            {/* FRONT — question + options, nothing revealed */}
+            <div className="flip-face game-card min-h-[340px] p-6 sm:p-8" aria-hidden={revealed}>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                {card.subject && (
+                  <p className="text-xs font-extrabold uppercase tracking-wide text-[#94a896]">
+                    {subjectIcon(track, card.subject)}
+                    {card.subtopic ? ` · ${card.subtopic}` : ` · ${card.subject}`}
+                  </p>
+                )}
+                <span className="shrink-0 rounded-full bg-[#fef9c3] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#b45309]">
+                  front
+                </span>
+              </div>
+              <h2 className="mb-6 text-lg font-black leading-relaxed text-[#16331f]">{card.question_text}</h2>
 
-          <div className="space-y-2.5">
-            {LETTERS.map((c) => {
-              const isCorrect = revealed && card.correct_choice === c;
-              return (
-                <div
-                  key={c}
-                  className={`flex items-start gap-3 rounded-2xl border-2 px-4 py-3 text-sm ${
-                    isCorrect
-                      ? "animate-pop border-[#16a34a] bg-[#dcfce7] font-bold text-[#16331f]"
-                      : "border-[#d9e6d3] bg-white text-[#3d5c44]"
-                  }`}
-                >
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
-                      isCorrect ? "bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-white" : "bg-[#dcfce7] text-[#15803d]"
-                    }`}
+              <div className="space-y-2.5">
+                {LETTERS.map((c) => (
+                  <div
+                    key={c}
+                    className="flex items-start gap-3 rounded-2xl border-2 border-[#d9e6d3] bg-white px-4 py-3 text-sm text-[#3d5c44]"
                   >
-                    {c}
-                  </span>
-                  <span>{card[`choice_${c.toLowerCase()}` as "choice_a"]}</span>
-                </div>
-              );
-            })}
-          </div>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#dcfce7] text-xs font-black text-[#15803d]">
+                      {c}
+                    </span>
+                    <span>{card[`choice_${c.toLowerCase()}` as "choice_a"]}</span>
+                  </div>
+                ))}
+              </div>
 
-          {revealed && card.explanation && (
-            <p className="animate-pop mt-4 rounded-2xl border border-[#86efac] bg-[#f0fdf4] px-4 py-3 text-sm text-[#15803d]">
-              💡 {card.explanation}
-            </p>
-          )}
+              <p className="mt-5 text-center text-xs font-semibold text-[#94a896]">
+                🤔 Think of your answer first — then flip the card.
+              </p>
+            </div>
+
+            {/* BACK — the answer, mirrored so it reads correctly after the flip */}
+            <div className="flip-face flip-face-back game-card min-h-[340px] border-[#86efac] bg-[#f7fdf9] p-6 sm:p-8" aria-hidden={!revealed}>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-xs font-extrabold uppercase tracking-widest text-[#15803d]">Answer</p>
+                <span className="shrink-0 rounded-full bg-[#dcfce7] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#166534]">
+                  back
+                </span>
+              </div>
+
+              <p className="mb-4 text-sm font-semibold leading-relaxed text-[#3d5c44]">{card.question_text}</p>
+
+              <div className="flex items-start gap-3 rounded-2xl border-2 border-[#16a34a] bg-[#dcfce7] px-4 py-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-base font-black text-white">
+                  {card.correct_choice}
+                </span>
+                <span className="pt-1 text-base font-black leading-snug text-[#16331f]">
+                  {card[`choice_${card.correct_choice.toLowerCase()}` as "choice_a"]}
+                </span>
+              </div>
+
+              {card.explanation && (
+                <p className="mt-4 rounded-2xl border border-[#86efac] bg-white px-4 py-3 text-sm leading-relaxed text-[#15803d]">
+                  💡 {card.explanation}
+                </p>
+              )}
+
+              <p className="mt-5 text-center text-xs font-semibold text-[#94a896]">
+                Be honest — mark it below so the ones you miss come back.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
