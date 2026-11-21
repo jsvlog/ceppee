@@ -92,7 +92,7 @@ export default async function LeaderboardPage({
   const sp = await searchParams;
   const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-  const { user, subs } = await getUserContext();
+  const { user, subs, isAdmin } = await getUserContext();
   if (!user) redirect("/login?next=/leaderboard");
 
   // Default to the track they actually study, so the first visit is never the
@@ -216,6 +216,7 @@ export default async function LeaderboardPage({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-[#5c7863]">
         <span>
           {periodMeta.blurb} {players.toLocaleString()} student{players === 1 ? "" : "s"} scored.
+          {isAdmin && " You are signed in as an admin, so your own attempts are not ranked."}
         </span>
         <ResetCountdown resetsAt={resetsAt} className="font-bold text-[#3d5c44]" />
       </div>
