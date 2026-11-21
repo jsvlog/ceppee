@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Tailwind v4's preflight leaves <button> at cursor: default, so every card
+   that is really a choice reads like static text. Put the pointer back. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
 :root {
   /* Brand greens & golds (primary brand = green, accent = gold) */
   --green-400: #34d399;

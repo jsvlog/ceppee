@@ -438,18 +438,27 @@ export default function TrackGameHub(props: TrackGameHubProps) {
       {/* ============================== CAMPAIGN ============================== */}
       {tab === "campaign" && (
         <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">
-              {isLET ? "Pick a subject campaign" : "Pick a paper"}
-            </h2>
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">
+                {isLET ? "Pick a subject campaign" : "Pick a paper"}
+              </h2>
+              <p className="mt-1 text-xs font-semibold text-[#94a896]">
+                👆 Tap a card — the map below switches to that subject.
+              </p>
+            </div>
             <span className="text-xs font-bold text-[#5c7863]">
               {isLET
-                ? `${allSets.length} papers in the bank`
+                ? `${allSets.length} papers across all subjects`
                 : `${mocks.length} mock ${mocks.length === 1 ? "exam" : "exams"} available`}
             </span>
           </div>
 
-          <div className={`mb-8 grid grid-cols-1 gap-3 ${subjects.length > 1 ? "sm:grid-cols-3" : ""}`}>
+          <div
+            role="radiogroup"
+            aria-label={isLET ? "Choose a subject campaign" : "Choose a paper"}
+            className={`mb-8 grid grid-cols-1 gap-3 ${subjects.length > 1 ? "sm:grid-cols-3" : ""}`}
+          >
             {subjects.map((s) => {
               const selected = activeSubject === s.key;
               const count = subjectItems(s.key);
@@ -459,15 +468,35 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                 <button
                   key={s.key}
                   type="button"
+                  role="radio"
+                  aria-checked={selected}
                   onClick={() => setActiveSubject(s.key)}
-                  aria-pressed={selected}
-                  className={`game-card game-card-interactive flex flex-col p-4 text-left ${
-                    selected ? "border-[#16a34a] bg-[#f6faf4] ring-2 ring-[#16a34a]/25" : ""
+                  className={`group flex flex-col rounded-2xl border-2 p-4 text-left transition ${
+                    selected
+                      ? "border-[#16a34a] border-b-[6px] bg-[#f0fdf4] shadow-md"
+                      : "border-[#d9e6d3] border-b-[6px] bg-white hover:-translate-y-0.5 hover:border-[#16a34a] hover:bg-[#fbfdf9] hover:shadow-lg"
                   }`}
                 >
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-2xl">{s.icon}</span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-extrabold ${accentSoft} ${accentText}`}>
+                  <div className="mb-2 flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                          selected
+                            ? "border-[#16a34a] bg-[#16a34a]"
+                            : "border-[#c9dcc4] bg-white group-hover:border-[#16a34a]"
+                        }`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${selected ? "bg-white" : "bg-transparent"}`} />
+                      </span>
+                      <span className="text-2xl">{s.icon}</span>
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-extrabold ${
+                        selected
+                          ? "bg-[#16a34a] text-white"
+                          : "border border-[#e2ece0] bg-[#f6faf4] text-[#5c7863]"
+                      }`}
+                    >
                       {isSpec && !major ? "Pick major" : `${count.toLocaleString()} items`}
                     </span>
                   </div>
@@ -486,6 +515,18 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#e2ece0] pt-2 text-[11px] font-extrabold">
+                    <span className="text-[#94a896]">
+                      {isLET ? `${setsFor(s.key, levelKey, major).length} papers` : `${count.toLocaleString()} items`}
+                    </span>
+                    {selected ? (
+                      <span className="px-2 py-1 text-[#15803d]">✓ You are here</span>
+                    ) : (
+                      <span className="rounded-lg border border-[#c9dcc4] bg-white px-2 py-1 text-[#15803d] transition group-hover:border-[#16a34a] group-hover:bg-[#16a34a] group-hover:text-white">
+                        Select {isLET ? "this campaign" : "this paper"} →
+                      </span>
+                    )}
                   </div>
                 </button>
               );
