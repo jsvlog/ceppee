@@ -295,7 +295,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
       <section className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
         <div className="game-card p-4 sm:p-5">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch lg:gap-6">
-            <div className="min-w-0">
+            <div className="min-w-0 lg:shrink-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">1. Division</span>
                 <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ${accentSoft} ${accentText}`}>
@@ -381,7 +381,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
 
             {/* Mirrors the two choices above so the bar never reads as a form you
                 still have to fill in — it also fills the dead space on wide screens. */}
-            <div className="hidden min-w-0 flex-col gap-1.5 lg:flex lg:justify-between lg:border-l lg:border-[#e2ece0] lg:pl-6">
+            <div className="hidden min-w-0 flex-col gap-1.5 lg:flex lg:w-56 lg:shrink-0 lg:justify-between lg:border-l lg:border-[#e2ece0] lg:pl-6">
               <span className="text-xs font-extrabold uppercase tracking-wider text-[#94a896]">Now viewing</span>
               <span className="flex flex-wrap items-center gap-1.5 text-sm font-black text-[#16331f]">
                 <span className={`rounded-md px-2 py-0.5 text-[11px] ${accentSoft} ${accentText}`}>{trackKey}</span>
@@ -389,7 +389,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                 {major && (
                   <>
                     <span className="text-[#94a896]">·</span>
-                    <span className="truncate">{major}</span>
+                    <span className="break-words">{major}</span>
                   </>
                 )}
               </span>
@@ -506,35 +506,6 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                     {m}
                   </button>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* Warm-up banner for the active subject */}
-          {(activeSubject !== "Specialization" || major) && subjectItems(activeSubject) > 0 && (
-            <div className="game-card mb-8 flex flex-col justify-between gap-4 bg-gradient-to-r from-[#f0fdf4] via-white to-[#fefce8] p-5 sm:flex-row sm:items-center">
-              <div>
-                <div className={`text-xs font-extrabold uppercase tracking-wider ${accentText}`}>
-                  ⚡ Warm up before the 150-item paper
-                </div>
-                <div className="text-lg font-black text-[#16331f]">
-                  {activeSubject === "Specialization" && major ? major : activeSubject} quick run
-                </div>
-                <p className="text-xs text-[#5c7863]">Short on time? Take a 20-item drill with instant explanations.</p>
-              </div>
-              <div className="flex flex-wrap gap-2.5">
-                <Link
-                  href={subscribed ? studyHref("drill", { subjects: activeSubject, count: "20" }) : gateHref}
-                  className="btn-arcade-green px-5 py-2.5 text-xs sm:text-sm"
-                >
-                  {subscribed ? "🎯 20-item drill" : "🔒 20-item drill"}
-                </Link>
-                <Link
-                  href={subscribed ? studyHref("flashcards", { subjects: activeSubject, count: "30" }) : gateHref}
-                  className="btn-arcade-surface px-4 py-2.5 text-xs sm:text-sm"
-                >
-                  {subscribed ? "🃏 30 cards" : "🔒 30 cards"}
-                </Link>
               </div>
             </div>
           )}
