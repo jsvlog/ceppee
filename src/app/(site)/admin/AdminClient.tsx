@@ -8,7 +8,7 @@ import { postAdmin } from "@/lib/admin-api";
 import { parseBulkQuestions } from "@/lib/bulk-import";
 import { MATERIAL, subjectsFor, subjectIcon, passingPctFor, SPECIALIZATIONS } from "@/lib/exam";
 import QuestionBank from "./QuestionBank";
-import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial, Coach, CoachTrack } from "@/lib/types";
+import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial, Coach, CoachTrack, OnlinePayment } from "@/lib/types";
 import type { AdminProfile, LessonMeta } from "./page";
 
 /* ================= helpers ================= */
@@ -45,6 +45,7 @@ export default function AdminClient({
   settings,
   testimonials,
   coaches,
+  onlinePayments,
 }: {
   stats: Record<string, number>;
   payments: (PaymentRequest & { profile?: { email: string; full_name: string } })[];
@@ -56,6 +57,7 @@ export default function AdminClient({
   settings: SiteSettings[];
   testimonials: Testimonial[];
   coaches: Coach[];
+  onlinePayments: (OnlinePayment & { profile?: { email: string | null; full_name: string | null } | null })[];
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("payments");
@@ -73,6 +75,21 @@ export default function AdminClient({
       setFlash({ ok: false, msg: e instanceof Error ? e.message : "Error" });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const [reconcileMsg, setReconcileMsg] = useState<string | null>(null);
+  const reconcile = async () => {
+    setReconcileMsg("Checking…");
+    try {
+      const res = await fetch("/api/paymongo/reconcile", { method: "POST" });
+      const json = (await res.json()) as { checked?: number; results?: { outcome: string }[]; error?: string };
+      if (!res.ok) throw new Error(json.error || "failed");
+      const activated = (json.results ?? []).filter((r) => r.outcome === "activated").length;
+      setReconcileMsg(`Checked ${json.checked ?? 0} · activated ${activated}`);
+      router.refresh();
+    } catch (e) {
+      setReconcileMsg(e instanceof Error ? e.message : "failed");
     }
   };
 
@@ -171,6 +188,55 @@ export default function AdminClient({
                   <span className={`badge badge-${p.status}`}>{p.status}</span>
                 </div>
               ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-[#16331f]">
+                🌐 Online payments — PayMongo ({onlinePayments.length})
+              </h2>
+              <button
+                onClick={reconcile}
+                disabled={busy}
+                className="rounded-xl border border-[#d9e6d3] bg-white px-4 py-2 text-xs font-bold text-[#3d5c44] hover:border-[#d4af37] disabled:opacity-40"
+              >
+                {reconcileMsg || "Check pending payments"}
+              </button>
+            </div>
+            <div className="card divide-y divide-[#d9e6d3]">
+              {onlinePayments.length === 0 && (
+                <div className="p-6 text-sm text-[#5c7863]">
+                  Nothing yet. Students who pay through PayMongo appear here the moment checkout starts.
+                </div>
+              )}
+              {onlinePayments.map((p) => {
+                const amount = p.amount / 100;
+                return (
+                  <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+                    <div>
+                      <span className="font-semibold text-[#16331f]">{p.profile?.email || p.user_id.slice(0, 8)}</span>
+                      <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${trackPill(p.track)}`}>{p.track}</span>
+                      <span className="ml-2 rounded-full bg-[#f6faf4] px-2 py-0.5 text-xs font-semibold text-[#3d5c44]">
+                        {p.plan === "season" ? "Season ₱500" : "Monthly ₱100"}
+                      </span>
+                      <div className="mt-1 text-xs text-[#5c7863]">
+                        {peso(amount)} · {p.payment_method || "—"} · {fmtDateTime(p.created_at)}
+                        {p.checkout_id ? ` · ${p.checkout_id.slice(0, 14)}…` : " · no checkout id"}
+                      </div>
+                      {p.granted_expires_at && (
+                        <div className="text-xs text-[#15803d]">
+                          ✓ Access until {fmtDate(p.granted_expires_at)} ({p.days_granted} days)
+                        </div>
+                      )}
+                      {p.failure_note && <div className="mt-1 text-xs text-[#991b1b]">{p.failure_note}</div>}
+                    </div>
+                    <span className={`badge badge-${p.status === "paid" ? "approved" : p.status === "pending" ? "pending" : "rejected"}`}>
+                      {p.status}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </section>
         </div>
@@ -2110,6 +2176,30 @@ function SettingsTab({
         </div>
       </div>
       <div className="card p-6 lg:col-span-2">
+        <h3 className="mb-1 font-bold text-[#16331f]">🗓️ Exam dates — what the ₱500 season pass runs to</h3>
+        <p className="mb-4 text-xs text-[#5c7863]">
+          Access ends at 11:59pm on these dates (Philippine time). Leave blank and the season pass grants 180
+          days instead, so nothing breaks before the schedule is posted.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SettingField
+            label="CSE exam date"
+            inputType="date"
+            value={get("exam_date_CSE")}
+            onSave={(v) => run("save_setting", { key: "exam_date_CSE", value: v }, "CSE exam date saved")}
+            busy={busy}
+          />
+          <SettingField
+            label="LET exam date"
+            inputType="date"
+            value={get("exam_date_LET")}
+            onSave={(v) => run("save_setting", { key: "exam_date_LET", value: v }, "LET exam date saved")}
+            busy={busy}
+          />
+        </div>
+      </div>
+
+      <div className="card p-6 lg:col-span-2">
         <h3 className="mb-4 font-bold text-[#16331f]">📋 Payment Instructions (shown to users in the payment modal)</h3>
         <SettingField
           label="Instructions"
@@ -2129,12 +2219,14 @@ function SettingField({
   onSave,
   busy,
   textarea,
+  inputType,
 }: {
   label: string;
   value: string;
   onSave: (v: string) => Promise<void>;
   busy: boolean;
   textarea?: boolean;
+  inputType?: string;
 }) {
   const [v, setV] = useState(value);
   const dirty = v !== value;
@@ -2145,7 +2237,7 @@ function SettingField({
         {textarea ? (
           <textarea className="input-warm" rows={3} value={v} onChange={(e) => setV(e.target.value)} />
         ) : (
-          <input className="input-warm" value={v} onChange={(e) => setV(e.target.value)} />
+          <input type={inputType ?? "text"} className="input-warm" value={v} onChange={(e) => setV(e.target.value)} />
         )}
         <button
           disabled={busy || !dirty}

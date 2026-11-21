@@ -352,10 +352,15 @@ export async function POST(request: NextRequest) {
 
       /* ---------- SETTINGS ---------- */
       case "save_setting": {
+        // upsert, not update: a key that has never been saved (e.g. the exam dates)
+        // would otherwise match zero rows and report success while saving nothing.
+        if (!payload.key) throw new Error("Missing setting key");
         const { error } = await admin
           .from("site_settings")
-          .update({ value: String(payload.value), updated_at: new Date().toISOString() })
-          .eq("key", payload.key);
+          .upsert(
+            { key: String(payload.key), value: String(payload.value ?? ""), updated_at: new Date().toISOString() },
+            { onConflict: "key" }
+          );
         if (error) throw error;
         return NextResponse.json({ ok: true });
       }

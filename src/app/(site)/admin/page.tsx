@@ -13,6 +13,7 @@ import type {
   SiteSettings,
   Testimonial,
   Coach,
+  OnlinePayment,
 } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -53,6 +54,7 @@ export default async function AdminPage() {
     { data: settings },
     { data: testimonials },
     { data: coaches },
+    { data: onlinePayments },
   ] = await Promise.all([
     admin.rpc("admin_stats"),
     admin
@@ -88,7 +90,23 @@ export default async function AdminPage() {
       .select("*")
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
+    // No profiles(...) embed here: payments.user_id references auth.users, so
+    // PostgREST has no relationship to profiles and the join 400s into an empty
+    // list. Attach the profile from the profiles query below instead.
+    admin
+      .from("payments")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200),
   ]);
+
+  const profileById = new Map(
+    ((profiles as AdminProfile[]) || []).map((p) => [p.id, { email: p.email, full_name: p.full_name }])
+  );
+  const onlineWithProfile = ((onlinePayments as unknown as OnlinePayment[]) || []).map((p) => ({
+    ...p,
+    profile: profileById.get(p.user_id) ?? null,
+  }));
 
   return (
     <AdminClient
@@ -102,6 +120,7 @@ export default async function AdminPage() {
       settings={(settings as SiteSettings[]) || []}
       testimonials={(testimonials as Testimonial[]) || []}
       coaches={(coaches as Coach[]) || []}
+      onlinePayments={onlineWithProfile}
     />
   );
 }

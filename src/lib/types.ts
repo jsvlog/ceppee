@@ -264,3 +264,23 @@ export interface LeaderboardAround extends LeaderboardRow {
 
 /** The three leaderboard windows the SQL function accepts. */
 export type LeaderboardPeriod = "daily" | "weekly" | "all";
+
+/** A PayMongo order row (`payments`), as the admin list shows it. */
+export interface OnlinePayment {
+  id: string;
+  user_id: string;
+  track: Track;
+  plan: "monthly" | "season";
+  amount: number;
+  currency: string;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  provider: string;
+  payment_method: string | null;
+  checkout_id: string | null;
+  days_granted: number | null;
+  granted_expires_at: string | null;
+  failure_note: string | null;
+  created_at: string;
+  paid_at: string | null;
+  profile?: { email: string | null; full_name: string | null } | null;
+}
