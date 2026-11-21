@@ -50,6 +50,11 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
       <Link href="/read" className={linkCls("/read")}>
         Read
       </Link>
+      {user && (
+        <Link href="/leaderboard" className={linkCls("/leaderboard")}>
+          Leaderboard
+        </Link>
+      )}
       <Link href="/coaches" className={linkCls("/coaches")}>
         Coaches
       </Link>

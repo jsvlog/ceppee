@@ -42,6 +42,8 @@ export interface TrackGameHubProps {
   attempts: ExamAttempt[];
   mastery: SubjectProgress[];
   exams: Exam[];
+  /** The caller's weekly standing, for the leaderboard card. Null = not ranked yet. */
+  weeklyRank: { rank: number; players: number } | null;
 }
 
 const QUICK_COUNTS = [10, 20, 30, 50];
@@ -49,7 +51,7 @@ const QUICK_COUNTS = [10, 20, 30, 50];
 export default function TrackGameHub(props: TrackGameHubProps) {
   const {
     trackKey, trackSlug, initialLevel, initialMajor, subscribed, isSignedIn,
-    stats, allSets, attempts, mastery, exams,
+    stats, allSets, attempts, mastery, exams, weeklyRank,
   } = props;
 
   const isLET = trackKey === "LET";
@@ -710,7 +712,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
           </div>
 
           <h3 className="mb-3 text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">Special modes</h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Link
               href={subscribed ? studyHref("mistakes") : gateHref}
               className="game-card game-card-interactive flex items-start gap-4 p-5"
@@ -720,6 +722,21 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                 <div className="font-black text-[#16331f]">Boss rematch: retry my mistakes</div>
                 <p className="mt-1 text-xs text-[#5c7863]">
                   The exact items you got wrong. Get one right and it leaves the list.
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href={`/leaderboard?track=${trackSlug}&period=weekly`}
+              className="game-card game-card-interactive flex items-start gap-4 p-5"
+            >
+              <span className="text-3xl">🏆</span>
+              <div>
+                <div className="font-black text-[#16331f]">Leaderboard</div>
+                <p className="mt-1 text-xs text-[#5c7863]">
+                  {weeklyRank
+                    ? `You are #${weeklyRank.rank} of ${weeklyRank.players} this week. Daily, weekly and all-time boards.`
+                    : "Today, this week and all-time. Finish one drill and your name is on it."}
                 </p>
               </div>
             </Link>

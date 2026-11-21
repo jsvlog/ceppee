@@ -47,6 +47,13 @@ const RANKS: { minLevel: number; title: string; icon: string }[] = [
   { minLevel: 15, title: "Topnotcher Contender", icon: "👑" },
 ];
 
+/** Level -> rank title/icon. The ladder the hub's XP badge and the leaderboard share. */
+export function rankForLevel(level: number): { title: string; icon: string } {
+  let rank = RANKS[0];
+  for (const r of RANKS) if (level >= r.minLevel) rank = r;
+  return { title: rank.title, icon: rank.icon };
+}
+
 /** Order-independent: the caller passes attempts newest-first, but only dates matter. */
 export function computePlayerStats(attempts: AttemptSummary[], passingPct = 75): PlayerStats {
   let xp = 0;
@@ -69,8 +76,7 @@ export function computePlayerStats(attempts: AttemptSummary[], passingPct = 75):
   const xpInLevel = xp % XP_PER_LEVEL;
   const levelProgressPct = Math.min(100, Math.round((xpInLevel / XP_PER_LEVEL) * 100));
 
-  let rank = RANKS[0];
-  for (const r of RANKS) if (level >= r.minLevel) rank = r;
+  const rank = rankForLevel(level);
 
   // Study streak = consecutive UTC days with at least one finished attempt,
   // counted back from the most recent day.

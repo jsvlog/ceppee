@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   getBankStats,
+  getLeaderboardAround,
   getRecentTrackAttempts,
   getSubjectProgress,
   getUserContext,
@@ -10,7 +11,7 @@ import {
 } from "@/lib/queries";
 import { levelsFor, specializationsFor } from "@/lib/exam";
 import TrackGameHub from "@/components/study/TrackGameHub";
-import type { Exam, Level, SetCatalogRow, Track } from "@/lib/types";
+import type { Exam, LeaderboardAround, Level, SetCatalogRow, Track } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -57,9 +58,14 @@ export default async function TrackPage({
   const { user, subs, isAdmin } = userCtx;
   const subscribed = isAdmin || hasActiveSub(subs, trackKey);
 
-  const [mastery, attempts] = user
-    ? await Promise.all([getSubjectProgress(trackKey), getRecentTrackAttempts(user.id, trackKey)])
-    : [[], []];
+  const [mastery, attempts, weekly] = user
+    ? await Promise.all([
+        getSubjectProgress(trackKey),
+        getRecentTrackAttempts(user.id, trackKey),
+        getLeaderboardAround(trackKey, "weekly", 0),
+      ])
+    : [[], [], []];
+  const weeklyMe = (weekly as LeaderboardAround[]).find((r) => r.is_me) ?? null;
 
   return (
     <TrackGameHub
@@ -74,6 +80,7 @@ export default async function TrackPage({
       attempts={attempts}
       mastery={mastery}
       exams={(examsRes.data as Exam[] | null) ?? []}
+      weeklyRank={weeklyMe ? { rank: weeklyMe.rank, players: weeklyMe.players } : null}
     />
   );
 }

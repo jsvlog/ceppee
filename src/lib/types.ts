@@ -243,3 +243,24 @@ export interface ExamWithCount extends Exam {
   pinned_count?: number;
   exam_questions?: { count: number }[];
 }
+
+/** One row of leaderboard() / leaderboard_me() — XP is computed server-side. */
+export interface LeaderboardRow {
+  rank: number;
+  user_id: string;
+  display_name: string;
+  xp: number;
+  level: number;
+  papers: number;
+  items: number;
+  is_me: boolean;
+}
+
+/** leaderboard_me() repeats the board meta on every row. */
+export interface LeaderboardAround extends LeaderboardRow {
+  players: number;
+  resets_at: string | null;
+}
+
+/** The three leaderboard windows the SQL function accepts. */
+export type LeaderboardPeriod = "daily" | "weekly" | "all";

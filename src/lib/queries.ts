@@ -1,7 +1,10 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import type { BankStat, Coach, ExamAttempt, Level, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
+import type { BankStat, Coach, ExamAttempt, LeaderboardAround, LeaderboardRow, LeaderboardPeriod, Level, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
+
+/** Daily | weekly | all-time — the three leaderboard windows. */
+export type { LeaderboardPeriod };
 
 export interface SiteStats {
   lessons: number;
@@ -133,6 +136,48 @@ export const getBankStats = cache(async (track: Track): Promise<BankStat[]> => {
     return [];
   }
 });
+
+/**
+ * Top of the leaderboard for a track + period. XP is computed in SQL from
+ * `exam_attempts` (see supabase/leaderboard.sql), never sent by the browser.
+ */
+export const getLeaderboard = cache(
+  async (track: Track, period: LeaderboardPeriod, limit = 20): Promise<LeaderboardRow[]> => {
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase.rpc("leaderboard", {
+        p_track: track,
+        p_period: period,
+        p_limit: limit,
+      });
+      if (error) return [];
+      return (data as LeaderboardRow[]) ?? [];
+    } catch {
+      return [];
+    }
+  }
+);
+
+/**
+ * The caller's row plus `span` rows each side, with the board meta (players,
+ * resets_at) repeated on every row. Empty when they have no attempts in the period.
+ */
+export const getLeaderboardAround = cache(
+  async (track: Track, period: LeaderboardPeriod, span = 2): Promise<LeaderboardAround[]> => {
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase.rpc("leaderboard_me", {
+        p_track: track,
+        p_period: period,
+        p_span: span,
+      });
+      if (error) return [];
+      return (data as LeaderboardAround[]) ?? [];
+    } catch {
+      return [];
+    }
+  }
+);
 
 /** Questions available to THIS user for a track+level (0 while the bank is empty). */
 export function countAvailable(stats: BankStat[], level: Level, subjects?: string[]): number {
