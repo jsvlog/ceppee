@@ -147,6 +147,18 @@ export default function TrackGameHub(props: TrackGameHubProps) {
     [setsFor, activeSubject, levelKey, major]
   );
 
+  // Everything the current division + majorship unlocks, across all subjects —
+  // what the "Now viewing" summary describes.
+  const selectionSets = useMemo(
+    () =>
+      allSets.filter(
+        (s) =>
+          (s.level === "both" || s.level === levelKey) &&
+          (s.subject !== "Specialization" || (major !== null && s.specialization === major))
+      ),
+    [allSets, levelKey, major]
+  );
+
   const regions = useMemo(
     () => buildCampaignRegions(visibleSets, attempts, { passingPct, subscribed, regionSize: 5 }),
     [visibleSets, attempts, passingPct, subscribed]
@@ -195,7 +207,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
     : "from-[#14532d] via-[#15803d] to-[#ca8a04]";
 
   const TABS: { id: HubTab; icon: string; label: string; badge: string }[] = [
-    { id: "campaign", icon: "🗺️", label: "Campaign Map", badge: isLET ? `${visibleSets.length} sets` : `${mocks.length} mocks` },
+    { id: "campaign", icon: "🗺️", label: "Campaign Map", badge: isLET ? `${visibleSets.length} sets` : `${mocks.length} mock${mocks.length === 1 ? "" : "s"}` },
     { id: "arena", icon: "⚡", label: "Quick Arena", badge: "Drills" },
   ];
 
@@ -282,7 +294,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
       {/* ==================== LEVEL / MAJORSHIP CONTROL BAR ==================== */}
       <section className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
         <div className="game-card p-4 sm:p-5">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch lg:gap-6">
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">1. Division</span>
@@ -291,29 +303,39 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                {levelOptions.map((l) => {
+                {levelOptions.map((l, i) => {
                   const active = l.key === levelKey;
+                  // "Elementary (Grades 1–6)" -> name + the parenthetical detail.
+                  const [mainName, ...rest] = l.short.split(" (");
+                  const detail = rest.length ? rest.join(" (").replace(/\)\s*$/, "") : "";
                   return (
                     <button
                       key={l.key}
                       type="button"
                       onClick={() => applySelection(l.key, major)}
                       aria-pressed={active}
-                      className={`relative flex flex-col items-start gap-0.5 rounded-2xl px-4 py-3 text-left transition sm:min-w-[190px] ${
+                      className={`relative flex flex-col items-start gap-1 rounded-2xl px-4 py-3 text-left transition sm:min-w-[190px] ${
                         active
                           ? "border-2 border-[#0b1f13] border-b-[6px] bg-[#16331f] text-white shadow-lg"
                           : "border-2 border-[#d9e6d3] border-b-[6px] bg-white text-[#3d5c44] hover:border-[#16a34a] hover:bg-[#f6faf4]"
                       }`}
                     >
-                      <span className="flex items-center gap-1.5 text-sm font-black">
+                      <span className="flex items-start gap-1.5 text-sm font-black leading-tight">
                         <span
-                          className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
+                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
                             active ? "bg-[#4ade80] text-[#0b1f13]" : "bg-[#eef4ea] text-[#94a896]"
                           }`}
                         >
-                          {active ? "✓" : l.key === "elementary" ? "1" : "2"}
+                          {active ? "✓" : i + 1}
                         </span>
-                        {l.key === "elementary" ? "Elementary" : "Secondary"}
+                        <span>
+                          {mainName}
+                          {detail && (
+                            <span className={`block text-[11px] font-semibold ${active ? "text-[#bbf7d0]" : "text-[#94a896]"}`}>
+                              {detail}
+                            </span>
+                          )}
+                        </span>
                       </span>
                       <span className={`text-[11px] font-semibold ${active ? "text-[#bbf7d0]" : "text-[#94a896]"}`}>
                         {active ? "You are studying this" : "Tap to switch"}
@@ -325,7 +347,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
             </div>
 
             {majorOptions.length > 0 && (
-              <div className="flex w-full max-w-xs flex-col gap-2">
+              <div className="flex w-full flex-col gap-2 lg:w-72 lg:shrink-0 lg:justify-between lg:border-l lg:border-[#e2ece0] lg:pl-6">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">
                     2. Majorship{majorRequired ? "" : " (optional)"}
@@ -356,6 +378,29 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                 </span>
               </div>
             )}
+
+            {/* Mirrors the two choices above so the bar never reads as a form you
+                still have to fill in — it also fills the dead space on wide screens. */}
+            <div className="hidden min-w-0 flex-col gap-1.5 lg:flex lg:justify-between lg:border-l lg:border-[#e2ece0] lg:pl-6">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[#94a896]">Now viewing</span>
+              <span className="flex flex-wrap items-center gap-1.5 text-sm font-black text-[#16331f]">
+                <span className={`rounded-md px-2 py-0.5 text-[11px] ${accentSoft} ${accentText}`}>{trackKey}</span>
+                {levelLabel(trackKey, levelKey).replace(`${trackKey} `, "")}
+                {major && (
+                  <>
+                    <span className="text-[#94a896]">·</span>
+                    <span className="truncate">{major}</span>
+                  </>
+                )}
+              </span>
+              <span className="text-[11px] font-semibold text-[#5c7863]">
+                {isLET
+                  ? `${selectionSets.length} papers · ${selectionSets.reduce((n, s) => n + s.live, 0).toLocaleString()} items`
+                  : `${mocks.length} mock ${mocks.length === 1 ? "exam" : "exams"} · ${mocks
+                      .reduce((n, e) => n + e.question_count, 0)
+                      .toLocaleString()} items`}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -397,7 +442,11 @@ export default function TrackGameHub(props: TrackGameHubProps) {
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-[#5c7863]">
               {isLET ? "Pick a subject campaign" : "Pick a paper"}
             </h2>
-            <span className="text-xs font-bold text-[#5c7863]">{allSets.length} papers in the bank</span>
+            <span className="text-xs font-bold text-[#5c7863]">
+              {isLET
+                ? `${allSets.length} papers in the bank`
+                : `${mocks.length} mock ${mocks.length === 1 ? "exam" : "exams"} available`}
+            </span>
           </div>
 
           <div className={`mb-8 grid grid-cols-1 gap-3 ${subjects.length > 1 ? "sm:grid-cols-3" : ""}`}>
