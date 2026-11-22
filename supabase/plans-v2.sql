@@ -300,6 +300,36 @@ begin
      limit greatest(1, least(coalesce(p_limit, 30), 500));
 end $$;
 
+-- Mistakes pool: same row rule, otherwise a subject buyer would be handed items
+-- from papers they never bought (they answered them while holding an older pass).
+create or replace function public.draw_mistakes(
+  p_track text,
+  p_level text default 'both',
+  p_limit int default 20
+) returns table(
+  id uuid, question_text text,
+  choice_a text, choice_b text, choice_c text, choice_d text,
+  correct_choice text, explanation text, subject text, subtopic text,
+  times_wrong int
+) language plpgsql security definer set search_path = public as $$
+declare v_uid uuid := auth.uid();
+begin
+  if v_uid is null or not public.bank_access(p_track) then return; end if;
+  return query
+    select q.id, q.question_text, q.choice_a, q.choice_b, q.choice_c, q.choice_d,
+           k.correct_choice, k.explanation, q.subject, q.subtopic, sp.wrong
+      from public.study_progress sp
+      join public.exam_questions q on q.id = sp.question_id and q.is_active
+      join public.question_keys k on k.question_id = q.id
+     where sp.user_id = v_uid
+       and sp.wrong > 0
+       and q.track = p_track
+       and (p_level is null or p_level = 'both' or q.level = 'both' or q.level = p_level)
+       and public.user_can_access(q.track, q.level, q.subject)
+     order by sp.wrong desc, random()
+     limit greatest(1, least(coalesce(p_limit, 20), 200));
+end $$;
+
 -- ---- 6. activation writes the scope --------------------------------------
 create or replace function public.activate_payment(
   p_payment_id uuid,

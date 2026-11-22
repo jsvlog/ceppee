@@ -11,7 +11,6 @@ import {
   subjectsFor,
   timedMinutes,
 } from "@/lib/exam";
-import { peso } from "@/lib/format";
 import {
   buildCampaignRegions,
   computePlayerStats,
@@ -40,6 +39,7 @@ export interface TrackGameHubProps {
   subscribed: boolean;
   /** The caller's subscription rows — decides per-subject locks (plans v2). */
   subs: Subscription[];
+  isAdmin: boolean;
   isSignedIn: boolean;
   stats: BankStat[];
   allSets: SetCatalogRow[];
@@ -54,7 +54,7 @@ const QUICK_COUNTS = [10, 20, 30, 50];
 
 export default function TrackGameHub(props: TrackGameHubProps) {
   const {
-    trackKey, trackSlug, initialLevel, initialMajor, subscribed, subs, isSignedIn,
+    trackKey, trackSlug, initialLevel, initialMajor, subscribed, subs, isAdmin, isSignedIn,
     stats, allSets, attempts, mastery, exams, weeklyRank,
   } = props;
 
@@ -238,7 +238,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
               <p className="mt-1 max-w-2xl text-sm text-white/90">
                 {subscribed
                   ? "Clear a set at the passing mark to light up the next node, earn stars, and keep your streak alive."
-                  : `The free sampler is open. Subscribe for ${peso(500)} to unlock every 150-item set, drill and flashcard.`}
+                  : "The free sampler is open. Plans start at ₱149 a month, or ₱299 for a single subject until exam day."}
               </p>
             </div>
 
@@ -250,7 +250,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
               )}
               {!subscribed && (
                 <Link href={gateHref} className="btn-arcade-surface px-6 py-3 text-sm text-[#16331f]">
-                  🔓 Unlock — {peso(500)}
+                  🔓 See the plans
                 </Link>
               )}
             </div>
@@ -674,7 +674,7 @@ export default function TrackGameHub(props: TrackGameHubProps) {
               const needsMajor = isSpec && !major;
               // A complete package covers the whole level; a single-subject pass
               // covers just its paper. Anything narrower shows the price instead.
-              const unlocked = subscribed || canAccess(subs, { track: trackKey, level: levelKey, subject: s.key });
+              const unlocked = isAdmin || canAccess(subs, { track: trackKey, level: levelKey, subject: s.key });
               return (
                 <div key={s.key} className="game-card flex flex-col p-5">
                   <div className="mb-2 flex items-center justify-between">
@@ -779,7 +779,9 @@ export default function TrackGameHub(props: TrackGameHubProps) {
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {mocks.map((e) => {
-                  const locked = !subscribed && !e.is_free_preview;
+                  // A mixed paper needs the whole level; a ₱299 subject pass is not enough.
+                  const locked =
+                    !isAdmin && !e.is_free_preview && !canAccess(subs, { track: trackKey, level: e.level });
                   return (
                     <Link
                       key={e.id}

@@ -75,6 +75,7 @@ export default async function TrackPage({
       initialMajor={major}
       subscribed={subscribed}
       subs={subs}
+      isAdmin={Boolean(isAdmin)}
       isSignedIn={Boolean(user)}
       stats={stats}
       allSets={(catalogRes.data as SetCatalogRow[] | null) ?? []}
