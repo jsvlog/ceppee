@@ -138,6 +138,20 @@ export const getBankStats = cache(async (track: Track): Promise<BankStat[]> => {
   }
 });
 
+/** How many items sit in each majorship paper (plans v3: ₱299 buys ONE major). */
+export const getBankMajors = cache(
+  async (track: Track): Promise<{ level: string; specialization: string; total: number }[]> => {
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase.rpc("bank_majors", { p_track: track });
+      if (error) return [];
+      return (data as { level: string; specialization: string; total: number }[]) ?? [];
+    } catch {
+      return [];
+    }
+  }
+);
+
 /**
  * Top of the leaderboard for a track + period. XP is computed in SQL from
  * `exam_attempts` (see supabase/leaderboard.sql), never sent by the browser.

@@ -46,6 +46,8 @@ export interface Subscription {
   scope: SubScope;
   level: "elementary" | "secondary" | null;
   subject: string | null;
+  /** A Specialization pass names one majorship (plans v3). */
+  specialization: string | null;
 }
 
 export interface Exam {

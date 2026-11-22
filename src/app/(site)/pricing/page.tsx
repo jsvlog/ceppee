@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getBankStats, getUserContext } from "@/lib/queries";
+import { getBankStats, getBankMajors, getUserContext } from "@/lib/queries";
 import { accessUntil, canAccess } from "@/lib/access";
 import { PLANS } from "@/lib/paymongo";
 import PlanCheckout, { type PlanOption } from "@/components/PlanCheckout";
@@ -40,10 +40,11 @@ export default async function PricingPage({
   const { user, subs } = await getUserContext();
   const supabase = await createClient();
 
-  const [{ data: settings }, letBank, cseBank] = await Promise.all([
+  const [{ data: settings }, letBank, cseBank, majorsRaw] = await Promise.all([
     supabase.from("site_settings").select("key, value").in("key", ["exam_date_CSE", "exam_date_LET"]),
     getBankStats("LET"),
     getBankStats("CSE"),
+    getBankMajors("LET"),
   ]);
 
   const examDates = Object.fromEntries((settings ?? []).map((r) => [r.key as string, r.value as string])) as Record<
@@ -72,6 +73,8 @@ export default async function PricingPage({
     wantedLevel === "secondary" || wantedLevel === "elementary" ? wantedLevel : "secondary";
 
   const href = (t: Track, lv: "elementary" | "secondary") => `/pricing?track=${t}&level=${lv}`;
+  /** The hub passes the majorship its student already picked. */
+  const wantedMajor = String(sp.major ?? "").trim();
   const trackLive = bankSize[track] > 0;
 
   // ---- the plans for this family -----------------------------------------
@@ -87,14 +90,56 @@ export default async function PricingPage({
     if (!row.subject) continue;
     subjectTotals.set(row.subject, (subjectTotals.get(row.subject) ?? 0) + row.total);
   }
-  const subjects = [...subjectTotals.entries()]
-    .filter(([, n]) => n > 0)
+  // "Specialization" is not one paper: each majorship is its own ₱299 purchase,
+  // so English buys English and nothing else. Majors that belong to the other
+  // division (or to both) are listed under the level that can sit them.
+  const majors = (majorsRaw as { level: string; specialization: string; total: number }[])
+    .filter((m) => track !== "CSE" && (m.level === "both" || m.level === level))
+    .sort((a, b) =>
+      a.specialization === wantedMajor ? -1 : b.specialization === wantedMajor ? 1 : 0
+    )
+    .map((m) => ({
+      name: m.specialization,
+      count: m.total,
+      major: m.specialization as string | undefined,
+      until: accessUntil(subs, {
+        track,
+        level,
+        subject: "Specialization",
+        specialization: m.specialization,
+      }),
+    }));
+
+  const coreSubjects = [...subjectTotals.entries()]
+    .filter(([name, n]) => n > 0 && name !== "Specialization")
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({
       name,
       count,
+      major: undefined as string | undefined,
       until: accessUntil(subs, { track, level, subject: name }),
     }));
+
+  const subjects = [...coreSubjects, ...majors];
+
+  /** One ₱299 card; a majorship card names its paper through `major`. */
+  const subjectOption = (s: (typeof subjects)[number]) => ({
+    id: "subject" as const,
+    price: PLANS.subject.price,
+    label: s.name,
+    term: PLANS.subject.term,
+    subject: s.major ? "Specialization" : s.name,
+    major: s.major,
+    badge: s.major && s.major === wantedMajor ? "Your majorship" : undefined,
+    blurb: `${s.count.toLocaleString()} items in the bank. Unlocked until exam day.`,
+    ownedUntil: s.until
+      ? new Date(s.until).toLocaleDateString("en-PH", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null,
+  });
 
   const completeFeatures =
     track === "CSE"
@@ -311,35 +356,44 @@ export default async function PricingPage({
               </div>
             </div>
 
-            {/* ---- one subject ------------------------------------------- */}
-            {subjects.length > 0 && (
+            {/* ---- one paper: the two everyone sits, then the majorship -- */}
+            {coreSubjects.length > 0 && (
               <div className="mt-12">
                 <h2 className="text-center text-2xl font-black text-[#16331f]">
-                  Or just one {track === "CSE" ? "category" : "subject"} — {money(PLANS.subject.price)}
+                  Or just one {track === "CSE" ? "category" : "paper"} — {money(PLANS.subject.price)}
                 </h2>
                 <p className="mx-auto mt-2 mb-6 max-w-xl text-center text-sm text-[#5c7863]">
-                  A single paper, unlocked until exam day. Handy when one subject is the only thing standing
-                  between you and a passing score.
+                  One card is one paper, unlocked until exam day. Handy when a single subject is the only
+                  thing standing between you and a passing score.
                 </p>
                 <PlanCheckout
                   track={track}
                   level={track === "LET" ? level : null}
                   columns={2}
-                  plans={subjects.map((s) => ({
-                    id: "subject",
-                    price: PLANS.subject.price,
-                    label: s.name,
-                    term: PLANS.subject.term,
-                    subject: s.name,
-                    blurb: `${s.count.toLocaleString()} items in the bank. Unlocked until exam day.`,
-                    ownedUntil: s.until
-                      ? new Date(s.until).toLocaleDateString("en-PH", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : null,
-                  }))}
+                  plans={coreSubjects.map((s) => subjectOption(s))}
+                  enabled={enabled}
+                  isSignedIn={Boolean(user)}
+                  activeUntil={null}
+                />
+              </div>
+            )}
+
+            {majors.length > 0 && (
+              <div className="mt-12">
+                <h2 className="text-center text-2xl font-black text-[#16331f]">
+                  Your majorship — {money(PLANS.subject.price)}, one paper
+                </h2>
+                <p className="mx-auto mt-2 mb-6 max-w-xl text-center text-sm text-[#5c7863]">
+                  A majorship is its own paper. English buys English, Filipino buys Filipino — nothing else.
+                  {level === "secondary"
+                    ? " The complete package is the cheaper way to cover every major."
+                    : " The complete package covers your elementary papers too."}
+                </p>
+                <PlanCheckout
+                  track={track}
+                  level={track === "LET" ? level : null}
+                  columns={2}
+                  plans={majors.map((s) => subjectOption(s))}
                   enabled={enabled}
                   isSignedIn={Boolean(user)}
                   activeUntil={null}

@@ -676,7 +676,16 @@ export default function TrackGameHub(props: TrackGameHubProps) {
               const needsMajor = isSpec && !major;
               // A complete package covers the whole level; a single-subject pass
               // covers just its paper. Anything narrower shows the price instead.
-              const unlocked = isAdmin || canAccess(subs, { track: trackKey, level: levelKey, subject: s.key });
+              // A Specialization pass buys ONE majorship, so the card is only
+              // unlocked for the major this student actually paid for.
+              const unlocked =
+                isAdmin ||
+                canAccess(subs, {
+                  track: trackKey,
+                  level: levelKey,
+                  subject: s.key,
+                  specialization: s.key === "Specialization" ? major || null : null,
+                });
               return (
                 <div key={s.key} className="game-card flex flex-col p-5">
                   <div className="mb-2 flex items-center justify-between">
@@ -700,10 +709,12 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                     </p>
                   ) : !unlocked ? (
                     <Link
-                      href={`/pricing?track=${trackKey}&level=${levelKey}`}
+                      href={`/pricing?track=${trackKey}&level=${levelKey}${
+                        s.key === "Specialization" && major ? `&major=${encodeURIComponent(major)}` : ""
+                      }`}
                       className="btn-arcade-surface w-full py-2.5 text-xs"
                     >
-                      🔒 Unlock this subject · ₱299
+                      🔒 Unlock {s.key === "Specialization" && major ? major : "this subject"} · ₱299
                     </Link>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">

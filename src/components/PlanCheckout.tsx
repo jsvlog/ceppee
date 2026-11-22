@@ -13,6 +13,8 @@ export interface PlanOption {
   badge?: string;
   /** The subject this option unlocks (the ₱299 plan). */
   subject?: string;
+  /** The majorship this option unlocks when the subject is Specialization. */
+  major?: string;
   /** Set when the buyer already owns it — the button turns into a receipt. */
   ownedUntil?: string | null;
   /** "season" shows "one time", a number shows "/ N days". */
@@ -61,7 +63,13 @@ export default function PlanCheckout({
       const res = await fetch("/api/paymongo/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ track, plan: plan.id, subject: plan.subject, level }),
+        body: JSON.stringify({
+          track,
+          plan: plan.id,
+          subject: plan.subject,
+          major: plan.major,
+          level,
+        }),
       });
       const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
       if (!res.ok || !json.url) throw new Error(json.error || "Could not start the checkout.");

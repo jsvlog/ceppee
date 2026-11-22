@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
     track?: string;
     plan?: string;
     subject?: string;
+    major?: string;
     level?: string;
   };
   const track = String(body.track ?? "").toUpperCase();
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
   // A subject plan must name a paper the track really has, checked against the
   // bank — a made-up subject would otherwise buy a token that unlocks nothing.
   let subject: string | null = null;
+  let major: string | null = null;
   if (plan.needsSubject) {
     subject = String(body.subject ?? "").trim();
     if (!subject) {
@@ -95,6 +97,30 @@ export async function POST(req: NextRequest) {
     if (!hit || hit.length === 0) {
       return NextResponse.json({ error: `"${subject}" is not a ${track} subject.` }, { status: 400 });
     }
+
+    // "Specialization" is not one paper — English, Filipino, Mathematics... each
+    // is its own majorship, and a ₱299 pass buys exactly one of them.
+    if (subject === "Specialization") {
+      const wanted = String(body.major ?? "").trim();
+      if (!wanted) {
+        return NextResponse.json({ error: "Pick your majorship first." }, { status: 400 });
+      }
+      const { data: majorHit, error: majorErr } = await admin
+        .from("exam_questions")
+        .select("id")
+        .eq("track", track)
+        .eq("is_active", true)
+        .eq("subject", "Specialization")
+        .eq("specialization", wanted)
+        .limit(1);
+      if (majorErr) {
+        return NextResponse.json({ error: "Could not check the majorship list." }, { status: 500 });
+      }
+      if (!majorHit || majorHit.length === 0) {
+        return NextResponse.json({ error: `"${wanted}" is not a ${track} majorship.` }, { status: 400 });
+      }
+      major = wanted;
+    }
   }
 
   const paymentId = crypto.randomUUID();
@@ -107,6 +133,7 @@ export async function POST(req: NextRequest) {
     scope,
     level,
     subject,
+    specialization: major,
     amount: plan.amount,
     currency: "PHP",
     status: "pending",
