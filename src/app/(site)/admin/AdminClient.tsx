@@ -93,8 +93,8 @@ export default function AdminClient({
     }
   };
 
-  const pendingPayments = payments.filter((p) => p.status === "pending");
-  const reviewedPayments = payments.filter((p) => p.status !== "pending");
+  // Manual GCash verification is gone: PayMongo grants access itself.
+  const legacyPayments = payments.filter((p) => p.status === "pending");
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -138,9 +138,9 @@ export default function AdminClient({
             }`}
           >
             {t.label}
-            {t.id === "payments" && pendingPayments.length > 0 && (
+            {t.id === "payments" && legacyPayments.length > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#15803d] text-[10px] font-black text-white">
-                {pendingPayments.length}
+                {legacyPayments.length}
               </span>
             )}
           </button>
@@ -150,47 +150,6 @@ export default function AdminClient({
       {/* ============ PAYMENTS ============ */}
       {tab === "payments" && (
         <div className="space-y-8">
-          <section>
-            <h2 className="mb-4 text-lg font-bold text-[#16331f]">
-              ⏳ Pending verification ({pendingPayments.length})
-            </h2>
-            {pendingPayments.length === 0 ? (
-              <div className="card p-6 text-sm text-[#5c7863]">No pending. Enjoy the calm! ☕</div>
-            ) : (
-              <div className="space-y-5">
-                {pendingPayments.map((p) => (
-                  <PaymentCard
-                    key={p.id}
-                    p={p}
-                    busy={busy}
-                    onApprove={() => run("approve_payment", { payment_id: p.id }, `Approved! The ${p.track} subscription is now active.`)}
-                    onReject={(note) => run("reject_payment", { payment_id: p.id, note }, "Rejected.")}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="mb-4 text-lg font-bold text-[#16331f]">📁 Reviewed ({reviewedPayments.length})</h2>
-            <div className="card divide-y divide-[#d9e6d3]">
-              {reviewedPayments.length === 0 && (
-                <div className="p-6 text-sm text-[#5c7863]">No reviewed payments yet.</div>
-              )}
-              {reviewedPayments.map((p) => (
-                <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
-                  <div>
-                    <span className="font-semibold text-[#16331f]">{p.profile?.email || "—"}</span>
-                    <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${trackPill(p.track)}`}>{p.track}</span>
-                    <span className="ml-2 text-[#5c7863]">{peso(p.amount)} · {fmtDateTime(p.created_at)}</span>
-                    {p.admin_note && <div className="mt-1 text-xs text-[#991b1b]">Note: {p.admin_note}</div>}
-                  </div>
-                  <span className={`badge badge-${p.status}`}>{p.status}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
           <section>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-[#16331f]">
@@ -2212,16 +2171,6 @@ function SettingsTab({
         </div>
       </div>
 
-      <div className="card p-6 lg:col-span-2">
-        <h3 className="mb-4 font-bold text-[#16331f]">📋 Payment Instructions (shown to users in the payment modal)</h3>
-        <SettingField
-          label="Instructions"
-          textarea
-          value={get("payment_instructions")}
-          onSave={(v) => run("save_setting", { key: "payment_instructions", value: v }, "Instructions saved")}
-          busy={busy}
-        />
-      </div>
     </div>
   );
 }

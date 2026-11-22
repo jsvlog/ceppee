@@ -420,14 +420,7 @@ export default async function PricingPage({
             </div>
           </div>
           <p className="mt-6 text-xs text-[#94a896]">
-            Prefer GCash transfer? You can still send it manually from your{" "}
-            <Link
-              href={user ? "/dashboard" : "/login"}
-              className="underline decoration-[#d4af37] decoration-2 underline-offset-2"
-            >
-              dashboard
-            </Link>{" "}
-            and an admin approves it within 24 hours.
+            Manual GCash transfers are closed — every pass is bought and unlocked here.
           </p>
         </div>
       </div>

@@ -3,11 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import PaymentModal from "@/components/PaymentModal";
 import { peso, daysUntil, fmtDate, fmtDateTime, TRACK_LABEL } from "@/lib/format";
-import type { Track, PaymentRequest, Subscription, ExamAttempt, Exam, ExamWithCount, SubjectProgress } from "@/lib/types";
+import type { Track, OnlinePayment, Subscription, ExamAttempt, Exam, ExamWithCount, SubjectProgress } from "@/lib/types";
 
-const PRICE = 500;
+const PLAN_LABEL: Record<string, string> = {
+  monthly: "Monthly pass",
+  subject: "One paper",
+  beed: "Complete BEED",
+  bsed: "Complete BSED",
+  csec: "Complete CSE",
+  season: "Season pass",
+};
 
 const trackMeta: Record<Track, { emoji: string; color: string; soft: string; btn: string; label: string }> = {
   CSE: { emoji: "🏛️", color: "text-[#15803d]", soft: "bg-[#dcfce7]", btn: "btn-primary", label: "CSE Review" },
@@ -17,26 +23,24 @@ const trackMeta: Record<Track, { emoji: string; color: string; soft: string; btn
 export default function DashboardClient({
   userName,
   subs,
-  requests,
+  payments,
   attempts,
   freeExams,
   mastery,
 }: {
   userName: string;
   subs: Subscription[];
-  requests: PaymentRequest[];
+  payments: OnlinePayment[];
   attempts: (ExamAttempt & { exam?: Exam })[];
   freeExams: ExamWithCount[];
   mastery: { track: Track; rows: SubjectProgress[] }[];
 }) {
   const router = useRouter();
-  const [payTrack, setPayTrack] = useState<Track | null>(null);
 
   const getSub = (t: Track) =>
     subs.find((s) => s.track === t && s.status === "active" && new Date(s.expires_at) > new Date());
 
   const handlePaid = () => {
-    setPayTrack(null);
     router.refresh();
   };
 
@@ -62,8 +66,8 @@ export default function DashboardClient({
                 </span>
                 {sub ? (
                   <span className="badge badge-active">✓ Active</span>
-                ) : requests.some((r) => r.track === t && r.status === "pending") ? (
-                  <span className="badge badge-pending">⏳ Verifying</span>
+                ) : payments.some((p) => p.track === t && p.status === "pending") ? (
+                  <span className="badge badge-pending">⏳ Awaiting payment</span>
                 ) : (
                   <span className="badge badge-expired">🔒 Locked</span>
                 )}
@@ -82,15 +86,15 @@ export default function DashboardClient({
               ) : (
                 <>
                   <p className="mb-5 text-sm leading-relaxed text-[#5c7863]">
-                    The {TRACK_LABEL[t]} reviewer is still locked. Subscribe to unlock all lessons,
-                    drills, and mock exams.
+                    The {TRACK_LABEL[t]} reviewer is still locked. Pick a pass — a month of everything,
+                    one paper, or the complete package until exam day.
                   </p>
-                  <button
-                    onClick={() => setPayTrack(t)}
-                    className={`${meta.btn} px-6 py-2.5 text-sm`}
+                  <Link
+                    href={`/pricing?track=${t}&level=secondary`}
+                    className={`${meta.btn} inline-block px-6 py-2.5 text-sm`}
                   >
-                    Subscribe — {peso(PRICE)}
-                  </button>
+                    Choose a plan →
+                  </Link>
                 </>
               )}
             </div>
@@ -230,45 +234,35 @@ export default function DashboardClient({
         )}
       </div>
 
-      {/* Payment history */}
+      {/* Payment history (PayMongo orders) */}
       <div>
         <h2 className="mb-4 text-xl font-bold text-[#16331f]">💳 Payment history</h2>
-        {requests.length === 0 ? (
-          <div className="card p-6 text-sm text-[#5c7863]">Nothing yet. Once you subscribe, your payment status will show up here.</div>
+        {payments.length === 0 ? (
+          <div className="card p-6 text-sm text-[#5c7863]">
+            Nothing yet. Buy a pass from the pricing page and it shows up here — access unlocks by itself.
+          </div>
         ) : (
           <div className="card divide-y divide-[#d9e6d3]">
-            {requests.map((r) => (
-              <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+            {payments.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
                   <div className="font-semibold text-[#16331f]">
-                    {trackMeta[r.track].emoji} {r.track} — {peso(r.amount)}
+                    {trackMeta[p.track].emoji} {p.track} — {PLAN_LABEL[p.plan] ?? p.plan} · {peso(p.amount / 100)}
                   </div>
                   <div className="text-xs text-[#5c7863]">
-                    Ref: {r.reference_number || "—"} · {fmtDateTime(r.created_at)}
+                    {p.subject ? `${p.subject} · ` : ""}
+                    {p.payment_method ? `${p.payment_method} · ` : ""}
+                    {fmtDateTime(p.created_at)}
                   </div>
-                  {r.admin_note && (
-                    <div className="mt-1 text-xs text-[#991b1b]">Note: {r.admin_note}</div>
-                  )}
                 </div>
-                <span className={`badge badge-${r.status}`}>
-                  {r.status === "pending" ? "⏳ Verifying" : r.status === "approved" ? "✓ Approved" : "✕ Rejected"}
+                <span className={`badge badge-${p.status === "paid" ? "active" : p.status === "pending" ? "pending" : "expired"}`}>
+                  {p.status === "paid" ? "✓ Paid" : p.status === "pending" ? "⏳ Awaiting payment" : "✕ Not completed"}
                 </span>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* Payment modal */}
-      {payTrack && (
-        <PaymentModal
-          track={payTrack}
-          basePrice={PRICE}
-          myRequests={requests}
-          onClose={() => setPayTrack(null)}
-          onSuccess={handlePaid}
-        />
-      )}
     </div>
   );
 }

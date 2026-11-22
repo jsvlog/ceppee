@@ -4,7 +4,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { getUserContext, hasActiveSub, getSubjectProgress } from "@/lib/queries";
 import { redirect } from "next/navigation";
 import DashboardClient from "./DashboardClient";
-import type { PaymentRequest, Subscription, ExamAttempt, Exam, ExamWithCount, SubjectProgress, Track } from "@/lib/types";
+import type { OnlinePayment, Subscription, ExamAttempt, Exam, ExamWithCount, SubjectProgress, Track } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/login?next=/dashboard");
   if (isAdmin) redirect("/admin");
 
-  let requests: PaymentRequest[] = [];
+  let payments: OnlinePayment[] = [];
   let attempts: (ExamAttempt & { exam?: Exam })[] = [];
   let freeExams: ExamWithCount[] = [];
   let mastery: { track: Track; rows: SubjectProgress[] }[] = [];
@@ -22,8 +22,8 @@ export default async function DashboardPage() {
   try {
     const admin = getAdminClient();
 
-    const [{ data: payReqs }, { data: myAttempts }, { data: previews }] = await Promise.all([
-      admin.from("payment_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+    const [{ data: payRows }, { data: myAttempts }, { data: previews }] = await Promise.all([
+      admin.from("payments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
       admin
         .from("exam_attempts")
         .select("*, exam:exams(title)")
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
       admin.from("exams").select("*, exam_questions(count)").eq("is_free_preview", true).eq("is_active", true),
     ]);
 
-    requests = (payReqs as PaymentRequest[]) ?? [];
+    payments = (payRows as OnlinePayment[]) ?? [];
     attempts = (myAttempts as (ExamAttempt & { exam?: Exam })[]) ?? [];
     freeExams = ((previews as unknown as (ExamWithCount & { exam_questions?: { count: number }[] })[]) ?? []).map(
       (e) => ({ ...e, pinned_count: e.exam_questions?.[0]?.count ?? 0 })
@@ -51,7 +51,7 @@ export default async function DashboardPage() {
     <DashboardClient
       userName={profile?.full_name?.split(" ")[0] || "Ka-Ceppee"}
       subs={subs}
-      requests={requests}
+      payments={payments}
       attempts={attempts}
       freeExams={freeExams}
       mastery={mastery}
