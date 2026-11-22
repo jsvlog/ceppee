@@ -137,8 +137,11 @@ export default async function PricingPage({
     id: "monthly",
     price: PLANS.monthly.price,
     term: PLANS.monthly.term,
-    label: "Monthly pass",
-    blurb: "Everything in this track for 30 days. Buy again anytime — the days stack.",
+    label: track === "LET" ? `Monthly — ${level === "elementary" ? "BEED" : "BSED"}` : "Monthly pass",
+    blurb:
+      track === "LET"
+        ? `The same ${level === "elementary" ? "elementary (BEED)" : "secondary (BSED)"} access as the complete package, for 30 days. Buy again anytime — the days stack.`
+        : "Everything in CSE for 30 days. Buy again anytime — the days stack.",
     ownedUntil: monthlyUntil
       ? new Date(monthlyUntil).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })
       : null,
@@ -172,6 +175,7 @@ export default async function PricingPage({
               <Link
                 key={t}
                 href={href(t, level)}
+                scroll={false}
                 className={`group relative overflow-hidden rounded-3xl border-2 p-6 transition ${
                   on
                     ? "border-[#16a34a] bg-white shadow-lg shadow-[#16a34a]/10"
@@ -231,6 +235,7 @@ export default async function PricingPage({
                     <Link
                       key={o.id}
                       href={href("LET", o.id)}
+                      scroll={false}
                       className={`flex-1 rounded-xl px-4 py-3 text-center transition ${
                         level === o.id ? "bg-[#16331f] text-white" : "text-[#3d5c44] hover:bg-[#f4f8f1]"
                       }`}
@@ -283,6 +288,7 @@ export default async function PricingPage({
                   enabled={enabled}
                   isSignedIn={Boolean(user)}
                   activeUntil={null}
+                  level={track === "LET" ? level : null}
                 />
               </div>
 
@@ -293,12 +299,13 @@ export default async function PricingPage({
                   enabled={enabled}
                   isSignedIn={Boolean(user)}
                   activeUntil={null}
+                  level={track === "LET" ? level : null}
                 />
                 <div className="rounded-2xl border border-[#e6efe1] bg-white/80 p-5">
                   <p className="text-sm font-bold text-[#16331f]">Not sure yet?</p>
                   <p className="mt-1 text-xs text-[#5c7863]">
-                    The monthly pass is the cheap way to try everything for 30 days. If you like it, the complete
-                    package takes over until exam day and the days you already paid are not wasted.
+                    The monthly pass gives the same access as the complete package for 30 days. If you stick with
+                    it, nothing is wasted — but the complete package works out cheaper if you are staying until exam day.
                   </p>
                 </div>
               </div>
@@ -316,6 +323,7 @@ export default async function PricingPage({
                 </p>
                 <PlanCheckout
                   track={track}
+                  level={track === "LET" ? level : null}
                   columns={2}
                   plans={subjects.map((s) => ({
                     id: "subject",

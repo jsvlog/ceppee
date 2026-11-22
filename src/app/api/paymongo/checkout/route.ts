@@ -38,7 +38,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
-  const body = (await req.json().catch(() => ({}))) as { track?: string; plan?: string; subject?: string };
+  const body = (await req.json().catch(() => ({}))) as {
+    track?: string;
+    plan?: string;
+    subject?: string;
+    level?: string;
+  };
   const track = String(body.track ?? "").toUpperCase();
   const planId = String(body.plan ?? "");
 
@@ -55,6 +60,19 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = getAdminClient();
+
+  // LET has two divisions, and the monthly pass buys one of them — the same
+  // scope the complete package gives, just for 30 days. CSE has no divisions.
+  let scope: "track" | "level" | "subject" = plan.scope;
+  let level: "elementary" | "secondary" | null = plan.level ?? null;
+  if (plan.leveled && track === "LET") {
+    const wanted = String(body.level ?? "").toLowerCase();
+    if (wanted !== "elementary" && wanted !== "secondary") {
+      return NextResponse.json({ error: "Pick elementary (BEED) or secondary (BSED) first." }, { status: 400 });
+    }
+    scope = "level";
+    level = wanted;
+  }
 
   // A subject plan must name a paper the track really has, checked against the
   // bank — a made-up subject would otherwise buy a token that unlocks nothing.
@@ -86,8 +104,8 @@ export async function POST(req: NextRequest) {
     user_id: user.id,
     track,
     plan: planId,
-    scope: plan.scope,
-    level: plan.level ?? null,
+    scope,
+    level,
     subject,
     amount: plan.amount,
     currency: "PHP",

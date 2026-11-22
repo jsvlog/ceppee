@@ -33,6 +33,7 @@ export default function PlanCheckout({
   isSignedIn,
   activeUntil,
   columns = 1,
+  level = null,
 }: {
   track: Track;
   plans: PlanOption[];
@@ -41,6 +42,8 @@ export default function PlanCheckout({
   /** Whole-track pass already running, shown as a banner. */
   activeUntil: string | null;
   columns?: 1 | 2;
+  /** elementary | secondary — the monthly pass is scoped to it on LET. */
+  level?: "elementary" | "secondary" | null;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +61,7 @@ export default function PlanCheckout({
       const res = await fetch("/api/paymongo/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ track, plan: plan.id, subject: plan.subject }),
+        body: JSON.stringify({ track, plan: plan.id, subject: plan.subject, level }),
       });
       const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
       if (!res.ok || !json.url) throw new Error(json.error || "Could not start the checkout.");

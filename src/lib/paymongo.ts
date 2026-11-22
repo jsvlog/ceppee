@@ -43,6 +43,8 @@ export interface Plan {
   level?: "elementary" | "secondary";
   /** True when the buyer has to name a subject (or CSE category). */
   needsSubject?: boolean;
+  /** True when the grant is narrowed to the level the buyer picked (LET monthly). */
+  leveled?: boolean;
   /** "season" = until the exam date; a number = that many days. */
   term: "season" | number;
   label: string;
@@ -101,7 +103,9 @@ export const PLANS: Record<PlanId, Plan> = {
     tracks: ["CSE", "LET"],
     term: 30,
     label: "Monthly pass",
-    blurb: "Everything in this track for 30 days. Buy again anytime — days stack.",
+    blurb: "The same access as the complete package, for 30 days. Buy again anytime — days stack.",
+    /** For LET the scope follows the chosen level (BEED or BSED), like the package. */
+    leveled: true,
   },
 };
 

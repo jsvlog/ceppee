@@ -199,7 +199,9 @@ export default function TrackGameHub(props: TrackGameHubProps) {
     if (major) p.set("major", major);
     return `/study/${trackSlug}/${mode}?${p.toString()}`;
   };
-  const gateHref = isSignedIn ? "/dashboard" : `/login?next=/review/${trackSlug}`;
+  // Every "unlock" link goes to the plan picker for THIS track and level — the
+  // dashboard is where you manage a pass, not where you buy one.
+  const gateHref = `/pricing?track=${trackKey}&level=${levelKey}`;
 
   const levelExams = exams.filter((e) => e.level === levelKey || e.level === "both");
   const mocks = levelExams.filter((e) => e.mode === "mock");
