@@ -31,6 +31,9 @@ export interface PaymentRequest {
   user_name?: string;
 }
 
+/** How wide a purchase is: the whole track, one level, or one subject. */
+export type SubScope = "track" | "level" | "subject";
+
 export interface Subscription {
   id: string;
   user_id: string;
@@ -39,6 +42,10 @@ export interface Subscription {
   started_at: string;
   expires_at: string;
   payment_request_id: string | null;
+  /** Defaults to 'track' — everything sold before plans v2 was a whole-track pass. */
+  scope: SubScope;
+  level: "elementary" | "secondary" | null;
+  subject: string | null;
 }
 
 export interface Exam {
@@ -270,7 +277,10 @@ export interface OnlinePayment {
   id: string;
   user_id: string;
   track: Track;
-  plan: "monthly" | "season";
+  plan: "monthly" | "season" | "subject" | "beed" | "bsed" | "csec";
+  scope: SubScope | null;
+  level: "elementary" | "secondary" | null;
+  subject: string | null;
   amount: number;
   currency: string;
   status: "pending" | "paid" | "failed" | "cancelled";

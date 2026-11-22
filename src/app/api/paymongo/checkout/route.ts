@@ -8,11 +8,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/paymongo/checkout  { track, plan }
+ * POST /api/paymongo/checkout  { track, plan, subject? }
  *
  * 1. authenticate (cookie session)
- * 2. validate track/plan — the AMOUNT comes from PLANS, never the body
- * 3. write the payments row FIRST, use its id as the reference_number
+ * 2. validate track/plan/subject — the AMOUNT comes from PLANS, never the body
+ * 3. write the payments row FIRST (plan, scope, level, subject) and use its id
+ *    as the reference_number
  * 4. create the hosted session and hand back its url
  *
  * Nothing here grants access; only the webhook does.
@@ -37,26 +38,58 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
 
-  const body = (await req.json().catch(() => ({}))) as { track?: string; plan?: string };
+  const body = (await req.json().catch(() => ({}))) as { track?: string; plan?: string; subject?: string };
   const track = String(body.track ?? "").toUpperCase();
-  const plan = String(body.plan ?? "");
+  const planId = String(body.plan ?? "");
 
   if (!isTrack(track)) {
     return NextResponse.json({ error: "Unknown track." }, { status: 400 });
   }
-  if (!isPlanId(plan)) {
+  if (!isPlanId(planId)) {
     return NextResponse.json({ error: "Unknown plan." }, { status: 400 });
   }
 
+  const plan = PLANS[planId];
+  if (!plan.tracks.includes(track)) {
+    return NextResponse.json({ error: `${plan.label} is not sold for ${track}.` }, { status: 400 });
+  }
+
   const admin = getAdminClient();
+
+  // A subject plan must name a paper the track really has, checked against the
+  // bank — a made-up subject would otherwise buy a token that unlocks nothing.
+  let subject: string | null = null;
+  if (plan.needsSubject) {
+    subject = String(body.subject ?? "").trim();
+    if (!subject) {
+      return NextResponse.json({ error: "Pick a subject first." }, { status: 400 });
+    }
+    const { data: hit, error } = await admin
+      .from("exam_questions")
+      .select("id")
+      .eq("track", track)
+      .eq("is_active", true)
+      .eq("subject", subject)
+      .limit(1);
+    if (error) {
+      return NextResponse.json({ error: "Could not check the subject list." }, { status: 500 });
+    }
+    if (!hit || hit.length === 0) {
+      return NextResponse.json({ error: `"${subject}" is not a ${track} subject.` }, { status: 400 });
+    }
+  }
+
   const paymentId = crypto.randomUUID();
 
   const { error: insertError } = await admin.from("payments").insert({
     id: paymentId,
     user_id: user.id,
     track,
-    plan,
-    amount: PLANS[plan].amount,
+    plan: planId,
+    scope: plan.scope,
+    level: plan.level ?? null,
+    subject,
+    amount: plan.amount,
     currency: "PHP",
     status: "pending",
     provider: "paymongo",
@@ -69,14 +102,34 @@ export async function POST(req: NextRequest) {
 
   const origin = (process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin).replace(/\/$/, "");
 
+  // The season ends on exam day; show that date on the PayMongo page when set.
+  let examDateLabel: string | null = null;
+  if (plan.term === "season") {
+    const { data } = await admin
+      .from("site_settings")
+      .select("value")
+      .eq("key", `exam_date_${track}`)
+      .maybeSingle();
+    const value = (data as { value?: string } | null)?.value;
+    if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      examDateLabel = new Date(`${value}T00:00:00+08:00`).toLocaleDateString("en-PH", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+  }
+
   try {
     const session = await createCheckoutSession({
       paymentId,
-      plan,
+      plan: planId,
       track,
       userId: user.id,
       email: user.email,
       origin,
+      examDateLabel,
+      subject,
     });
 
     const { error: updateError } = await admin

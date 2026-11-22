@@ -14,40 +14,104 @@ import crypto from "crypto";
  * activate_payment(); never by the success page.
  */
 
-export type PlanId = "monthly" | "season";
+export type PlanId = "monthly" | "subject" | "beed" | "bsed" | "csec";
+export type PlanScope = "track" | "level" | "subject";
+export type PlanTrack = "CSE" | "LET";
 
+/**
+ * The four products, priced here and nowhere else.
+ *
+ *   monthly  P149  everything in one track, 30 days (buy again to stack)
+ *   subject  P299  one subject / CSE category, until the exam date
+ *   beed     P399  every elementary LET paper, until the exam date
+ *   bsed     P499  every secondary LET paper, until the exam date
+ *   csec     P499  every CSE paper, until the exam date
+ *
+ * `scope` tells activate_payment() how wide the grant is; it is repeated into
+ * the payments row so an old order can always be re-read.
+ */
 export interface Plan {
   id: PlanId;
   /** Pesos, for display. */
   price: number;
-  /** Centavos, what PayMongo is told. 100 pesos = 10000. */
+  /** Centavos, what PayMongo is told. 149 pesos = 14900. */
   amount: number;
+  scope: PlanScope;
+  /** Which tracks this plan may be sold for. */
+  tracks: PlanTrack[];
+  /** Fixed level for level-scoped plans. */
+  level?: "elementary" | "secondary";
+  /** True when the buyer has to name a subject (or CSE category). */
+  needsSubject?: boolean;
+  /** "season" = until the exam date; a number = that many days. */
+  term: "season" | number;
   label: string;
   blurb: string;
 }
 
 export const PLANS: Record<PlanId, Plan> = {
-  season: {
-    id: "season",
-    price: 500,
-    amount: 50000,
-    label: "Season pass",
-    blurb: "One payment, access until your exam date.",
+  beed: {
+    id: "beed",
+    price: 399,
+    amount: 39900,
+    scope: "level",
+    tracks: ["LET"],
+    level: "elementary",
+    term: "season",
+    label: "Complete BEED",
+    blurb: "Every elementary paper — Gen Ed, Prof Ed and your specialization. Until exam day.",
+  },
+  bsed: {
+    id: "bsed",
+    price: 499,
+    amount: 49900,
+    scope: "level",
+    tracks: ["LET"],
+    level: "secondary",
+    term: "season",
+    label: "Complete BSED",
+    blurb: "Every secondary paper — Gen Ed, Prof Ed and your major. Until exam day.",
+  },
+  csec: {
+    id: "csec",
+    price: 499,
+    amount: 49900,
+    scope: "track",
+    tracks: ["CSE"],
+    term: "season",
+    label: "Complete CSE",
+    blurb: "Every CSE category, all 202 sets' worth of practice. Until exam day.",
+  },
+  subject: {
+    id: "subject",
+    price: 299,
+    amount: 29900,
+    scope: "subject",
+    tracks: ["CSE", "LET"],
+    needsSubject: true,
+    term: "season",
+    label: "One subject",
+    blurb: "Only the paper you need, unlocked until exam day.",
   },
   monthly: {
     id: "monthly",
-    price: 100,
-    amount: 10000,
+    price: 149,
+    amount: 14900,
+    scope: "track",
+    tracks: ["CSE", "LET"],
+    term: 30,
     label: "Monthly pass",
-    blurb: "30 days of access. Renew any time you need more.",
+    blurb: "Everything in this track for 30 days. Buy again anytime — days stack.",
   },
 };
 
-/** Cheapest-per-day wording order: the season pass is the headline. */
-export const PLAN_ORDER: PlanId[] = ["season", "monthly"];
+/** What can be sold for a track, in the order the pricing page shows it. */
+export function plansFor(track: PlanTrack): PlanId[] {
+  return track === "CSE" ? ["csec", "subject", "monthly"] : ["beed", "bsed", "subject", "monthly"];
+}
 
 export function isPlanId(v: unknown): v is PlanId {
-  return v === "monthly" || v === "season";
+  return typeof v === "string" && Object.prototype.hasOwnProperty.call(PLANS, v);
 }
 
 export function isTrack(v: unknown): v is "CSE" | "LET" {
@@ -69,24 +133,32 @@ function authHeader(): string {
 export interface CheckoutArgs {
   paymentId: string;
   plan: PlanId;
-  track: "CSE" | "LET";
+  track: PlanTrack;
   userId: string;
   email?: string | null;
   origin: string;
   examDateLabel?: string | null;
+  /** The subject / CSE category for the P299 plan. */
+  subject?: string | null;
 }
 
 /** Creates the hosted checkout session and returns its id + url. */
 export async function createCheckoutSession(args: CheckoutArgs): Promise<{ id: string; url: string }> {
   const plan = PLANS[args.plan];
-  const itemName =
-    args.track === "CSE" ? "CSE Review" : "LET Review";
-  const suffix =
-    args.plan === "season"
+  const base = args.track === "CSE" ? "CSE Review" : "LET Review";
+  const what =
+    plan.scope === "subject"
+      ? ` — ${args.subject ?? "One subject"}`
+      : plan.scope === "level"
+        ? ` — ${plan.label}`
+        : ` — ${plan.label}`;
+  const until =
+    plan.term === "season"
       ? args.examDateLabel
-        ? ` — Season pass (until ${args.examDateLabel})`
-        : " — Season pass"
-      : " — Monthly pass (30 days)";
+        ? ` (until ${args.examDateLabel})`
+        : " (until exam day)"
+      : ` (${plan.term} days)`;
+  const itemName = `${base}${what}${until}`;
 
   const res = await fetch(`${PAYMONGO_API()}/v2/checkout_sessions`, {
     method: "POST",
@@ -95,13 +167,13 @@ export async function createCheckoutSession(args: CheckoutArgs): Promise<{ id: s
       data: {
         attributes: {
           line_items: [
-            { name: `${itemName}${suffix}`, amount: plan.amount, currency: "PHP", quantity: 1 },
+            { name: itemName, amount: plan.amount, currency: "PHP", quantity: 1 },
           ],
           payment_method_types: ["card", "gcash", "qrph", "maya"],
           success_url: `${args.origin}/payment/success?ref=${args.paymentId}`,
           cancel_url: `${args.origin}/pricing?cancelled=1`,
           reference_number: args.paymentId,
-          description: `Teacher Ceppee Review — ${args.track} ${plan.label}`,
+          description: `Teacher Ceppee Review — ${args.track} ${plan.label}${args.subject ? ` (${args.subject})` : ""}`,
           send_email_receipt: true,
           show_description: true,
           metadata: {
@@ -109,6 +181,8 @@ export async function createCheckoutSession(args: CheckoutArgs): Promise<{ id: s
             user_id: args.userId,
             track: args.track,
             plan: args.plan,
+            scope: plan.scope,
+            ...(args.subject ? { subject: args.subject } : {}),
           },
           ...(args.email
             ? { billing: { name: "", email: args.email, phone: "" } }

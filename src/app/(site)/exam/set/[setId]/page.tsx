@@ -89,7 +89,7 @@ export default async function SetMockPage({
       <RunnerShell>
         <LockedCard
           title="This paper is locked 🔒"
-          msg={`"${s.title}" is part of the ${track} bank. Subscribe for ₱500 to unlock every set mock, drill and flashcard.`}
+          msg={`"${s.title}" is part of the ${track} bank. A pass starts at ₱149 a month, or ₱299 for one subject until exam day.`}
           backHref={backHref}
           backLabel="Back to the campaign"
           loginHref="/dashboard"

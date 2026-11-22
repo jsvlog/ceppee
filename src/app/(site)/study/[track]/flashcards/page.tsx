@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext, hasActiveSub, getBankStats } from "@/lib/queries";
+import { canAccess } from "@/lib/access";
 import { levelLabel, subjectsFor, passingPctFor } from "@/lib/exam";
 import { parseStudyParams } from "@/lib/study";
 import StudyRunner from "@/components/study/StudyRunner";
@@ -40,6 +41,10 @@ export default async function FlashcardsPage({
   if (!user) redirect(`/login?next=${encodeURIComponent(backHref)}`);
 
   const subscribed = isAdmin || hasActiveSub(subs, trackKey);
+  // Only the papers this student actually owns (a ₱299 pass is one subject).
+  const allowedSubjects = p.subjects.filter(
+    (k) => isAdmin || canAccess(subs, { track: trackKey, level: p.level, subject: k })
+  );
   const subjectsMeta = subjectsFor(trackKey, p.level).map((s) => ({
     key: s.key,
     icon: s.icon,
@@ -69,10 +74,24 @@ export default async function FlashcardsPage({
       <RunnerShell>
         <LockedCard
           title="Flashcards are for subscribers 🔒"
-          msg={`Subscribe for ₱500 to unlock flashcards, subject drills and the full mock exams for ${trackKey}.`}
+          msg={`A pass starts at ₱149 a month, or ₱299 for one subject until exam day.`}
           backHref={backHref}
           backLabel="Back to reviewer"
-          loginHref="/dashboard"
+          loginHref={`/pricing?track=${trackKey}&level=${p.level}`}
+        />
+      </RunnerShell>
+    );
+  }
+
+  if (allowedSubjects.length === 0) {
+    return (
+      <RunnerShell>
+        <LockedCard
+          title="That paper is not in your pass 🔒"
+          msg={`Your pass does not cover ${p.subjects.join(", ")}. Unlock a single subject for ₱299 until exam day, or take the complete package.`}
+          backHref={backHref}
+          backLabel="Back to reviewer"
+          loginHref={`/pricing?track=${trackKey}&level=${p.level}`}
         />
       </RunnerShell>
     );
@@ -82,7 +101,7 @@ export default async function FlashcardsPage({
   const { data, error } = await supabase.rpc("draw_flashcards", {
     p_track: trackKey,
     p_level: p.level,
-    p_subjects: p.subjects,
+    p_subjects: allowedSubjects,
     p_specialization: p.major,
     p_limit: p.count,
     p_mode: "all",

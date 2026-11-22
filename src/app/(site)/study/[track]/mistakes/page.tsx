@@ -42,10 +42,10 @@ export default async function MistakesPage({
       <RunnerShell>
         <LockedCard
           title="Retry My Mistakes is for subscribers 🔒"
-          msg={`Subscribe for ₱500 to unlock the mistake tracker together with all mocks, drills and flashcards for ${trackKey}.`}
+          msg={`A pass starts at ₱149 a month, or ₱299 for one subject until exam day.`}
           backHref={backHref}
           backLabel="Back to reviewer"
-          loginHref="/dashboard"
+          loginHref={`/pricing?track=${trackKey}`}
         />
       </RunnerShell>
     );

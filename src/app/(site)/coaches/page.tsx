@@ -78,7 +78,7 @@ export default async function CoachesPage() {
                 and your coach is one message away.
               </p>
               <Link href="/pricing" className="btn-primary px-6 py-3 text-sm">
-                See the ₱500 season pass →
+                See the plans →
               </Link>
             </div>
           </div>

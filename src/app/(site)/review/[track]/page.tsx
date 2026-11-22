@@ -74,6 +74,7 @@ export default async function TrackPage({
       initialLevel={levelKey}
       initialMajor={major}
       subscribed={subscribed}
+      subs={subs}
       isSignedIn={Boolean(user)}
       stats={stats}
       allSets={(catalogRes.data as SetCatalogRow[] | null) ?? []}

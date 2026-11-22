@@ -4,10 +4,20 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { peso } from "@/lib/format";
 
+const PLAN_LABEL: Record<string, string> = {
+  monthly: "Monthly pass",
+  subject: "One subject",
+  beed: "Complete BEED",
+  bsed: "Complete BSED",
+  csec: "Complete CSE",
+  season: "Season pass",
+};
+
 interface PaymentRow {
   id: string;
   track: "CSE" | "LET";
-  plan: "monthly" | "season";
+  plan: "monthly" | "season" | "subject" | "beed" | "bsed" | "csec";
+  subject?: string | null;
   amount: number;
   status: "pending" | "paid" | "failed" | "cancelled";
   granted_expires_at: string | null;
@@ -74,7 +84,7 @@ export default function PaymentPoller({ initial }: { initial: PaymentRow }) {
           </div>
           <div className="rounded-xl bg-[#f6faf4] p-3">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#5c7863]">Plan</div>
-            <div className="font-black text-[#16331f]">{row.plan === "season" ? "Season pass" : "Monthly pass"}</div>
+            <div className="font-black text-[#16331f]">{PLAN_LABEL[row.plan] ?? row.plan}</div>
           </div>
         </div>
         <div className="flex flex-wrap justify-center gap-3">
@@ -117,7 +127,7 @@ export default function PaymentPoller({ initial }: { initial: PaymentRow }) {
         confirmation, and your dashboard unlocks either way.
       </p>
       <div className="mx-auto max-w-xs rounded-xl bg-[#f6faf4] p-3 text-xs text-[#5c7863]">
-        {row.track} · {row.plan === "season" ? "Season pass" : "Monthly pass"} · {peso(row.amount / 100)}
+        {row.track} · {PLAN_LABEL[row.plan] ?? row.plan} · {peso(row.amount / 100)}
       </div>
       {slow && (
         <p className="mt-4 text-xs text-[#b45309]">

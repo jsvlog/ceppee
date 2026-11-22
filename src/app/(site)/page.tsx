@@ -48,7 +48,7 @@ const faqs = [
   },
   {
     q: "How much is it and how long is my access?",
-    a: "₱500 per track (CSE or LET) for the entire review season — usually 6 months, right up to the next exam. If the exam date changes, we adjust your access so you're never left hanging.",
+    a: "Three ways: ₱149 for a month of everything in one track, ₱299 for a single subject until exam day, or the complete package — ₱399 for BEED, ₱499 for BSED, ₱499 for CSE. The complete packages run right up to your exam date.",
   },
   {
     q: "Are the CSE and LET subscriptions separate?",
@@ -93,7 +93,7 @@ export default async function HomePage() {
             </h1>
             <p className="animate-fade-up mb-8 text-lg leading-relaxed text-[#5c7863] sm:text-xl">
               A complete online reviewer: lessons, practice drills, and realistic timed mock exams.
-              The deal: <strong className="text-[#3d5c44]">₱500 per track</strong>, for the whole review season.
+              The deal: <strong className="text-[#3d5c44]">from ₱149 a month</strong>, or one payment until exam day.
             </p>
             <div className="animate-fade-up mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="#tracks" className="btn-primary px-8 py-3.5 text-base">
@@ -145,8 +145,8 @@ export default async function HomePage() {
                 <li className="flex items-start gap-2"><span className="text-[#16a34a]">●</span> Free preview lesson + sample drill</li>
               </ul>
               <div className="mb-6 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#16331f]">₱500</span>
-                <span className="text-sm text-[#5c7863]">/ full review season</span>
+                <span className="text-3xl font-black text-[#16331f]">₱499</span>
+                <span className="text-sm text-[#5c7863]">/ complete, until exam day</span>
               </div>
               <Link href="/review/cse" className="btn-primary block px-6 py-3 text-center text-sm">
                 Start CSE Review
@@ -172,8 +172,8 @@ export default async function HomePage() {
                 <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> Free preview lesson + sample drill</li>
               </ul>
               <div className="mb-6 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#16331f]">₱500</span>
-                <span className="text-sm text-[#5c7863]">/ full review season</span>
+                <span className="text-3xl font-black text-[#16331f]">₱399</span>
+                <span className="text-sm text-[#5c7863]">/ BEED complete · ₱499 BSED</span>
               </div>
               <Link href="/review/let" className="btn-gold block px-6 py-3 text-center text-sm">
                 Start LET Review
@@ -279,15 +279,15 @@ export default async function HomePage() {
               Ready to pass?
             </h2>
             <p className="relative mx-auto mb-8 max-w-xl text-white/90">
-              Join Teacher Ceppee's reviewees. ₱500 per track, full season — cheaper than paying
-              for a single retake.
+              Join Teacher Ceppee's reviewees. Pay for the exam you are taking — from ₱149,
+              and one payment carries you to exam day.
             </p>
             <div className="relative flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/review/cse" className="rounded-xl bg-white px-8 py-3.5 font-bold text-[#15803d] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl">
-                CSE Review — ₱500
+                CSE Review — ₱499
               </Link>
               <Link href="/review/let" className="rounded-xl border-2 border-white/70 px-8 py-3.5 font-bold text-white transition hover:bg-white/10">
-                LET Review — ₱500
+                LET Review — ₱399
               </Link>
             </div>
           </div>

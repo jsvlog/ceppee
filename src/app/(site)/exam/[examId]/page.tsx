@@ -49,7 +49,7 @@ export default async function ExamPage({ params }: { params: Promise<{ examId: s
       <RunnerShell>
         <LockedCard
           title="This exam is locked 🔒"
-          msg={`"${e.title}" is for ${track} subscribers. Subscribe for ₱500 to unlock all mock exams, drills and flashcards.`}
+          msg={`"${e.title}" is for ${track} pass holders. A pass starts at ₱149 a month, or ₱299 for one subject until exam day.`}
           backHref={backHref}
           backLabel="Back to reviewer"
           loginHref="/dashboard"

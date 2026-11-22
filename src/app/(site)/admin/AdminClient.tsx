@@ -218,7 +218,20 @@ export default function AdminClient({
                       <span className="font-semibold text-[#16331f]">{p.profile?.email || p.user_id.slice(0, 8)}</span>
                       <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${trackPill(p.track)}`}>{p.track}</span>
                       <span className="ml-2 rounded-full bg-[#f6faf4] px-2 py-0.5 text-xs font-semibold text-[#3d5c44]">
-                        {p.plan === "season" ? "Season ₱500" : "Monthly ₱100"}
+                        {p.plan === "beed"
+                          ? "BEED ₱399"
+                          : p.plan === "bsed"
+                            ? "BSED ₱499"
+                            : p.plan === "csec"
+                              ? "CSE ₱499"
+                              : p.plan === "subject"
+                                ? "Subject ₱299"
+                                : p.plan === "season"
+                                  ? "Season ₱500"
+                                  : "Monthly ₱149"}
+                        {p.plan === "subject" && p.subject ? (
+                          <span className="block text-[11px] font-semibold text-[#5c7863]">{p.subject}</span>
+                        ) : null}
                       </span>
                       <div className="mt-1 text-xs text-[#5c7863]">
                         {peso(amount)} · {p.payment_method || "—"} · {fmtDateTime(p.created_at)}
@@ -2176,7 +2189,7 @@ function SettingsTab({
         </div>
       </div>
       <div className="card p-6 lg:col-span-2">
-        <h3 className="mb-1 font-bold text-[#16331f]">🗓️ Exam dates — what the ₱500 season pass runs to</h3>
+        <h3 className="mb-1 font-bold text-[#16331f]">🗓️ Exam dates — where every season pass stops</h3>
         <p className="mb-4 text-xs text-[#5c7863]">
           Access ends at 11:59pm on these dates (Philippine time). Leave blank and the season pass grants 180
           days instead, so nothing breaks before the schedule is posted.

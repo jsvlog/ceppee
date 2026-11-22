@@ -25,8 +25,10 @@ import type {
   Level,
   SetCatalogRow,
   SubjectProgress,
+  Subscription,
   Track,
 } from "@/lib/types";
+import { canAccess } from "@/lib/access";
 
 type HubTab = "campaign" | "arena";
 
@@ -36,6 +38,8 @@ export interface TrackGameHubProps {
   initialLevel: Level;
   initialMajor: string | null;
   subscribed: boolean;
+  /** The caller's subscription rows — decides per-subject locks (plans v2). */
+  subs: Subscription[];
   isSignedIn: boolean;
   stats: BankStat[];
   allSets: SetCatalogRow[];
@@ -50,7 +54,7 @@ const QUICK_COUNTS = [10, 20, 30, 50];
 
 export default function TrackGameHub(props: TrackGameHubProps) {
   const {
-    trackKey, trackSlug, initialLevel, initialMajor, subscribed, isSignedIn,
+    trackKey, trackSlug, initialLevel, initialMajor, subscribed, subs, isSignedIn,
     stats, allSets, attempts, mastery, exams, weeklyRank,
   } = props;
 
@@ -668,6 +672,9 @@ export default function TrackGameHub(props: TrackGameHubProps) {
               const count = subjectItems(s.key);
               const isSpec = s.key === "Specialization";
               const needsMajor = isSpec && !major;
+              // A complete package covers the whole level; a single-subject pass
+              // covers just its paper. Anything narrower shows the price instead.
+              const unlocked = subscribed || canAccess(subs, { track: trackKey, level: levelKey, subject: s.key });
               return (
                 <div key={s.key} className="game-card flex flex-col p-5">
                   <div className="mb-2 flex items-center justify-between">
@@ -689,9 +696,12 @@ export default function TrackGameHub(props: TrackGameHubProps) {
                     <p className="rounded-xl bg-[#f6faf4] p-3 text-center text-xs font-bold text-[#94a896]">
                       Items still being uploaded
                     </p>
-                  ) : !subscribed ? (
-                    <Link href={gateHref} className="btn-arcade-surface w-full py-2.5 text-xs">
-                      🔒 Subscribe to practice
+                  ) : !unlocked ? (
+                    <Link
+                      href={`/pricing?track=${trackKey}&level=${levelKey}`}
+                      className="btn-arcade-surface w-full py-2.5 text-xs"
+                    >
+                      🔒 Unlock this subject · ₱299
                     </Link>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">

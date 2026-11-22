@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { canAccess, accessUntil } from "./access";
 import type { BankStat, Coach, ExamAttempt, LeaderboardAround, LeaderboardRow, LeaderboardPeriod, Level, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
 
 /** Daily | weekly | all-time — the three leaderboard windows. */

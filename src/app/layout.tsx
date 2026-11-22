@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://teacherceppee.com"),
+  alternates: { canonical: "/" },
   title: {
     default: "Teacher Ceppee Review — CSE & LET Reviewer Online",
     template: "%s — Teacher Ceppee Review",
@@ -18,6 +20,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
+    url: "https://teacherceppee.com",
     siteName: "Teacher Ceppee Review",
     title: "Teacher Ceppee Review — CSE & LET Reviewer Online",
     description: "Lessons, practice quizzes, and timed mock exams for CSE and LET.",
