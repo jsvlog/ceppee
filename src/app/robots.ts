@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/api/", "/dashboard", "/payment/", "/study/", "/exam/", "/lesson/"],
       },
     ],
-    sitemap: "https://teacherceppee.com/sitemap.xml",
-    host: "https://teacherceppee.com",
+    sitemap: "https://www.teacherceppee.com/sitemap.xml",
+    host: "https://www.teacherceppee.com",
   };
 }
