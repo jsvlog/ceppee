@@ -156,8 +156,7 @@ export default function PlanCheckout({
 
       {!enabled && (
         <p className="rounded-xl bg-[#fffbeb] px-3 py-2 text-xs font-semibold text-[#b45309] sm:col-span-2">
-          Online payment is still being switched on. Use GCash or bank transfer from your dashboard — an admin
-          approves it within 24 hours.
+          Online payment is still being switched on. Nothing is being sold until it is — check back shortly.
         </p>
       )}
 

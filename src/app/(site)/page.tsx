@@ -44,7 +44,7 @@ const features = [
 const faqs = [
   {
     q: "How do I pay?",
-    a: "GCash or bank transfer! When you click Subscribe, the payment details appear. Send the exact amount, upload the receipt screenshot and reference number, then we verify — usually within 24 hours.",
+    a: "GCash, Maya, QR Ph or card, straight from the pricing page. You pick a plan, you are taken to a secure PayMongo checkout, and the moment you pay your access unlocks by itself — no receipt to send, no waiting for approval.",
   },
   {
     q: "How much is it and how long is my access?",
