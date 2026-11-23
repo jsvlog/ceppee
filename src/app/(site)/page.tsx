@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSiteStats, getPublicTestimonials, getPublicCoaches } from "@/lib/queries";
 import { TRACK_LABEL } from "@/lib/format";
+import { PLANS, type PlanId } from "@/lib/paymongo";
 import Testimonials from "@/components/Testimonials";
 import TestimonialHighlight from "@/components/TestimonialHighlight";
 import CoachesSection from "@/components/CoachesSection";
@@ -39,6 +40,17 @@ const features = [
     title: "Verified Answers",
     desc: "Every question has an explanation — you won't just know the answer, you'll know why.",
   },
+];
+
+// The hero advertises what is actually for sale. Prices are read from PLANS, so a price
+// change is a one-line edit in src/lib/paymongo.ts; only the order and wording of the
+// five pills live here.
+const HERO_PACKAGES: { plan: PlanId; label: string }[] = [
+  { plan: "monthly", label: "monthly" },
+  { plan: "subject", label: "one subject" },
+  { plan: "beed", label: "BEED complete" },
+  { plan: "bsed", label: "BSED complete" },
+  { plan: "csec", label: "CSE complete" },
 ];
 
 const faqs = [
@@ -88,25 +100,37 @@ export default async function HomePage() {
               Reviewing made easy, made by Teacher Ceppee
             </div>
             <h1 className="animate-fade-up mb-6 text-4xl font-black leading-tight tracking-tight text-[#16331f] sm:text-5xl lg:text-6xl">
-              Pass the CSE or LET —<br />
-              <span className="gradient-text">on your first take.</span>
+              Your CSE and LET Goal —<br />
+              <span className="gradient-text">A Clearer Way to Prepare.</span>
             </h1>
-            <p className="animate-fade-up mb-8 text-lg leading-relaxed text-[#5c7863] sm:text-xl">
+            <p className="animate-fade-up mb-6 text-lg leading-relaxed text-[#5c7863] sm:text-xl">
               A complete online reviewer: lessons, practice drills, and realistic timed mock exams.
-              The deal: <strong className="text-[#3d5c44]">from ₱149 a month</strong>, or one payment until exam day.
             </p>
+            <div className="animate-fade-up mb-8 flex flex-wrap items-center justify-center gap-2">
+              {HERO_PACKAGES.map((p) => (
+                <span
+                  key={p.plan}
+                  className="inline-flex items-baseline gap-1.5 rounded-full border border-[#d9e6d3] bg-white/85 px-3.5 py-1.5 text-sm font-semibold text-[#3d5c44] shadow-sm"
+                >
+                  <strong className="text-[#16331f]">₱{PLANS[p.plan].price}</strong>
+                  {p.label}
+                </span>
+              ))}
+            </div>
             <div className="animate-fade-up mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="#tracks" className="btn-primary px-8 py-3.5 text-base">
-                Choose Your Review →
+                Explore our packages →
               </Link>
               <Link href="/review/cse" className="rounded-xl border border-[#d9e6d3] bg-white px-8 py-3.5 text-base font-semibold text-[#3d5c44] shadow-sm transition hover:border-[#d4af37] hover:text-[#16331f]">
                 Try Free Preview
               </Link>
             </div>
             <div className="animate-fade-up flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-[#5c7863]">
-              <span>✓ {stats.lessons}+ lessons</span>
-              <span>✓ {stats.questions}+ practice questions</span>
-              <span>✓ {stats.exams} mock & practice exams</span>
+              <span>✓ {stats.readingLessons.toLocaleString("en-PH")} lessons in the reading library</span>
+              <span>✓ {stats.questions.toLocaleString("en-PH")}+ practice questions</span>
+              <span>
+                ✓ {Math.floor(stats.mockPapers / 10) * 10}+ mock exams, unlimited attempts
+              </span>
               <span>✓ GCash / bank — no credit card needed</span>
             </div>
 

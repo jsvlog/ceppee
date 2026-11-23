@@ -8,9 +8,11 @@ import type { BankStat, Coach, ExamAttempt, LeaderboardAround, LeaderboardRow, L
 export type { LeaderboardPeriod };
 
 export interface SiteStats {
-  lessons: number;
+  /** Reading-library sections — what the hero advertises as "lessons". */
+  readingLessons: number;
   questions: number;
-  exams: number;
+  /** Full set papers = the mock exams a student can actually sit. */
+  mockPapers: number;
 }
 
 // Public marketing stats. Uses the service-role client so the counts reflect the
@@ -23,18 +25,18 @@ export interface SiteStats {
 export const getSiteStats = cache(async (): Promise<SiteStats> => {
   const admin = getAdminClient();
   try {
-    const [lessons, questions, exams] = await Promise.all([
-      admin.from("lessons").select("id", { count: "exact", head: true }).eq("is_published", true),
+    const [lessons, questions, papers] = await Promise.all([
+      admin.from("reading_sections").select("id", { count: "exact", head: true }),
       admin.from("exam_questions").select("id", { count: "exact", head: true }),
-      admin.from("exams").select("id", { count: "exact", head: true }).eq("is_active", true),
+      admin.from("question_sets").select("id", { count: "exact", head: true }),
     ]);
     return {
-      lessons: lessons.count ?? 0,
+      readingLessons: lessons.count ?? 0,
       questions: questions.count ?? 0,
-      exams: exams.count ?? 0,
+      mockPapers: papers.count ?? 0,
     };
   } catch {
-    return { lessons: 0, questions: 0, exams: 0 };
+    return { readingLessons: 0, questions: 0, mockPapers: 0 };
   }
 });
 
