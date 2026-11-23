@@ -177,7 +177,7 @@ export default async function HomePage() {
                 <span className="text-3xl font-black text-[#16331f]">₱499</span>
                 <span className="text-sm text-[#5c7863]">/ complete, until exam day</span>
               </div>
-              <Link href="/review/cse" className="btn-primary block px-6 py-3 text-center text-sm">
+              <Link href="/review/cse" className="btn-primary block px-6 py-3.5 text-center text-base font-extrabold">
                 Start CSE Review
               </Link>
             </div>
@@ -196,15 +196,20 @@ export default async function HomePage() {
                 and Science — case-based strategies that actually work.
               </p>
               <ul className="mb-6 space-y-2 text-sm text-[#3d5c44]">
-                <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> Professional Education focus (40% of the score)</li>
+                <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> 15 mock exams for each major</li>
+                <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> 50 mock exams for Prof Ed and Gen Ed</li>
                 <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> Case-based timed mock exams</li>
                 <li className="flex items-start gap-2"><span className="text-[#ca8a04]">●</span> Free preview lesson + sample drill</li>
               </ul>
-              <div className="mb-6 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#16331f]">₱399</span>
-                <span className="text-sm text-[#5c7863]">/ BEED complete · ₱499 BSED</span>
+              <div className="mb-6 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                <span className="text-3xl font-black text-[#16331f]">
+                  ₱399 <span className="text-sm font-bold text-[#5c7863]">BEED complete</span>
+                </span>
+                <span className="text-3xl font-black text-[#16331f]">
+                  ₱499 <span className="text-sm font-bold text-[#5c7863]">BSED complete</span>
+                </span>
               </div>
-              <Link href="/review/let" className="btn-gold block px-6 py-3 text-center text-sm">
+              <Link href="/review/let" className="btn-gold block px-6 py-3.5 text-center text-base font-extrabold">
                 Start LET Review
               </Link>
             </div>
