@@ -64,7 +64,9 @@
     ".next-v15/types/**/*.ts",
     ".next-v15/dev/types/**/*.ts",
     ".next-v16/types/**/*.ts",
-    ".next-v16/dev/types/**/*.ts"
+    ".next-v16/dev/types/**/*.ts",
+    ".next-v17/types/**/*.ts",
+    ".next-v17/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

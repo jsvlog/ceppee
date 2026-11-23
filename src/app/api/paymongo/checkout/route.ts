@@ -214,8 +214,16 @@ export async function POST(req: NextRequest) {
       .from("payments")
       .update({ status: "failed", failure_note: message.slice(0, 500) })
       .eq("id", paymentId);
+    // Admins get the provider's own words; students get something readable.
+    let detail: string | undefined;
+    const { data: prof } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+    if (prof?.is_admin) detail = message.slice(0, 400);
+
     return NextResponse.json(
-      { error: "The payment provider did not accept the checkout. Please try again in a moment." },
+      {
+        error: "The payment provider did not accept the checkout. Please try again in a moment.",
+        ...(detail ? { detail } : {}),
+      },
       { status: 502 }
     );
   }
