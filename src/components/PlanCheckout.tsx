@@ -146,7 +146,7 @@ export default function PlanCheckout({
                 {busy === key
                   ? "Opening PayMongo…"
                   : isSignedIn
-                    ? `Pay ₱${p.price.toLocaleString()} — GCash, Maya or card`
+                    ? `Pay ₱${p.price.toLocaleString()} — GCash or card`
                     : "Create account to pay"}
               </button>
             )}
