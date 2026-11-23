@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Track } from "@/lib/types";
 import LogoMark from "@/components/LogoMark";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const trackLink = (track: Track) => `/review/${track.toLowerCase()}`;
 
@@ -76,6 +77,7 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
 
   const desktopAuth = user ? (
     <div className="flex items-center gap-3">
+      <ThemeToggle />
       <span className="hidden text-xs text-[#5c7863] lg:block">{user.email}</span>
       <button
         onClick={handleSignOut}
@@ -86,6 +88,7 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
     </div>
   ) : (
     <div className="flex items-center gap-3">
+      <ThemeToggle />
       <Link href="/login" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#3d5c44] transition hover:text-[#16331f]">
         Log in
       </Link>
@@ -137,6 +140,10 @@ export default function Navbar({ user, isAdmin }: { user: { email?: string } | n
         >
           <div className="flex flex-col gap-1 p-5 pt-20">
             {desktopLinks}
+            <div className="mt-3 flex items-center justify-between rounded-xl border border-[#d9e6d3] px-3 py-2">
+              <span className="text-sm font-semibold text-[#3d5c44]">Dark mode</span>
+              <ThemeToggle />
+            </div>
             <div className="mt-4 border-t border-[#d9e6d3] pt-4">
               {user ? (
                 <>

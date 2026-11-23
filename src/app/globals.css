@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Class-based dark mode. The toggle (src/components/ThemeToggle.tsx) puts `.dark`
+   on <html>; layout.tsx runs an inline script first so there is no flash. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Tailwind v4's preflight leaves <button> at cursor: default, so every card
    that is really a choice reads like static text. Put the pointer back. */
 @layer base {
@@ -40,6 +44,28 @@
   --success: #22c55e;
   --danger: #ef4444;
   --warning: #f59e0b;
+}
+
+/* ===== Dark theme =====
+   The components were written against the light palette with literal hex classes
+   (text-[#16331f] and friends), so dark mode is delivered in two halves:
+   these tokens, and the `.dark` remap block at the bottom of this file that
+   re-points those exact utility classes. New code should use the tokens. */
+.dark {
+  --bg-primary: #0b1410;
+  --bg-surface: #121e17;
+  --bg-surface-2: #182a21;
+  --bg-surface-3: #1f3228;
+  --text-primary: #eaf5ee;
+  --text-strong: #cdddd3;
+  --text-secondary: #a9bcb0;
+  --text-muted: #8b9e93;
+  --border-default: #26382d;
+
+  --cse-soft: rgba(34, 197, 94, 0.16);
+  --let-soft: rgba(234, 179, 8, 0.16);
+
+  color-scheme: dark;
 }
 
 body {
@@ -379,4 +405,157 @@ body {
     animation: none;
   }
 }
+
+/* =====================================================================
+   DARK MODE REMAP
+   Every component hardcodes the light palette (text-[#16331f],
+   bg-white, border-[#d9e6d3] …). Rather than rewrite 700 class names,
+   the exact utility classes are re-pointed here under `.dark`, which wins
+   on specificity (0,2,0 / 0,3,0 against Tailwind's 0,1,0).
+   Add a rule here whenever a new hardcoded colour is introduced.
+   ===================================================================== */
+
+/* --- text --- */
+.dark .text-\[\#16331f\],
+.dark .text-\[\#0b1f13\] { color: var(--text-primary); }
+.dark .text-\[\#3d5c44\],
+.dark .text-\[\#4a6553\] { color: var(--text-strong); }
+.dark .text-\[\#5c7863\] { color: var(--text-secondary); }
+.dark .text-\[\#94a896\],
+.dark .text-\[\#8aa08f\],
+.dark .text-\[\#c9d8c9\],
+.dark .text-\[\#c8d6c2\],
+.dark .text-\[\#d9e6d3\],
+.dark .text-\[\#e2e8f0\] { color: var(--text-muted); }
+.dark .text-\[\#15803d\],
+.dark .text-\[\#16a34a\] { color: #4ade80; }
+.dark .text-\[\#166534\],
+.dark .text-\[\#bbf7d0\] { color: #86efac; }
+.dark .text-\[\#b45309\],
+.dark .text-\[\#92400e\] { color: #fbbf24; }
+.dark .text-\[\#ca8a04\],
+.dark .text-\[\#d4af37\] { color: #facc15; }
+.dark .text-\[\#6b5a20\] { color: #e8d7a3; }
+.dark .text-\[\#991b1b\],
+.dark .text-\[\#b91c1c\],
+.dark .text-\[\#ef4444\] { color: #fca5a5; }
+.dark .text-\[\#0369a1\] { color: #7dd3fc; }
+.dark .text-\[\#475569\] { color: #cbd5e1; }
+.dark .text-\[\#5b21b6\] { color: #c4b5fd; }
+
+/* --- surfaces --- */
+.dark .bg-white { background-color: var(--bg-surface); }
+.dark .bg-\[\#f6faf4\] { background-color: var(--bg-primary); }
+.dark .bg-\[\#f6faf4\]\/85 { background-color: rgba(11, 20, 16, 0.78); }
+.dark .bg-\[\#fbfdf9\],
+.dark .bg-\[\#f7fdf9\],
+.dark .bg-\[\#fafcf8\],
+.dark .bg-\[\#f4f8f1\],
+.dark .bg-\[\#f1f5f1\],
+.dark .bg-\[\#f1f7ec\],
+.dark .bg-\[\#eef4ea\],
+.dark .bg-\[\#eef6eb\],
+.dark .bg-\[\#e7efe1\],
+.dark .bg-\[\#e6efe1\],
+.dark .bg-\[\#e2ece0\],
+.dark .bg-\[\#f0fdf4\],
+.dark .bg-\[\#f1f5f9\],
+.dark .bg-\[\#fffdf5\],
+.dark .bg-\[\#fffdf4\],
+.dark .bg-\[\#fffdf2\],
+.dark .bg-\[\#eef2f7\] { background-color: var(--bg-surface-2); }
+.dark .bg-\[\#16331f\],
+.dark .bg-\[\#3d5c44\] { background-color: var(--bg-surface-3); }
+.dark .bg-\[\#b8cdb2\] { background-color: #3a5140; }
+.dark .bg-\[\#d9e6d3\] { background-color: var(--border-default); }
+.dark .bg-\[\#dcfce7\] { background-color: rgba(34, 197, 94, 0.16); }
+.dark .bg-\[\#bbf7d0\] { background-color: rgba(34, 197, 94, 0.24); }
+.dark .bg-\[\#fef9c3\] { background-color: rgba(234, 179, 8, 0.16); }
+.dark .bg-\[\#fef3c7\] { background-color: rgba(245, 158, 11, 0.18); }
+.dark .bg-\[\#fee2e2\],
+.dark .bg-\[\#fecaca\] { background-color: rgba(239, 68, 68, 0.16); }
+.dark .bg-\[\#fde68a\] { background-color: rgba(234, 179, 8, 0.26); }
+.dark .bg-\[\#ede9fe\] { background-color: rgba(139, 92, 246, 0.18); }
+.dark .bg-\[\#e0f2fe\] { background-color: rgba(14, 165, 233, 0.18); }
+.dark .bg-\[\#fffbeb\] { background-color: rgba(245, 158, 11, 0.14); }
+.dark .bg-\[\#fef2f2\] { background-color: rgba(239, 68, 68, 0.12); }
+.dark .text-\[\#1877f2\] { color: #8ab4ff; }
+
+/* Soft two-stop gradients (badges, feature tiles). Both classes must be on the same
+   element, so a brand gradient that happens to share a stop is untouched. */
+.dark .from-\[\#dcfce7\].to-\[\#fef9c3\],
+.dark .from-\[\#dcfce7\].to-\[\#bbf7d0\] {
+  background-image: none;
+  background-color: rgba(34, 197, 94, 0.16);
+}
+
+/* --- borders / dividers / rings --- */
+.dark .border-\[\#d9e6d3\],
+.dark .border-\[\#e2ece0\],
+.dark .border-\[\#e6efe1\],
+.dark .border-\[\#eef4ea\],
+.dark .border-\[\#c9dcc4\] { border-color: var(--border-default); }
+.dark .border-\[\#d9e6d3\]\/80 { border-color: rgba(38, 56, 45, 0.8); }
+.dark .border-\[\#bbf7d0\],
+.dark .border-\[\#86efac\],
+.dark .border-\[\#dcfce7\] { border-color: rgba(74, 222, 128, 0.35); }
+.dark .border-\[\#fecaca\] { border-color: rgba(248, 113, 113, 0.35); }
+.dark .border-\[\#fde68a\],
+.dark .border-\[\#f3e3b8\],
+.dark .border-\[\#eab308\] { border-color: rgba(250, 204, 21, 0.35); }
+.dark .border-\[\#f59e0b\] { border-color: rgba(245, 158, 11, 0.45); }
+.dark .divide-\[\#d9e6d3\],
+.dark .divide-\[\#eef4ea\] { border-color: var(--border-default); }
+.dark .ring-\[\#dcfce7\] { --tw-ring-color: rgba(34, 197, 94, 0.28); }
+.dark .ring-\[\#d9e6d3\] { --tw-ring-color: var(--border-default); }
+
+/* --- any element that must stay literally white (sits on a green/gold gradient) --- */
+.dark .keep-white { background-color: #ffffff; color: #15803d; }
+
+/* Translucent white surfaces: a pill/chip on the page body must go dark with it,
+   otherwise it lands as a light block with light text on top. */
+.dark .bg-white\/70 { background-color: rgba(255, 255, 255, 0.07); }
+.dark .bg-white\/80 { background-color: rgba(24, 42, 33, 0.86); }
+.dark .bg-white\/85 { background-color: rgba(24, 42, 33, 0.92); }
+
+/* --- component classes from this file --- */
+.dark .gradient-hero {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(22, 163, 74, 0.22), transparent),
+    radial-gradient(ellipse 55% 45% at 16% 85%, rgba(212, 175, 55, 0.12), transparent),
+    radial-gradient(ellipse 55% 45% at 84% 68%, rgba(202, 138, 4, 0.10), transparent),
+    linear-gradient(180deg, #0f1d16 0%, #0b1410 55%, #0a120e 100%);
+}
+.dark .card,
+.dark .game-card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+.dark .card-hover:hover,
+.dark .game-card-interactive:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+.dark .input-warm { background: var(--bg-surface); }
+.dark .btn-arcade-surface { background: var(--bg-surface); }
+.dark .btn-arcade-surface:hover { background: var(--bg-surface-3); }
+.dark .skeleton {
+  background: linear-gradient(90deg, #1b2b22 25%, #22352a 50%, #1b2b22 75%);
+  background-size: 200% 100%;
+}
+.dark .lesson-content code { background: rgba(34, 197, 94, 0.16); }
+.dark .lesson-content blockquote { color: #86efac; }
+.dark .read-content h3 {
+  color: var(--text-primary);
+  border-top-color: var(--border-default);
+}
+.dark .read-content h4 { color: var(--text-strong); }
+.dark .read-content th,
+.dark .read-content td { border-color: var(--border-default); }
+.dark .read-content th { background: var(--bg-surface-2); color: var(--text-primary); }
+.dark .read-content tr:nth-child(even) td { background: rgba(255, 255, 255, 0.03); }
+.dark .badge-pending { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+.dark .badge-approved,
+.dark .badge-active { background: rgba(34, 197, 94, 0.16); color: #86efac; }
+.dark .badge-rejected { background: rgba(239, 68, 68, 0.16); color: #fca5a5; }
+.dark .badge-expired { background: var(--bg-surface-3); color: var(--text-secondary); }
+
 

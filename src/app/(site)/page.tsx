@@ -10,7 +10,7 @@ import LogoMark from "@/components/LogoMark";
 // One white button, used by both calls to action in the final band — the owner asked
 // for the LET button to look the same as the CSE one, not outlined.
 const ctaWhite =
-  "rounded-xl bg-white px-8 py-3.5 font-bold text-[#15803d] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl";
+  "keep-white rounded-xl bg-white px-8 py-3.5 font-bold text-[#15803d] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl";
 
 export const dynamic = "force-dynamic";
 
