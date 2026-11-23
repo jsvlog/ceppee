@@ -168,7 +168,7 @@ export default function PlanCheckout({
       )}
 
       <p className="text-center text-[11px] text-[#94a896] sm:col-span-2">
-        Secured by PayMongo. We never see your card or GCash details.{" "}
+        Secure checkout by HitPay. We never see your card or GCash details.{" "}
         {isSignedIn && (
           <Link href="/dashboard" className="font-semibold underline decoration-[#d4af37] decoration-2 underline-offset-2">
             Prefer GCash transfer?
