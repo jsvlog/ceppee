@@ -200,7 +200,7 @@ export default function Testimonials({ items }: { items?: Testimonial[] }) {
         </h2>
         <p className="mb-10 text-center mx-auto max-w-xl text-[#5c7863]">
           Real people, real passes. A taste of the reviewees Teacher Ceppee has
-          helped get their license.
+          helped them pass their exams.
         </p>
 
         {/* Social proof strip */}

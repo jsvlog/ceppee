@@ -4,7 +4,7 @@ import { getPublicCoaches } from "@/lib/queries";
 import CoachesSection from "@/components/CoachesSection";
 
 export const metadata: Metadata = {
-  title: "Meet the Coaches",
+  title: "Meet Your Review Coaches",
   description:
     "Meet the Teacher Ceppee Review coaches for the Civil Service Exam (CSE) and the Licensure Examination for Teachers (LET). Real reviewers, real subjects, and you can message them personally.",
 };
@@ -25,7 +25,7 @@ export default async function CoachesPage() {
             🧑‍🏫 Our review team
           </span>
           <h1 className="mx-auto mb-4 max-w-3xl text-4xl font-black text-[#16331f] sm:text-5xl">
-            Meet the <span className="gradient-text">coaches</span>
+            Meet Your <span className="gradient-text">Review Coaches</span>
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-[#5c7863]">
             The people who wrote your lessons, drills, and mock exams. Stuck on a topic? Message a

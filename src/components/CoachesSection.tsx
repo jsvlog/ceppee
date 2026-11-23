@@ -152,7 +152,7 @@ export default function CoachesSection({
         {heading && (
           <>
             <h2 className="mb-4 text-center mx-auto text-3xl font-black text-[#16331f] sm:text-4xl">
-              Meet the <span className="gradient-text">coaches</span>
+              Meet Your <span className="gradient-text">Review Coaches</span>
             </h2>
             <p className="mb-10 text-center mx-auto max-w-xl text-[#5c7863]">
               The people behind your review. Ask them anything — they answer personally on
