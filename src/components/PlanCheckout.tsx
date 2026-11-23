@@ -72,7 +72,18 @@ export default function PlanCheckout({
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-      if (!res.ok || !json.url) throw new Error(json.error || "Could not start the checkout.");
+      if (!res.ok || !json.url) {
+        // The server says PAUSED while the payment account is being verified; a
+        // student should read a sentence, not an error code.
+        if (json.error === "PAUSED") {
+          setError(
+            "Card and GCash payments open in a few days — the review center's payment account is being verified right now. Check back shortly."
+          );
+          setBusy(null);
+          return;
+        }
+        throw new Error(json.error || "Could not start the checkout.");
+      }
       window.location.href = json.url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
