@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { PAYMONGO_API } from "@/lib/paymongo";
+import { activeProvider, invoiceStatus } from "@/lib/xendit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,14 +33,14 @@ async function run(req: NextRequest) {
   }
 
   const secretKey = process.env.PAYMONGO_SECRET_KEY;
-  if (!secretKey) return NextResponse.json({ error: "payments not configured" }, { status: 503 });
+  if (!activeProvider()) return NextResponse.json({ error: "payments not configured" }, { status: 503 });
 
   const admin = getAdminClient();
   const cutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
   const { data: pending, error } = await admin
     .from("payments")
-    .select("id, track, plan, amount, checkout_id, created_at")
+    .select("id, track, plan, amount, checkout_id, created_at, provider")
     .eq("status", "pending")
     .not("checkout_id", "is", null)
     .lt("created_at", cutoff)
@@ -49,10 +50,28 @@ async function run(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const results: { id: string; outcome: string }[] = [];
-  const auth = "Basic " + Buffer.from(`${secretKey}:`).toString("base64");
+  const auth = "Basic " + Buffer.from(`${secretKey ?? ""}:`).toString("base64");
 
   for (const row of pending ?? []) {
     try {
+      // Xendit orders are checked through its invoice API, PayMongo ones through
+      // the checkout session. Both end in the same activate_payment() call.
+      if (row.provider === "xendit") {
+        const state = await invoiceStatus(row.checkout_id);
+        if (state === "paid") {
+          const { error: actError } = await admin.rpc("activate_payment", {
+            p_payment_id: row.id,
+            p_provider_ref: row.checkout_id,
+            p_method: null,
+            p_raw: { source: "reconcile", provider: "xendit" },
+          });
+          results.push({ id: row.id, outcome: actError ? `activate failed: ${actError.message}` : "activated" });
+        } else {
+          results.push({ id: row.id, outcome: state });
+        }
+        continue;
+      }
+
       const res = await fetch(`${PAYMONGO_API()}/v2/checkout_sessions/${row.checkout_id}`, {
         headers: { Authorization: auth },
         cache: "no-store",

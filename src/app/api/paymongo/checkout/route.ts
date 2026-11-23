@@ -2,7 +2,8 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import { PLANS, createCheckoutSession, isPlanId, isTrack, paymongoConfigured } from "@/lib/paymongo";
+import { PLANS, createCheckoutSession, isPlanId, isTrack } from "@/lib/paymongo";
+import { activeProvider, createInvoice } from "@/lib/xendit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,11 +20,9 @@ export const dynamic = "force-dynamic";
  * Nothing here grants access; only the webhook does.
  */
 export async function POST(req: NextRequest) {
-  if (!paymongoConfigured()) {
-    return NextResponse.json(
-      { error: "Online payments are not switched on yet. Use GCash or bank transfer for now." },
-      { status: 503 }
-    );
+  const provider = activeProvider();
+  if (!provider) {
+    return NextResponse.json({ error: "Online payment is not switched on yet." }, { status: 503 });
   }
 
   let user;
@@ -166,20 +165,32 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const session = await createCheckoutSession({
+    const session =
+      provider === "xendit"
+        ? await createInvoice({
+            paymentId,
+            plan: planId,
+            track,
+            email: user.email,
+            origin,
+            examDateLabel,
+            subject,
+            major,
+          })
+        : await createCheckoutSession({
       paymentId,
       plan: planId,
       track,
       userId: user.id,
       email: user.email,
-      origin,
-      examDateLabel,
-      subject,
-    });
+            origin,
+            examDateLabel,
+            subject,
+          });
 
     const { error: updateError } = await admin
       .from("payments")
-      .update({ checkout_id: session.id })
+      .update({ checkout_id: session.id, provider })
       .eq("id", paymentId);
     if (updateError) console.error("paymongo checkout: storing checkout_id failed", updateError.message);
 
@@ -192,7 +203,7 @@ export async function POST(req: NextRequest) {
       .update({ status: "failed", failure_note: message.slice(0, 500) })
       .eq("id", paymentId);
     return NextResponse.json(
-      { error: "PayMongo did not accept the checkout. Please try again in a moment." },
+      { error: "The payment provider did not accept the checkout. Please try again in a moment." },
       { status: 502 }
     );
   }

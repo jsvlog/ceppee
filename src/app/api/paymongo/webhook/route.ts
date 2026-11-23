@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhook } from "@/lib/paymongo";
+import { verifyCallbackToken } from "@/lib/xendit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,13 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: NextRequest) {
   const raw = await req.text();
+
+  // Xendit calls the same endpoint with a shared token instead of a signature.
+  const callbackToken = req.headers.get("x-callback-token");
+  if (callbackToken) {
+    return handleXendit(raw, callbackToken);
+  }
+
   const signature = req.headers.get("paymongo-signature");
 
   if (!verifyWebhook(raw, signature)) {
@@ -94,4 +102,76 @@ export async function POST(req: NextRequest) {
 
   const result = Array.isArray(activated) ? activated[0] : activated;
   return NextResponse.json({ ok: true, payment: reference, activated: result?.activated ?? null });
+}
+
+/**
+ * Xendit replay: { id, external_id, status: "PAID", paid_amount, payment_method }.
+ * `external_id` is the payments.id we created, so a replayed callback is inert —
+ * activate_payment() no-ops on an already-paid row.
+ */
+async function handleXendit(raw: string, token: string) {
+  if (!verifyCallbackToken(token)) {
+    console.warn("xendit webhook: bad callback token");
+    return NextResponse.json({ ok: false, error: "invalid token" }, { status: 401 });
+  }
+
+  let event: {
+    external_id?: string;
+    id?: string;
+    status?: string;
+    paid_amount?: number;
+    payment_method?: string;
+    payment_channel?: string;
+  };
+  try {
+    event = JSON.parse(raw);
+  } catch {
+    return NextResponse.json({ ok: false, error: "bad json" }, { status: 400 });
+  }
+
+  const status = (event.status ?? "").toUpperCase();
+  if (status !== "PAID" && status !== "SETTLED") {
+    return NextResponse.json({ ok: true, ignored: status || "unknown" });
+  }
+
+  const paymentId = event.external_id;
+  if (!paymentId) {
+    console.warn("xendit webhook: paid event without external_id");
+    return NextResponse.json({ ok: true, ignored: "no external_id" });
+  }
+
+  const admin = getAdminClient();
+  const { data: row, error: readError } = await admin
+    .from("payments")
+    .select("id, amount, status")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (readError) {
+    console.error("xendit webhook: lookup failed", readError.message);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+  if (!row) {
+    console.warn("xendit webhook: unknown payment", paymentId);
+    return NextResponse.json({ ok: true, ignored: "unknown payment" });
+  }
+
+  // Never let a small invoice pay for a bigger order.
+  if (typeof event.paid_amount === "number" && event.paid_amount < row.amount / 100) {
+    console.error("xendit webhook: amount mismatch", paymentId, event.paid_amount, row.amount);
+    return NextResponse.json({ ok: false, error: "amount mismatch" }, { status: 400 });
+  }
+
+  const { error: actError } = await admin.rpc("activate_payment", {
+    p_payment_id: paymentId,
+    p_provider_ref: event.id ?? null,
+    p_method: event.payment_method ?? event.payment_channel ?? null,
+    p_raw: event,
+  });
+  if (actError) {
+    // 5xx so Xendit retries; the reconcile job is the second net.
+    console.error("xendit webhook: activation failed", actError.message);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
 }

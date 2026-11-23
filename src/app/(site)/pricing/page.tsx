@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getBankStats, getBankMajors, getUserContext } from "@/lib/queries";
+import { activeProvider } from "@/lib/xendit";
 import { accessUntil, canAccess } from "@/lib/access";
 import { PLANS } from "@/lib/paymongo";
 import PlanCheckout, { type PlanOption } from "@/components/PlanCheckout";
@@ -51,7 +52,8 @@ export default async function PricingPage({
     string,
     string
   >;
-  const enabled = Boolean(process.env.PAYMONGO_SECRET_KEY);
+  // Either gateway will do; the page only needs to know that one is live.
+  const enabled = activeProvider() !== null;
 
   const bankSize: Record<Track, number> = {
     LET: (letBank as BankStat[]).reduce((a, b) => a + b.total, 0),
