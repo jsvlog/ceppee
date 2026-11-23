@@ -111,11 +111,11 @@ export default async function HomePage() {
             <p className="animate-fade-up mb-6 text-lg leading-relaxed text-[#5c7863] sm:text-xl">
               A complete online reviewer: lessons, practice drills, and realistic timed mock exams.
             </p>
-            <div className="animate-fade-up mb-8 flex flex-wrap items-center justify-center gap-2">
+            <div className="animate-fade-up mb-8 -mx-6 flex flex-wrap items-center justify-center gap-2 sm:-mx-10 lg:-mx-24">
               {HERO_PACKAGES.map((p) => (
                 <span
                   key={p.plan}
-                  className="inline-flex items-baseline gap-1.5 rounded-full border border-[#d9e6d3] bg-white/85 px-3.5 py-1.5 text-sm font-semibold text-[#3d5c44] shadow-sm"
+                  className="inline-flex items-baseline gap-1.5 whitespace-nowrap rounded-full border border-[#d9e6d3] bg-white/85 px-3.5 py-1.5 text-sm font-semibold text-[#3d5c44] shadow-sm"
                 >
                   <strong className="text-[#16331f]">₱{PLANS[p.plan].price}</strong>
                   {p.label}
@@ -177,7 +177,11 @@ export default async function HomePage() {
                 <span className="text-3xl font-black text-[#16331f]">₱499</span>
                 <span className="text-sm text-[#5c7863]">/ complete, until exam day</span>
               </div>
-              <Link href="/review/cse" className="btn-primary block px-6 py-3.5 text-center text-base font-extrabold">
+              <Link
+                href="/review/cse"
+                className="btn-primary flex h-14 items-center justify-center px-6 text-center text-base"
+                style={{ fontWeight: 700 }}
+              >
                 Start CSE Review
               </Link>
             </div>
@@ -209,7 +213,11 @@ export default async function HomePage() {
                   ₱499 <span className="text-sm font-bold text-[#5c7863]">BSED complete</span>
                 </span>
               </div>
-              <Link href="/review/let" className="btn-gold block px-6 py-3.5 text-center text-base font-extrabold">
+              <Link
+                href="/review/let"
+                className="btn-gold flex h-14 items-center justify-center px-6 text-center text-lg"
+                style={{ fontWeight: 800 }}
+              >
                 Start LET Review
               </Link>
             </div>
