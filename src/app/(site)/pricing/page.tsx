@@ -52,8 +52,9 @@ export default async function PricingPage({
     string,
     string
   >;
-  // Either gateway will do; the page only needs to know that one is live.
-  const enabled = activeProvider() !== null;
+  // Either gateway will do, unless payments are deliberately paused while the
+  // payment account is still being verified.
+  const enabled = activeProvider() !== null && process.env.PAYMENTS_PAUSED !== "1";
 
   const bankSize: Record<Track, number> = {
     LET: (letBank as BankStat[]).reduce((a, b) => a + b.total, 0),

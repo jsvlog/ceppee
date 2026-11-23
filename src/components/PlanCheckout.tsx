@@ -156,7 +156,8 @@ export default function PlanCheckout({
 
       {!enabled && (
         <p className="rounded-xl bg-[#fffbeb] px-3 py-2 text-xs font-semibold text-[#b45309] sm:col-span-2">
-          Online payment is still being switched on. Nothing is being sold until it is — check back shortly.
+          Card and GCash payments open in a few days — the review center's payment account is being
+          verified right now. Everything else is ready; check back shortly.
         </p>
       )}
 

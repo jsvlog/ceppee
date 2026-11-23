@@ -22,8 +22,8 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: NextRequest) {
   const provider = activeProvider();
-  if (!provider) {
-    return NextResponse.json({ error: "Online payment is not switched on yet." }, { status: 503 });
+  if (!provider || process.env.PAYMENTS_PAUSED === "1") {
+    return NextResponse.json({ error: "PAUSED" }, { status: 503 });
   }
 
   let user;
@@ -214,6 +214,11 @@ export async function POST(req: NextRequest) {
       .from("payments")
       .update({ status: "failed", failure_note: message.slice(0, 500) })
       .eq("id", paymentId);
+    // An unverified store is not an error the student can act on.
+    if (/not yet verified/i.test(message)) {
+      return NextResponse.json({ error: "PAUSED" }, { status: 503 });
+    }
+
     // Admins get the provider's own words; students get something readable.
     let detail: string | undefined;
     const { data: prof } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
