@@ -200,7 +200,11 @@ async function handleHitpay(raw: string, signature: string) {
   }
 
   const paymentId = fields.get("reference_number");
-  if (!paymentId) return NextResponse.json({ ok: true, ignored: "no reference" });
+  // A reference that is not one of our ids must not become a 500 — HitPay would
+  // retry it forever. Ignore it instead.
+  if (!paymentId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paymentId)) {
+    return NextResponse.json({ ok: true, ignored: "reference is not one of ours" });
+  }
 
   const admin = getAdminClient();
   const { data: row, error: readError } = await admin

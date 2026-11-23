@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const reference = `selftest-${crypto.randomUUID()}`;
+  const reference = crypto.randomUUID(); // a real-shaped id that belongs to no order
   const body = new URLSearchParams({
     status: "completed",
     reference_number: reference,
