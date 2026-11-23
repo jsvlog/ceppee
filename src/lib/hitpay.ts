@@ -46,29 +46,56 @@ export async function createPaymentRequest(args: HitPayArgs): Promise<{ id: stri
       : `${plan.term} days`;
   const purpose = `Teacher Ceppee · ${args.track} ${plan.label} — ${what} (${term})`;
 
-  const res = await fetch(`${HITPAY_API()}/v1/payment-requests`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-BUSINESS-API-KEY": apiKey(),
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: JSON.stringify({
-      amount: plan.price, // pesos
-      currency: "PHP",
-      email: args.email ?? undefined,
-      purpose,
-      reference_number: args.paymentId,
-      redirect_url: `${args.origin}/payment/success?ref=${args.paymentId}`,
-      // GCash carries no fixed fee. QR Ph costs a flat P20, which is 13% of the
-      // P149 plan, so it is only offered where it does not eat the margin.
-      payment_methods: plan.price >= 29900 ? ["gcash", "card", "qrph"] : ["gcash", "card"],
-      allow_repeated_payments: false,
-    }),
-  });
+  /**
+   * The methods a HitPay account may use differ per account and per environment
+   * (the sandbox has no GCash at all). Asking for one it does not have rejects
+   * the whole payment, so by default we let the account decide, which is what the
+   * merchant sees on the checkout page anyway. HITPAY_METHODS overrides it, e.g.
+   * "gcash,card" to keep QR Ph's flat P20 off the P149 plan.
+   */
+  const methods = (process.env.HITPAY_METHODS ?? "")
+    .split(",")
+    .map((m) => m.trim().toLowerCase())
+    .filter(Boolean);
+
+  const payload: Record<string, unknown> = {
+    amount: plan.price, // pesos
+    currency: "PHP",
+    email: args.email ?? undefined,
+    purpose,
+    reference_number: args.paymentId,
+    redirect_url: `${args.origin}/payment/success?ref=${args.paymentId}`,
+    allow_repeated_payments: false,
+  };
+  if (methods.length) payload.payment_methods = methods;
+
+  const post = (body: Record<string, unknown>) =>
+    fetch(`${HITPAY_API()}/v1/payment-requests`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-BUSINESS-API-KEY": apiKey(),
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: JSON.stringify(body),
+    });
+
+  let res = await post(payload);
+  let failure = "";
+
+  // A method this account does not have must not cost the student the sale:
+  // retry once without the list and let the checkout page offer what it can.
+  if (!res.ok && res.status === 422 && payload.payment_methods) {
+    const first = await res.text().catch(() => "");
+    failure = first;
+    if (/payment method/i.test(first)) {
+      const { payment_methods: _dropped, ...rest } = payload;
+      res = await post(rest);
+    }
+  }
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
+    const text = failure || (await res.text().catch(() => ""));
     throw new Error(`HitPay payment request failed (${res.status}): ${text.slice(0, 300)}`);
   }
   const json = (await res.json()) as { id?: string; url?: string };
