@@ -7,6 +7,11 @@ import TestimonialHighlight from "@/components/TestimonialHighlight";
 import CoachesSection from "@/components/CoachesSection";
 import LogoMark from "@/components/LogoMark";
 
+// One white button, used by both calls to action in the final band — the owner asked
+// for the LET button to look the same as the CSE one, not outlined.
+const ctaWhite =
+  "rounded-xl bg-white px-8 py-3.5 font-bold text-[#15803d] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl";
+
 export const dynamic = "force-dynamic";
 
 const features = [
@@ -300,18 +305,18 @@ export default async function HomePage() {
             <div className="absolute -left-16 -top-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
             <h2 className="relative mb-3 text-3xl font-black text-white sm:text-4xl">
-              Ready to pass?
+              Ready to start your review?
             </h2>
             <p className="relative mx-auto mb-8 max-w-xl text-white/90">
               Join Teacher Ceppee's reviewees. Pay for the exam you are taking — from ₱149,
               and one payment carries you to exam day.
             </p>
             <div className="relative flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link href="/review/cse" className="rounded-xl bg-white px-8 py-3.5 font-bold text-[#15803d] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl">
-                CSE Review — ₱499
+              <Link href="/review/cse" className={ctaWhite}>
+                Explore CSE Review — ₱499
               </Link>
-              <Link href="/review/let" className="rounded-xl border-2 border-white/70 px-8 py-3.5 font-bold text-white transition hover:bg-white/10">
-                LET Review — ₱399
+              <Link href="/review/let" className={ctaWhite}>
+                Explore LET Review — from ₱399
               </Link>
             </div>
           </div>
