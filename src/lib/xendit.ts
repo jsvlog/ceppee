@@ -16,7 +16,8 @@ export const XENDIT_API = () =>
   process.env.XENDIT_API_BASE?.replace(/\/$/, "") || "https://api.xendit.co";
 
 /** "xendit" when its key is set — it wins because it can actually be opened today. */
-export function activeProvider(): "xendit" | "paymongo" | null {
+export function activeProvider(): "hitpay" | "xendit" | "paymongo" | null {
+  if (process.env.HITPAY_API_KEY) return "hitpay";
   if (process.env.XENDIT_SECRET_KEY) return "xendit";
   if (process.env.PAYMONGO_SECRET_KEY) return "paymongo";
   return null;

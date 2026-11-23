@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { PAYMONGO_API } from "@/lib/paymongo";
 import { activeProvider, invoiceStatus } from "@/lib/xendit";
+import { requestStatus } from "@/lib/hitpay";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,6 +57,22 @@ async function run(req: NextRequest) {
     try {
       // Xendit orders are checked through its invoice API, PayMongo ones through
       // the checkout session. Both end in the same activate_payment() call.
+      if (row.provider === "hitpay") {
+        const state = await requestStatus(row.checkout_id);
+        if (state === "paid") {
+          const { error: actError } = await admin.rpc("activate_payment", {
+            p_payment_id: row.id,
+            p_provider_ref: row.checkout_id,
+            p_method: null,
+            p_raw: { source: "reconcile", provider: "hitpay" },
+          });
+          results.push({ id: row.id, outcome: actError ? `activate failed: ${actError.message}` : "activated" });
+        } else {
+          results.push({ id: row.id, outcome: state });
+        }
+        continue;
+      }
+
       if (row.provider === "xendit") {
         const state = await invoiceStatus(row.checkout_id);
         if (state === "paid") {

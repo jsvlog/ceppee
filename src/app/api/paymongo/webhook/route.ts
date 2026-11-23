@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { verifyWebhook } from "@/lib/paymongo";
 import { verifyCallbackToken } from "@/lib/xendit";
+import { verifySignature } from "@/lib/hitpay";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,12 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: NextRequest) {
   const raw = await req.text();
+
+  // HitPay posts form-encoded fields and signs the raw body with HMAC-SHA256.
+  const hitpaySignature = req.headers.get("hitpay-signature");
+  if (hitpaySignature) {
+    return handleHitpay(raw, hitpaySignature);
+  }
 
   // Xendit calls the same endpoint with a shared token instead of a signature.
   const callbackToken = req.headers.get("x-callback-token");
@@ -170,6 +177,61 @@ async function handleXendit(raw: string, token: string) {
   if (actError) {
     // 5xx so Xendit retries; the reconcile job is the second net.
     console.error("xendit webhook: activation failed", actError.message);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+/**
+ * HitPay replay: form-encoded { status: "completed", reference_number: <payments.id>,
+ * payment_id, amount }. Signed, so a forged body cannot grant access.
+ */
+async function handleHitpay(raw: string, signature: string) {
+  if (!verifySignature(raw, signature)) {
+    console.warn("hitpay webhook: bad signature");
+    return NextResponse.json({ ok: false, error: "invalid signature" }, { status: 401 });
+  }
+
+  const fields = new URLSearchParams(raw);
+  const status = (fields.get("status") ?? "").toLowerCase();
+  if (status !== "completed") {
+    return NextResponse.json({ ok: true, ignored: status || "unknown" });
+  }
+
+  const paymentId = fields.get("reference_number");
+  if (!paymentId) return NextResponse.json({ ok: true, ignored: "no reference" });
+
+  const admin = getAdminClient();
+  const { data: row, error: readError } = await admin
+    .from("payments")
+    .select("id, amount, status")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (readError) {
+    console.error("hitpay webhook: lookup failed", readError.message);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+  if (!row) {
+    console.warn("hitpay webhook: unknown payment", paymentId);
+    return NextResponse.json({ ok: true, ignored: "unknown payment" });
+  }
+
+  const paid = Number(fields.get("amount") ?? 0);
+  if (paid && paid * 100 < row.amount) {
+    console.error("hitpay webhook: amount mismatch", paymentId, paid, row.amount);
+    return NextResponse.json({ ok: false, error: "amount mismatch" }, { status: 400 });
+  }
+
+  const method = (fields.get("payment_type") ?? fields.get("payment_method") ?? "gcash").toUpperCase();
+  const { error: actError } = await admin.rpc("activate_payment", {
+    p_payment_id: paymentId,
+    p_provider_ref: fields.get("payment_id") ?? null,
+    p_method: method,
+    p_raw: Object.fromEntries(fields.entries()),
+  });
+  if (actError) {
+    console.error("hitpay webhook: activation failed", actError.message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 

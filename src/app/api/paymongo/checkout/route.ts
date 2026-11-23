@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { PLANS, createCheckoutSession, isPlanId, isTrack } from "@/lib/paymongo";
 import { activeProvider, createInvoice } from "@/lib/xendit";
+import { createPaymentRequest } from "@/lib/hitpay";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -166,7 +167,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const session =
-      provider === "xendit"
+      provider === "hitpay"
+        ? await createPaymentRequest({
+            paymentId,
+            plan: planId,
+            track,
+            email: user.email,
+            origin,
+            examDateLabel,
+            subject,
+            major,
+          })
+        : provider === "xendit"
         ? await createInvoice({
             paymentId,
             plan: planId,
