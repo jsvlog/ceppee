@@ -406,6 +406,16 @@ body {
   }
 }
 
+/* Hide native scrollbars on the sidebar drawer so a 15px scrollbar never steals
+   width from the collapsed icon rail. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* =====================================================================
    DARK MODE REMAP
    Every component hardcodes the light palette (text-[#16331f],

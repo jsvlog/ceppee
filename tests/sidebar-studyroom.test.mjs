@@ -72,3 +72,11 @@ test("StudyRunner scrolls to top of question card on Next/Prev and fits viewport
   assert.match(runner, /window\.scrollTo\(\{ top:/);
   assert.match(runner, /sticky top-16 z-20/);
 });
+
+test("collapsed sidebar hides native scrollbar and removes outer pill box border so icons never overlap or clip", () => {
+  const sidebar = read("src/components/AppSidebar.tsx");
+  const css = read("src/app/globals.css");
+  assert.match(sidebar, /no-scrollbar flex-1 overflow-y-auto/);
+  assert.match(css, /\.no-scrollbar::-webkit-scrollbar/);
+  assert.match(sidebar, /border-2 border-\[#16a34a\] border-b-\[4px\]/);
+});

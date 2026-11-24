@@ -248,14 +248,14 @@ export default function AppSidebar({
           href={item.href}
           title={item.label}
           aria-label={item.label}
-          className={`group mx-auto flex h-11 w-11 items-center justify-center rounded-xl transition ${
+          className={`group mx-auto flex h-11 w-11 items-center justify-center rounded-2xl transition ${
             active
-              ? "border-2 border-[#16a34a] bg-[#f0fdf4] shadow-sm"
-              : "border border-transparent hover:bg-[#f6faf4]"
+              ? "border-2 border-[#16a34a] border-b-[4px] bg-[#f0fdf4] shadow-sm"
+              : "border border-transparent hover:bg-white/60"
           }`}
         >
           <span
-            className={`flex h-8 w-8 items-center justify-center rounded-lg text-base transition ${
+            className={`flex h-8 w-8 items-center justify-center rounded-xl border border-b-2 border-black/10 text-base transition ${
               active ? "bg-[#16a34a] text-white shadow-sm" : item.iconBg
             }`}
           >
@@ -299,25 +299,38 @@ export default function AppSidebar({
       <div className="flex h-full flex-col justify-between">
         {/* Top section */}
         <div
-          className={`flex-1 overflow-y-auto overflow-x-hidden ${
+          className={`no-scrollbar flex-1 overflow-y-auto overflow-x-hidden ${
             isCollapsed ? "px-2 pt-3 pb-3" : "px-3 pt-4 pb-4"
           }`}
         >
           {/* Brand + Collapse button */}
           {isCollapsed ? (
             <div className="mb-3 flex flex-col items-center gap-2">
-              <Link href="/dashboard" title="Teacher Ceppee Review" className="flex items-center justify-center">
-                <LogoMark size="sm" />
-              </Link>
               <button
                 type="button"
                 onClick={() => setCollapsed(false)}
                 aria-label="Expand sidebar"
                 title="Expand drawer"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#d9e6d3] bg-white text-xs font-bold text-[#3d5c44] hover:border-[#16a34a] hover:text-[#16331f]"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#d9e6d3] bg-white text-sm font-bold text-[#3d5c44] shadow-sm transition hover:border-[#16a34a] hover:text-[#16331f]"
               >
                 »
               </button>
+              <Link
+                href="/dashboard"
+                title={`${firstName}'s study desk`}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#d9e6d3] bg-gradient-to-br from-[#dcfce7] via-[#f0fdf4] to-[#fef9c3] shadow-sm transition hover:border-[#16a34a]"
+              >
+                <LogoMark size="sm" />
+              </Link>
+              {activeSubs.length === 0 && !isAdmin && (
+                <Link
+                  href="/pricing"
+                  title="Unlock Full Pass — from ₱149"
+                  className="flex h-10 w-11 items-center justify-center rounded-2xl border border-[#eab308] bg-[#fffbeb] text-base shadow-sm transition hover:border-[#16a34a]"
+                >
+                  ✨
+                </Link>
+              )}
             </div>
           ) : (
             <div className="mb-4 flex items-center justify-between gap-2 px-1">
@@ -393,58 +406,55 @@ export default function AppSidebar({
             </Link>
           )}
 
-          {/* Study Section */}
-          <div className="mb-3">
-            {!isCollapsed && (
-              <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
-                Study
-              </div>
-            )}
-            <div
-              className={`rounded-2xl border border-[#d9e6d3] bg-white shadow-sm ${
-                isCollapsed ? "flex flex-col items-center space-y-1 p-1.5" : "space-y-1 p-1.5"
-              }`}
-            >
-              {studyItems.map((item) => renderNavItem(item, isCollapsed))}
+          {/* Study + Community Navigation */}
+          {isCollapsed ? (
+            <div className="flex flex-col items-center gap-1.5">
+              {studyItems.map((item) => renderNavItem(item, true))}
+              <div className="my-1 h-px w-8 bg-[#d9e6d3]" />
+              {communityItems.map((item) => renderNavItem(item, true))}
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="mb-3">
+                <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
+                  Study
+                </div>
+                <div className="space-y-1 rounded-2xl border border-[#d9e6d3] bg-white p-1.5 shadow-sm">
+                  {studyItems.map((item) => renderNavItem(item, false))}
+                </div>
+              </div>
 
-          {/* Community & Rooms Section */}
-          <div>
-            {!isCollapsed && (
-              <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
-                Community &amp; Rooms
+              <div>
+                <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
+                  Community &amp; Rooms
+                </div>
+                <div className="space-y-1 rounded-2xl border border-[#d9e6d3] bg-white p-1.5 shadow-sm">
+                  {communityItems.map((item) => renderNavItem(item, false))}
+                </div>
               </div>
-            )}
-            <div
-              className={`rounded-2xl border border-[#d9e6d3] bg-white shadow-sm ${
-                isCollapsed ? "flex flex-col items-center space-y-1 p-1.5" : "space-y-1 p-1.5"
-              }`}
-            >
-              {communityItems.map((item) => renderNavItem(item, isCollapsed))}
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
         {/* Bottom User Profile & Theme Bar */}
         <div
-          className={`relative border-t border-[#d9e6d3] bg-white ${isCollapsed ? "p-2" : "p-3"}`}
+          className={`relative border-t border-[#d9e6d3] ${isCollapsed ? "bg-[#f6faf4] py-3 px-2" : "bg-white p-3"}`}
           ref={isMobileDrawer ? mobileProfileRef : desktopProfileRef}
         >
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-2">
-              <ThemeToggle />
+            <div className="flex flex-col items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => setProfileMenuOpen((o) => !o)}
                 title={`${fullName} — Profile & sign out`}
                 aria-label="Open profile menu"
-                className="flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-[#f6faf4]"
+                className="flex h-10 w-10 items-center justify-center rounded-full transition hover:opacity-90"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#ca8a04] text-sm font-black text-white shadow-sm">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#ca8a04] text-sm font-black leading-none text-white shadow-sm">
                   {initial}
                 </span>
               </button>
+              <ThemeToggle />
             </div>
           ) : (
             <div className="flex items-center justify-between gap-2">
