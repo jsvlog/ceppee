@@ -372,6 +372,62 @@ export async function POST(request: NextRequest) {
         if (error) throw error;
         return NextResponse.json({ ok: true });
       }
+      case "set_user_label": {
+        const rawLabel = typeof payload.user_label === "string" ? payload.user_label.trim() : "";
+        const rawColor = typeof payload.user_badge_color === "string" ? payload.user_badge_color.trim() : "";
+        const { error } = await admin
+          .from("profiles")
+          .update({
+            user_label: rawLabel || null,
+            user_badge_color: rawColor || null,
+          })
+          .eq("id", payload.user_id);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+
+      /* ---------- STUDY ROOMS ---------- */
+      case "save_study_room": {
+        const title = String(payload.title || "").trim();
+        if (!title) throw new Error("Room title is required");
+        const rawSlug = String(payload.slug || title)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+        if (!rawSlug) throw new Error("Room slug is required");
+
+        const track = ["CSE", "LET", "BOTH"].includes(String(payload.track))
+          ? (String(payload.track) as "CSE" | "LET" | "BOTH")
+          : "BOTH";
+        const category = ["general", "subject", "major", "exam"].includes(String(payload.category))
+          ? (String(payload.category) as "general" | "subject" | "major" | "exam")
+          : "general";
+
+        const row = {
+          id: payload.id as string | undefined,
+          slug: rawSlug,
+          title,
+          subtitle: ((payload.subtitle as string) || "").trim() || null,
+          track,
+          category,
+          subject: ((payload.subject as string) || "").trim() || null,
+          specialization: ((payload.specialization as string) || "").trim() || null,
+          icon: ((payload.icon as string) || "").trim() || "💬",
+          sort_order: Number(payload.sort_order) || 0,
+          is_active: payload.is_active !== false,
+        };
+
+        const { error } = row.id
+          ? await admin.from("study_rooms").update(row).eq("id", row.id)
+          : await admin.from("study_rooms").insert(row);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+      case "delete_study_room": {
+        const { error } = await admin.from("study_rooms").delete().eq("id", payload.id);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
 
       default:
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });

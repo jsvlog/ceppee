@@ -8,7 +8,8 @@ import { postAdmin } from "@/lib/admin-api";
 import { parseBulkQuestions } from "@/lib/bulk-import";
 import { MATERIAL, subjectsFor, subjectIcon, passingPctFor, SPECIALIZATIONS } from "@/lib/exam";
 import QuestionBank from "./QuestionBank";
-import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial, Coach, CoachTrack, OnlinePayment } from "@/lib/types";
+import UserBadgePill, { BADGE_PRESETS, type BadgeColor } from "@/components/UserBadgePill";
+import type { Track, PaymentRequest, Subscription, Topic, ExamWithCount, Question, SiteSettings, Testimonial, Coach, CoachTrack, OnlinePayment, StudyRoom, StudyRoomCategory } from "@/lib/types";
 import type { AdminProfile, LessonMeta } from "./page";
 
 /* ================= helpers ================= */
@@ -23,7 +24,8 @@ const trackPill = (t: Track) =>
 
 const TABS = [
   { id: "payments", label: "💰 Payments" },
-  { id: "users", label: "👥 Users" },
+  { id: "users", label: "👥 Users & Badges" },
+  { id: "rooms", label: "💬 Study Rooms" },
   { id: "bank", label: "🧠 Question Bank" },
   { id: "content", label: "📚 Lessons" },
   { id: "exams", label: "⏱️ Mocks & Exams" },
@@ -46,6 +48,7 @@ export default function AdminClient({
   testimonials,
   coaches,
   onlinePayments,
+  studyRooms = [],
 }: {
   stats: Record<string, number>;
   payments: (PaymentRequest & { profile?: { email: string; full_name: string } })[];
@@ -58,6 +61,7 @@ export default function AdminClient({
   testimonials: Testimonial[];
   coaches: Coach[];
   onlinePayments: (OnlinePayment & { profile?: { email: string | null; full_name: string | null } | null })[];
+  studyRooms?: StudyRoom[];
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("payments");
@@ -214,61 +218,14 @@ export default function AdminClient({
         </div>
       )}
 
-      {/* ============ USERS ============ */}
+      {/* ============ USERS & BADGES ============ */}
       {tab === "users" && (
-        <div className="space-y-4">
-          {profiles.map((u) => {
-            const cseSub = subs.find((s) => s.user_id === u.id && s.track === "CSE" && s.status === "active" && new Date(s.expires_at) > new Date());
-            const letSub = subs.find((s) => s.user_id === u.id && s.track === "LET" && s.status === "active" && new Date(s.expires_at) > new Date());
-            return (
-              <div key={u.id} className="card p-5">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2 font-bold text-[#16331f]">
-                      {u.full_name || "—"}
-                      {u.is_admin && <span className="badge badge-pending">👑 Admin</span>}
-                    </div>
-                    <div className="text-xs text-[#5c7863]">{u.email}</div>
-                  </div>
-                  <div className="flex gap-2">
-                    {(["CSE", "LET"] as Track[]).map((t) => {
-                      const sub = t === "CSE" ? cseSub : letSub;
-                      return (
-                        <div key={t} className="rounded-xl border border-[#d9e6d3] px-3 py-2 text-center text-xs">
-                          <div className={`mb-1 font-bold ${t === "CSE" ? "text-[#15803d]" : "text-[#b45309]"}`}>{t}</div>
-                          {sub ? (
-                            <>
-                              <div className="font-semibold text-[#16a34a]">✓ until {fmtDate(sub.expires_at)}</div>
-                              <div className="mt-1 flex justify-center gap-1">
-                                <button disabled={busy} onClick={() => run("extend_sub", { user_id: u.id, track: t, days: 180 }, `${t} extended +180 days`)} className="rounded-md bg-[#dcfce7] px-2 py-1 font-bold text-[#15803d] hover:bg-[#bbf7d0]">+180d</button>
-                                <button disabled={busy} onClick={() => run("revoke_sub", { user_id: u.id, track: t }, `${t} revoked`)} className="rounded-md bg-[#fee2e2] px-2 py-1 font-bold text-[#991b1b] hover:bg-[#fecaca]">Revoke</button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="text-[#94a896]">🔒 No sub</div>
-                              <div className="mt-1 flex justify-center">
-                                <button disabled={busy} onClick={() => run("grant_sub", { user_id: u.id, track: t, days: 180 }, `${t} granted (180 days)`)} className="rounded-md bg-[#dcfce7] px-2 py-1 font-bold text-[#166534] hover:bg-[#bbf7d0]">Grant 180d</button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                    <button
-                      disabled={busy}
-                      onClick={() => run("make_admin", { user_id: u.id, is_admin: !u.is_admin }, u.is_admin ? "Admin removed" : "Admin granted")}
-                      className="self-center rounded-xl border border-[#d9e6d3] px-3 py-2 text-xs font-bold text-[#5c7863] hover:border-[#d4af37]"
-                    >
-                      {u.is_admin ? "Remove admin" : "Make admin"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          {profiles.length === 0 && <div className="card p-6 text-sm text-[#5c7863]">No users yet.</div>}
-        </div>
+        <UsersTab profiles={profiles} subs={subs} busy={busy} run={run} />
+      )}
+
+      {/* ============ STUDY ROOMS ============ */}
+      {tab === "rooms" && (
+        <StudyRoomsTab studyRooms={studyRooms} busy={busy} run={run} />
       )}
 
       {/* ============ QUESTION BANK ============ */}
@@ -2237,6 +2194,550 @@ function Modal({ title, children, onClose, wide }: { title: string; children: Re
         </div>
         {children}
       </div>
+    </div>
+  );
+}
+
+/* ---------- Users & Badges Tab ---------- */
+
+const BADGE_COLOR_OPTIONS: { key: BadgeColor; label: string }[] = [
+  { key: "gold", label: "Gold (Admin / Topnotcher)" },
+  { key: "green", label: "Green (Coach / LPT)" },
+  { key: "blue", label: "Blue (CSE / Scholar)" },
+  { key: "purple", label: "Purple (Achievement)" },
+  { key: "rose", label: "Rose (Streak / MVP)" },
+];
+
+function UsersTab({
+  profiles,
+  subs,
+  busy,
+  run,
+}: {
+  profiles: AdminProfile[];
+  subs: Subscription[];
+  busy: boolean;
+  run: (action: string, payload: Record<string, unknown>, okMsg: string) => Promise<void>;
+}) {
+  const [search, setSearch] = useState("");
+  const [editingBadgeUser, setEditingBadgeUser] = useState<AdminProfile | null>(null);
+  const [customLabel, setCustomLabel] = useState("");
+  const [customColor, setCustomColor] = useState<BadgeColor>("green");
+
+  const filtered = profiles.filter((u) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (u.full_name || "").toLowerCase().includes(q) ||
+      (u.email || "").toLowerCase().includes(q) ||
+      (u.user_label || "").toLowerCase().includes(q)
+    );
+  });
+
+  const openBadgeEditor = (u: AdminProfile) => {
+    setEditingBadgeUser(u);
+    setCustomLabel(u.user_label || "");
+    setCustomColor((u.user_badge_color as BadgeColor) || "green");
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+        <div>
+          <h2 className="text-base font-black text-[#16331f]">👥 Users, Roles &amp; Special Badges</h2>
+          <p className="text-xs text-[#5c7863]">
+            Label any user as Coach, Admin, Topnotcher, or give them a custom achievement badge shown in the Study Room.
+          </p>
+        </div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search user by name, email, or badge..."
+          className="input-warm max-w-xs py-2 text-xs"
+        />
+      </div>
+
+      {filtered.map((u) => {
+        const cseSub = subs.find(
+          (s) => s.user_id === u.id && s.track === "CSE" && s.status === "active" && new Date(s.expires_at) > new Date()
+        );
+        const letSub = subs.find(
+          (s) => s.user_id === u.id && s.track === "LET" && s.status === "active" && new Date(s.expires_at) > new Date()
+        );
+
+        return (
+          <div key={u.id} className="card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 font-bold text-[#16331f]">
+                  <span>{u.full_name || "—"}</span>
+                  <UserBadgePill
+                    label={u.user_label}
+                    color={u.user_badge_color}
+                    isAdmin={u.is_admin}
+                    size="sm"
+                  />
+                </div>
+                <div className="mt-0.5 text-xs text-[#5c7863]">{u.email}</div>
+
+                {/* Quick preset badge buttons */}
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-[#5c7863]">Quick label:</span>
+                  {BADGE_PRESETS.map((preset) => {
+                    const active = u.user_label === preset.label;
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          run(
+                            "set_user_label",
+                            {
+                              user_id: u.id,
+                              user_label: active ? "" : preset.label,
+                              user_badge_color: active ? "" : preset.color,
+                            },
+                            active ? `Removed ${preset.label} badge` : `Labeled as ${preset.label}`
+                          )
+                        }
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+                          active
+                            ? "bg-[#16331f] text-white"
+                            : "border border-[#d9e6d3] bg-[#f6faf4] text-[#3d5c44] hover:border-[#16a34a]"
+                        }`}
+                      >
+                        {preset.icon} {preset.label}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => openBadgeEditor(u)}
+                    className="rounded-full border border-[#eab308] bg-[#fffbeb] px-2.5 py-1 text-[11px] font-extrabold text-[#b45309] hover:bg-[#fef9c3]"
+                  >
+                    ✎ Custom achievement / badge
+                  </button>
+                  {u.user_label && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() =>
+                        run("set_user_label", { user_id: u.id, user_label: "", user_badge_color: "" }, "Badge cleared")
+                      }
+                      className="rounded-full bg-[#fee2e2] px-2.5 py-1 text-[11px] font-bold text-[#991b1b]"
+                    >
+                      ✕ Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {(["CSE", "LET"] as Track[]).map((t) => {
+                  const sub = t === "CSE" ? cseSub : letSub;
+                  return (
+                    <div key={t} className="rounded-xl border border-[#d9e6d3] px-3 py-2 text-center text-xs">
+                      <div className={`mb-1 font-bold ${t === "CSE" ? "text-[#15803d]" : "text-[#b45309]"}`}>{t}</div>
+                      {sub ? (
+                        <>
+                          <div className="font-semibold text-[#16a34a]">✓ until {fmtDate(sub.expires_at)}</div>
+                          <div className="mt-1 flex justify-center gap-1">
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                run("extend_sub", { user_id: u.id, track: t, days: 180 }, `${t} extended +180 days`)
+                              }
+                              className="rounded-md bg-[#dcfce7] px-2 py-1 font-bold text-[#15803d] hover:bg-[#bbf7d0]"
+                            >
+                              +180d
+                            </button>
+                            <button
+                              disabled={busy}
+                              onClick={() => run("revoke_sub", { user_id: u.id, track: t }, `${t} revoked`)}
+                              className="rounded-md bg-[#fee2e2] px-2 py-1 font-bold text-[#991b1b] hover:bg-[#fecaca]"
+                            >
+                              Revoke
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-[#94a896]">🔒 No sub</div>
+                          <div className="mt-1 flex justify-center">
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                run("grant_sub", { user_id: u.id, track: t, days: 180 }, `${t} granted (180 days)`)
+                              }
+                              className="rounded-md bg-[#dcfce7] px-2 py-1 font-bold text-[#166534] hover:bg-[#bbf7d0]"
+                            >
+                              Grant 180d
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+                <button
+                  disabled={busy}
+                  onClick={() =>
+                    run(
+                      "make_admin",
+                      { user_id: u.id, is_admin: !u.is_admin },
+                      u.is_admin ? "Admin removed" : "Admin granted"
+                    )
+                  }
+                  className="self-center rounded-xl border border-[#d9e6d3] px-3 py-2 text-xs font-bold text-[#5c7863] hover:border-[#d4af37]"
+                >
+                  {u.is_admin ? "Remove admin" : "Make admin"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {filtered.length === 0 && <div className="card p-6 text-sm text-[#5c7863]">No matching users found.</div>}
+
+      {editingBadgeUser && (
+        <Modal
+          title={`Badge / Label for ${editingBadgeUser.full_name || editingBadgeUser.email}`}
+          onClose={() => setEditingBadgeUser(null)}
+        >
+          <div className="space-y-4">
+            <Field label="Badge text (e.g., Coach, Admin, Topnotcher, Math Wizard, 30-Day Streak)">
+              <input
+                type="text"
+                className="input-warm"
+                value={customLabel}
+                onChange={(e) => setCustomLabel(e.target.value)}
+                placeholder="Type custom label or achievement..."
+              />
+            </Field>
+            <Field label="Badge color style">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {BADGE_COLOR_OPTIONS.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => setCustomColor(c.key)}
+                    className={`rounded-xl border px-3 py-2 text-left text-xs font-bold transition ${
+                      customColor === c.key
+                        ? "border-[#16a34a] bg-[#f0fdf4] text-[#16331f]"
+                        : "border-[#d9e6d3] bg-white text-[#5c7863]"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <div className="rounded-xl border border-[#d9e6d3] bg-[#f6faf4] p-3">
+              <div className="mb-1 text-[11px] font-bold text-[#5c7863]">Preview in Study Room:</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-[#16331f]">
+                  {editingBadgeUser.full_name || "Reviewer"}
+                </span>
+                <UserBadgePill
+                  label={customLabel || "Custom Badge"}
+                  color={customColor}
+                  isAdmin={editingBadgeUser.is_admin}
+                  size="sm"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  await run(
+                    "set_user_label",
+                    {
+                      user_id: editingBadgeUser.id,
+                      user_label: customLabel,
+                      user_badge_color: customColor,
+                    },
+                    "User badge saved"
+                  );
+                  setEditingBadgeUser(null);
+                }}
+                className="btn-primary flex-1 py-2.5 text-sm"
+              >
+                Save Badge
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingBadgeUser(null)}
+                className="rounded-xl border border-[#d9e6d3] px-4 text-sm font-semibold text-[#5c7863]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Study Rooms Tab ---------- */
+
+function StudyRoomsTab({
+  studyRooms,
+  busy,
+  run,
+}: {
+  studyRooms: StudyRoom[];
+  busy: boolean;
+  run: (action: string, payload: Record<string, unknown>, okMsg: string) => Promise<void>;
+}) {
+  const [modalRoom, setModalRoom] = useState<Partial<StudyRoom> | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
+        <div>
+          <h2 className="text-lg font-black text-[#16331f]">💬 Study Rooms ({studyRooms.length})</h2>
+          <p className="text-xs text-[#5c7863]">
+            Create or edit study rooms for different subjects, majorships, or exams. Students can join and chat in any active room.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            setModalRoom({
+              title: "",
+              subtitle: "",
+              track: "LET",
+              category: "subject",
+              icon: "💬",
+              sort_order: studyRooms.length + 1,
+              is_active: true,
+            })
+          }
+          className="btn-primary px-5 py-2.5 text-sm"
+        >
+          + Create Study Room
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {studyRooms.map((room) => (
+          <div key={room.id} className="card flex items-start justify-between gap-3 p-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#dcfce7] text-xl">
+                {room.icon || "💬"}
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-black text-[#16331f]">{room.title}</span>
+                  <span className="rounded-full bg-[#f0fdf4] px-2 py-0.5 text-[10px] font-extrabold uppercase text-[#15803d]">
+                    {room.track} · {room.category}
+                  </span>
+                  {!room.is_active && (
+                    <span className="rounded-full bg-[#fee2e2] px-2 py-0.5 text-[10px] font-bold text-[#991b1b]">
+                      Hidden
+                    </span>
+                  )}
+                </div>
+                {room.subtitle && <p className="mt-1 text-xs text-[#5c7863]">{room.subtitle}</p>}
+                <div className="mt-1 text-[11px] text-[#94a896]">
+                  slug: <code>{room.slug}</code> · order {room.sort_order}
+                  {room.specialization ? ` · Major: ${room.specialization}` : ""}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 gap-1.5">
+              <button
+                type="button"
+                onClick={() => setModalRoom(room)}
+                className="rounded-lg bg-[#dcfce7] px-2.5 py-1.5 text-xs font-bold text-[#15803d]"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  if (confirm(`Delete study room "${room.title}" and all its chat messages?`)) {
+                    void run("delete_study_room", { id: room.id }, "Study room deleted");
+                  }
+                }}
+                className="rounded-lg bg-[#fee2e2] px-2.5 py-1.5 text-xs font-bold text-[#991b1b]"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {modalRoom && (
+        <Modal
+          title={modalRoom.id ? "Edit Study Room" : "Create Study Room"}
+          onClose={() => setModalRoom(null)}
+        >
+          <StudyRoomForm
+            initial={modalRoom}
+            busy={busy}
+            onSave={async (payload) => {
+              await run("save_study_room", payload, "Study room saved");
+              setModalRoom(null);
+            }}
+          />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function StudyRoomForm({
+  initial,
+  busy,
+  onSave,
+}: {
+  initial: Partial<StudyRoom>;
+  busy: boolean;
+  onSave: (payload: Record<string, unknown>) => Promise<void>;
+}) {
+  const [title, setTitle] = useState(initial.title || "");
+  const [slug, setSlug] = useState(initial.slug || "");
+  const [subtitle, setSubtitle] = useState(initial.subtitle || "");
+  const [track, setTrack] = useState<"CSE" | "LET" | "BOTH">(initial.track || "LET");
+  const [category, setCategory] = useState<StudyRoomCategory>(initial.category || "subject");
+  const [subject, setSubject] = useState(initial.subject || "");
+  const [specialization, setSpecialization] = useState(initial.specialization || "");
+  const [icon, setIcon] = useState(initial.icon || "💬");
+  const [sortOrder, setSortOrder] = useState(initial.sort_order ?? 10);
+  const [isActive, setIsActive] = useState(initial.is_active !== false);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_100px]">
+        <Field label="Room Title">
+          <input
+            className="input-warm"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Mathematics Majorship"
+          />
+        </Field>
+        <Field label="Emoji Icon">
+          <input
+            className="input-warm text-center text-lg"
+            value={icon}
+            onChange={(e) => setIcon(e.target.value)}
+            placeholder="💬"
+          />
+        </Field>
+      </div>
+
+      <Field label="Subtitle / Description">
+        <input
+          className="input-warm"
+          value={subtitle}
+          onChange={(e) => setSubtitle(e.target.value)}
+          placeholder="e.g. Algebra, calculus, geometry & problem-solving discussions."
+        />
+      </Field>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Exam Track">
+          <select
+            className="input-warm"
+            value={track}
+            onChange={(e) => setTrack(e.target.value as "CSE" | "LET" | "BOTH")}
+          >
+            <option value="LET">LET</option>
+            <option value="CSE">CSE</option>
+            <option value="BOTH">Both (All Reviewees)</option>
+          </select>
+        </Field>
+        <Field label="Room Category">
+          <select
+            className="input-warm"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as StudyRoomCategory)}
+          >
+            <option value="general">General Lounge</option>
+            <option value="exam">Exam Room</option>
+            <option value="subject">Core Subject Room</option>
+            <option value="major">Majorship Room</option>
+          </select>
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Linked Majorship (optional)">
+          <select
+            className="input-warm"
+            value={specialization}
+            onChange={(e) => setSpecialization(e.target.value)}
+          >
+            <option value="">— None —</option>
+            {SPECIALIZATIONS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Sort Order">
+          <input
+            type="number"
+            className="input-warm"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
+          />
+        </Field>
+      </div>
+
+      <Field label="URL Slug (leave blank to auto-generate)">
+        <input
+          className="input-warm text-xs"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder="e.g. major-mathematics"
+        />
+      </Field>
+
+      <label className="flex items-center gap-2 text-sm font-semibold text-[#3d5c44]">
+        <input
+          type="checkbox"
+          checked={isActive}
+          onChange={(e) => setIsActive(e.target.checked)}
+          className="h-4 w-4"
+        />
+        Room is active and visible to students
+      </label>
+
+      <button
+        type="button"
+        disabled={busy || !title.trim()}
+        onClick={() =>
+          void onSave({
+            id: initial.id,
+            title,
+            slug,
+            subtitle,
+            track,
+            category,
+            subject,
+            specialization: specialization || null,
+            icon,
+            sort_order: sortOrder,
+            is_active: isActive,
+          })
+        }
+        className="btn-primary w-full py-3"
+      >
+        {busy ? "Saving…" : "Save Study Room"}
+      </button>
     </div>
   );
 }

@@ -446,7 +446,8 @@ body {
 /* --- surfaces --- */
 .dark .bg-white { background-color: var(--bg-surface); }
 .dark .bg-\[\#f6faf4\] { background-color: var(--bg-primary); }
-.dark .bg-\[\#f6faf4\]\/85 { background-color: rgba(11, 20, 16, 0.78); }
+.dark .bg-\[\#f6faf4\]\/85,
+.dark .bg-\[\#f6faf4\]\/90 { background-color: rgba(11, 20, 16, 0.85); }
 .dark .bg-\[\#fbfdf9\],
 .dark .bg-\[\#f7fdf9\],
 .dark .bg-\[\#fafcf8\],
@@ -499,6 +500,8 @@ body {
 .dark .border-\[\#bbf7d0\],
 .dark .border-\[\#86efac\],
 .dark .border-\[\#dcfce7\] { border-color: rgba(74, 222, 128, 0.35); }
+.dark .border-\[\#bae6fd\] { border-color: rgba(56, 189, 248, 0.35); }
+.dark .border-\[\#ddd6fe\] { border-color: rgba(167, 139, 250, 0.35); }
 .dark .border-\[\#fecaca\] { border-color: rgba(248, 113, 113, 0.35); }
 .dark .border-\[\#fde68a\],
 .dark .border-\[\#f3e3b8\],

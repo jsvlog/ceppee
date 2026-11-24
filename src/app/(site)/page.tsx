@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getSiteStats, getPublicTestimonials, getPublicCoaches } from "@/lib/queries";
+import { redirect } from "next/navigation";
+import { getSiteStats, getPublicTestimonials, getPublicCoaches, getUserContext } from "@/lib/queries";
 import { TRACK_LABEL } from "@/lib/format";
 import { PLANS, type PlanId } from "@/lib/paymongo";
 import Testimonials from "@/components/Testimonials";
@@ -86,6 +87,9 @@ const faqs = [
 ];
 
 export default async function HomePage() {
+  const { user } = await getUserContext();
+  if (user) redirect("/dashboard");
+
   const [stats, testimonials, coaches] = await Promise.all([
     getSiteStats(),
     getPublicTestimonials(),

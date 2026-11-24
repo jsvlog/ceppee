@@ -14,6 +14,7 @@ import type {
   Testimonial,
   Coach,
   OnlinePayment,
+  StudyRoom,
 } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -24,6 +25,8 @@ export interface AdminProfile {
   email: string | null;
   full_name: string | null;
   is_admin: boolean;
+  user_label?: string | null;
+  user_badge_color?: string | null;
   created_at: string;
 }
 
@@ -55,6 +58,7 @@ export default async function AdminPage() {
     { data: testimonials },
     { data: coaches },
     { data: onlinePayments },
+    { data: studyRooms },
   ] = await Promise.all([
     admin.rpc("admin_stats"),
     admin
@@ -98,6 +102,11 @@ export default async function AdminPage() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(200),
+    admin
+      .from("study_rooms")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
 
   const profileById = new Map(
@@ -121,6 +130,7 @@ export default async function AdminPage() {
       testimonials={(testimonials as Testimonial[]) || []}
       coaches={(coaches as Coach[]) || []}
       onlinePayments={onlineWithProfile}
+      studyRooms={(studyRooms as StudyRoom[]) || []}
     />
   );
 }

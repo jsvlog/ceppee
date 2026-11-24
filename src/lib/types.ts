@@ -11,7 +11,53 @@ export interface Profile {
   email?: string;
   full_name: string | null;
   is_admin: boolean;
+  user_label?: string | null;
+  user_badge_color?: string | null;
   created_at?: string;
+}
+
+export type StudyRoomCategory = "general" | "subject" | "major" | "exam";
+
+export interface StudyRoom {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  track: "CSE" | "LET" | "BOTH";
+  category: StudyRoomCategory;
+  subject: string | null;
+  specialization: string | null;
+  icon: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface StudyRoomMessage {
+  id: string;
+  room_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  display_name: string;
+  is_admin: boolean;
+  user_label: string | null;
+  user_badge_color: string | null;
+  is_me: boolean;
+}
+
+export interface RecentStudyChat {
+  id: string;
+  room_id: string;
+  room_slug: string;
+  room_title: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  display_name: string;
+  is_admin: boolean;
+  user_label: string | null;
+  user_badge_color: string | null;
 }
 
 export interface PaymentRequest {

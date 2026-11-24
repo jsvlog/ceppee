@@ -10,9 +10,8 @@ export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const { user, profile, isAdmin, subs } = await getUserContext();
+  const { user, profile, subs } = await getUserContext();
   if (!user) redirect("/login?next=/dashboard");
-  if (isAdmin) redirect("/admin");
 
   let payments: OnlinePayment[] = [];
   let attempts: (ExamAttempt & { exam?: Exam })[] = [];

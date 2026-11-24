@@ -2,7 +2,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { canAccess, accessUntil } from "./access";
-import type { BankStat, Coach, ExamAttempt, LeaderboardAround, LeaderboardRow, LeaderboardPeriod, Level, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
+import type { BankStat, Coach, ExamAttempt, LeaderboardAround, LeaderboardRow, LeaderboardPeriod, Level, RecentStudyChat, StudyRoom, StudyRoomMessage, SubjectProgress, Subscription, Testimonial, Track } from "@/lib/types";
 
 /** Daily | weekly | all-time — the three leaderboard windows. */
 export type { LeaderboardPeriod };
@@ -88,7 +88,7 @@ export async function getPublicCoaches(): Promise<Coach[]> {
 
 export interface UserContext {
   user: { id: string; email?: string } | null;
-  profile: { id: string; full_name: string | null; is_admin: boolean } | null;
+  profile: { id: string; full_name: string | null; is_admin: boolean; user_label?: string | null; user_badge_color?: string | null } | null;
   isAdmin: boolean;
   subs: Subscription[];
 }
@@ -102,7 +102,7 @@ export const getUserContext = cache(async (): Promise<UserContext> => {
 
   try {
     const [{ data: profile }, { data: subs }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, is_admin").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("id, full_name, is_admin, user_label, user_badge_color").eq("id", user.id).maybeSingle(),
       supabase.from("subscriptions").select("*").eq("user_id", user.id),
     ]);
     return {
@@ -238,3 +238,47 @@ export const getRecentTrackAttempts = cache(async (userId: string | null, track:
     return [];
   }
 });
+
+/** Active study rooms for the Study Room sidebar & chats page. */
+export const getStudyRooms = cache(async (): Promise<StudyRoom[]> => {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("study_rooms")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (error) return [];
+    return (data as StudyRoom[]) ?? [];
+  } catch {
+    return [];
+  }
+});
+
+/** Recent messages across active study rooms for the top header Study Room dropdown. */
+export const getRecentStudyChat = cache(async (limit = 5): Promise<RecentStudyChat[]> => {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("get_recent_study_chat", { p_limit: limit });
+    if (error) return [];
+    return (data as RecentStudyChat[]) ?? [];
+  } catch {
+    return [];
+  }
+});
+
+/** Messages in a specific study room, chronological order. */
+export async function getStudyRoomMessages(roomId: string, limit = 80): Promise<StudyRoomMessage[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("get_study_room_messages", {
+      p_room_id: roomId,
+      p_limit: limit,
+    });
+    if (error) return [];
+    return (data as StudyRoomMessage[]) ?? [];
+  } catch {
+    return [];
+  }
+}
