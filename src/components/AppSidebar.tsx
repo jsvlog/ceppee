@@ -58,9 +58,11 @@ export default function AppSidebar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [chatPreviewOpen, setChatPreviewOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const chatPreviewRef = useRef<HTMLDivElement>(null);
-  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const desktopProfileRef = useRef<HTMLDivElement>(null);
+  const mobileProfileRef = useRef<HTMLDivElement>(null);
 
   // Determine active track from URL or active subscription
   const activeSubs = subs.filter((s) => s.status === "active" && new Date(s.expires_at) > new Date());
@@ -89,10 +91,13 @@ export default function AppSidebar({
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
-      if (chatPreviewRef.current && !chatPreviewRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (chatPreviewRef.current && !chatPreviewRef.current.contains(target)) {
         setChatPreviewOpen(false);
       }
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+      const inDesktopProfile = desktopProfileRef.current?.contains(target) ?? false;
+      const inMobileProfile = mobileProfileRef.current?.contains(target) ?? false;
+      if (!inDesktopProfile && !inMobileProfile) {
         setProfileMenuOpen(false);
       }
     };
@@ -101,10 +106,26 @@ export default function AppSidebar({
   }, []);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    if (signingOut) return;
+    setSigningOut(true);
+    setProfileMenuOpen(false);
+    setMobileOpen(false);
+    try {
+      const supabase = createClient();
+      await Promise.all([
+        supabase.auth.signOut(),
+        fetch("/api/auth/signout", { method: "POST" }).catch(() => null),
+      ]);
+    } catch {
+      /* continue to redirect */
+    }
+    window.location.href = "/";
+  };
+
+  const handleProfileNav = (href: string) => {
+    setProfileMenuOpen(false);
+    setMobileOpen(false);
+    router.push(href);
   };
 
   const studyItems: NavItem[] = [
@@ -218,13 +239,36 @@ export default function AppSidebar({
       ? `${activeSubs[0].track} Pass Active`
       : "Free Plan";
 
-  const renderNavItem = (item: NavItem) => {
+  const renderNavItem = (item: NavItem, isCollapsed: boolean) => {
     const active = item.match(pathname);
+    if (isCollapsed) {
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          title={item.label}
+          aria-label={item.label}
+          className={`group mx-auto flex h-11 w-11 items-center justify-center rounded-xl transition ${
+            active
+              ? "border-2 border-[#16a34a] bg-[#f0fdf4] shadow-sm"
+              : "border border-transparent hover:bg-[#f6faf4]"
+          }`}
+        >
+          <span
+            className={`flex h-8 w-8 items-center justify-center rounded-lg text-base transition ${
+              active ? "bg-[#16a34a] text-white shadow-sm" : item.iconBg
+            }`}
+          >
+            {item.icon}
+          </span>
+        </Link>
+      );
+    }
+
     return (
       <Link
         key={item.href}
         href={item.href}
-        title={collapsed ? item.label : undefined}
         className={`group flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition ${
           active
             ? "border border-[#16a34a] bg-[#f0fdf4] font-extrabold text-[#15803d] shadow-sm"
@@ -238,202 +282,264 @@ export default function AppSidebar({
         >
           {item.icon}
         </span>
-        {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <div className="truncate leading-tight">{item.label}</div>
-            {item.sublabel && (
-              <div className="truncate text-[11px] font-normal text-[#5c7863]">{item.sublabel}</div>
-            )}
-          </div>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="truncate leading-tight">{item.label}</div>
+          {item.sublabel && (
+            <div className="truncate text-[11px] font-normal text-[#5c7863]">{item.sublabel}</div>
+          )}
+        </div>
       </Link>
     );
   };
 
-  const sidebarContent = (isMobileDrawer = false) => (
-    <div className="flex h-full flex-col justify-between">
-      {/* Top section */}
-      <div className="flex-1 overflow-y-auto px-3 pt-4 pb-4">
-        {/* Brand + Collapse button */}
-        <div className="mb-4 flex items-center justify-between gap-2 px-1">
-          <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
-            <LogoMark size="sm" />
-            {(!collapsed || isMobileDrawer) && (
-              <span className="truncate text-sm font-black tracking-tight text-[#16331f]">
-                Teacher Ceppee<span className="gradient-text"> Review</span>
-              </span>
-            )}
-          </Link>
-          {!isMobileDrawer ? (
-            <button
-              type="button"
-              onClick={() => setCollapsed((c) => !c)}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              title={collapsed ? "Expand drawer" : "Collapse drawer"}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#d9e6d3] bg-white text-xs font-bold text-[#3d5c44] hover:border-[#16a34a] hover:text-[#16331f]"
-            >
-              {collapsed ? "»" : "«"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setMobileOpen(false)}
-              aria-label="Close drawer"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#d9e6d3] bg-white text-xs font-bold text-[#3d5c44]"
-            >
-              ✕
-            </button>
-          )}
-        </div>
+  const sidebarContent = (isMobileDrawer = false) => {
+    const isCollapsed = collapsed && !isMobileDrawer;
 
-        {/* User Study Desk Card */}
-        {(!collapsed || isMobileDrawer) && (
-          <div className="mb-3 rounded-2xl border border-[#d9e6d3] bg-gradient-to-br from-[#dcfce7] via-[#f0fdf4] to-[#fef9c3] p-3.5 shadow-sm">
-            <div className="flex items-center gap-3">
-              <LogoMark size="sm" className="shrink-0 shadow" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-black text-[#16331f]">
-                  {firstName}&apos;s study desk
-                </div>
-                <div className="mt-0.5 truncate text-[11px] font-extrabold text-[#b45309]">
-                  {activeSubs.length > 0
-                    ? `✓ ${activeSubs[0].track} Reviewer Active`
-                    : "Ready for LET & CSE"}
-                </div>
-              </div>
-            </div>
-            {(profile?.user_label || isAdmin) && (
-              <div className="mt-2.5 flex items-center gap-1.5 border-t border-[#d9e6d3]/70 pt-2">
-                <UserBadgePill
-                  label={profile?.user_label}
-                  color={profile?.user_badge_color}
-                  isAdmin={isAdmin}
-                  size="xs"
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Upgrade / Pass CTA Pill */}
-        {(!collapsed || isMobileDrawer) && activeSubs.length === 0 && !isAdmin && (
-          <Link
-            href="/pricing"
-            className="mb-4 flex items-center justify-between rounded-xl border border-[#eab308] bg-[#fffbeb] px-3 py-2 text-xs font-extrabold text-[#b45309] shadow-sm transition hover:border-[#16a34a] hover:bg-[#f0fdf4] hover:text-[#15803d]"
-          >
-            <span className="flex items-center gap-2">
-              <span>✨</span>
-              <span>Unlock Full Pass</span>
-            </span>
-            <span>from ₱149 →</span>
-          </Link>
-        )}
-
-        {/* Study Section */}
-        <div className="mb-4">
-          {(!collapsed || isMobileDrawer) && (
-            <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
-              Study
-            </div>
-          )}
-          <div className="space-y-1 rounded-2xl border border-[#d9e6d3] bg-white p-1.5 shadow-sm">
-            {studyItems.map(renderNavItem)}
-          </div>
-        </div>
-
-        {/* Community & Rooms Section */}
-        <div>
-          {(!collapsed || isMobileDrawer) && (
-            <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
-              Community &amp; Rooms
-            </div>
-          )}
-          <div className="space-y-1 rounded-2xl border border-[#d9e6d3] bg-white p-1.5 shadow-sm">
-            {communityItems.map(renderNavItem)}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom User Profile & Theme Bar */}
-      <div className="relative border-t border-[#d9e6d3] bg-white p-3" ref={profileMenuRef}>
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => setProfileMenuOpen((o) => !o)}
-            className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1.5 text-left transition hover:bg-[#f6faf4]"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#ca8a04] text-sm font-black text-white shadow-sm">
-              {initial}
-            </span>
-            {(!collapsed || isMobileDrawer) && (
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate text-xs font-extrabold text-[#16331f]">{fullName}</span>
-                  <span className="text-[10px] text-[#5c7863]">▾</span>
-                </div>
-                <div className="truncate text-[11px] text-[#5c7863]">Profile &amp; sign out</div>
-              </div>
-            )}
-          </button>
-
-          {(!collapsed || isMobileDrawer) && <ThemeToggle />}
-        </div>
-
-        {profileMenuOpen && (
-          <div className="absolute bottom-16 left-3 right-3 z-50 rounded-2xl border border-[#d9e6d3] bg-white p-3 shadow-xl">
-            <div className="mb-2 border-b border-[#e2ece0] pb-2">
-              <div className="truncate text-xs font-extrabold text-[#16331f]">{fullName}</div>
-              <div className="truncate text-[11px] text-[#5c7863]">{user.email}</div>
-              <div className="mt-1.5">
-                <UserBadgePill
-                  label={profile?.user_label}
-                  color={profile?.user_badge_color}
-                  isAdmin={isAdmin}
-                  size="xs"
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Link
-                href="/dashboard"
-                className="block rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#3d5c44] hover:bg-[#f6faf4] hover:text-[#16331f]"
-              >
-                🌱 My Study Desk
+    return (
+      <div className="flex h-full flex-col justify-between">
+        {/* Top section */}
+        <div
+          className={`flex-1 overflow-y-auto overflow-x-hidden ${
+            isCollapsed ? "px-2 pt-3 pb-3" : "px-3 pt-4 pb-4"
+          }`}
+        >
+          {/* Brand + Collapse button */}
+          {isCollapsed ? (
+            <div className="mb-3 flex flex-col items-center gap-2">
+              <Link href="/dashboard" title="Teacher Ceppee Review" className="flex items-center justify-center">
+                <LogoMark size="sm" />
               </Link>
-              <Link
-                href="/study-room"
-                className="block rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#3d5c44] hover:bg-[#f6faf4] hover:text-[#16331f]"
-              >
-                💬 Join Study Room
-              </Link>
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className="block rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#b45309] hover:bg-[#fffbeb]"
-                >
-                  🛠️ Admin Dashboard
-                </Link>
-              )}
               <button
                 type="button"
-                onClick={handleSignOut}
-                className="mt-1 w-full rounded-lg border border-[#fecaca] bg-[#fef2f2] px-2.5 py-1.5 text-left text-xs font-extrabold text-[#991b1b] hover:bg-[#fee2e2]"
+                onClick={() => setCollapsed(false)}
+                aria-label="Expand sidebar"
+                title="Expand drawer"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#d9e6d3] bg-white text-xs font-bold text-[#3d5c44] hover:border-[#16a34a] hover:text-[#16331f]"
               >
-                Sign out
+                »
               </button>
             </div>
+          ) : (
+            <div className="mb-4 flex items-center justify-between gap-2 px-1">
+              <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5">
+                <LogoMark size="sm" />
+                <span className="truncate text-sm font-black tracking-tight text-[#16331f]">
+                  Teacher Ceppee<span className="gradient-text"> Review</span>
+                </span>
+              </Link>
+              {!isMobileDrawer ? (
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(true)}
+                  aria-label="Collapse sidebar"
+                  title="Collapse drawer"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#d9e6d3] bg-white text-xs font-bold text-[#3d5c44] hover:border-[#16a34a] hover:text-[#16331f]"
+                >
+                  «
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close drawer"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#d9e6d3] bg-white text-xs font-bold text-[#3d5c44]"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* User Study Desk Card */}
+          {!isCollapsed && (
+            <div className="mb-3 rounded-2xl border border-[#d9e6d3] bg-gradient-to-br from-[#dcfce7] via-[#f0fdf4] to-[#fef9c3] p-3.5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <LogoMark size="sm" className="shrink-0 shadow" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-black text-[#16331f]">
+                    {firstName}&apos;s study desk
+                  </div>
+                  <div className="mt-0.5 truncate text-[11px] font-extrabold text-[#b45309]">
+                    {activeSubs.length > 0
+                      ? `✓ ${activeSubs[0].track} Reviewer Active`
+                      : "Ready for LET & CSE"}
+                  </div>
+                </div>
+              </div>
+              {(profile?.user_label || isAdmin) && (
+                <div className="mt-2.5 flex items-center gap-1.5 border-t border-[#d9e6d3]/70 pt-2">
+                  <UserBadgePill
+                    label={profile?.user_label}
+                    color={profile?.user_badge_color}
+                    isAdmin={isAdmin}
+                    size="xs"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Upgrade / Pass CTA Pill */}
+          {!isCollapsed && activeSubs.length === 0 && !isAdmin && (
+            <Link
+              href="/pricing"
+              className="mb-4 flex items-center justify-between rounded-xl border border-[#eab308] bg-[#fffbeb] px-3 py-2 text-xs font-extrabold text-[#b45309] shadow-sm transition hover:border-[#16a34a] hover:bg-[#f0fdf4] hover:text-[#15803d]"
+            >
+              <span className="flex items-center gap-2">
+                <span>✨</span>
+                <span>Unlock Full Pass</span>
+              </span>
+              <span>from ₱149 →</span>
+            </Link>
+          )}
+
+          {/* Study Section */}
+          <div className="mb-3">
+            {!isCollapsed && (
+              <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
+                Study
+              </div>
+            )}
+            <div
+              className={`rounded-2xl border border-[#d9e6d3] bg-white shadow-sm ${
+                isCollapsed ? "flex flex-col items-center space-y-1 p-1.5" : "space-y-1 p-1.5"
+              }`}
+            >
+              {studyItems.map((item) => renderNavItem(item, isCollapsed))}
+            </div>
           </div>
-        )}
+
+          {/* Community & Rooms Section */}
+          <div>
+            {!isCollapsed && (
+              <div className="mb-1.5 px-2 text-[11px] font-extrabold uppercase tracking-wider text-[#5c7863]">
+                Community &amp; Rooms
+              </div>
+            )}
+            <div
+              className={`rounded-2xl border border-[#d9e6d3] bg-white shadow-sm ${
+                isCollapsed ? "flex flex-col items-center space-y-1 p-1.5" : "space-y-1 p-1.5"
+              }`}
+            >
+              {communityItems.map((item) => renderNavItem(item, isCollapsed))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom User Profile & Theme Bar */}
+        <div
+          className={`relative border-t border-[#d9e6d3] bg-white ${isCollapsed ? "p-2" : "p-3"}`}
+          ref={isMobileDrawer ? mobileProfileRef : desktopProfileRef}
+        >
+          {isCollapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <ThemeToggle />
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((o) => !o)}
+                title={`${fullName} — Profile & sign out`}
+                aria-label="Open profile menu"
+                className="flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-[#f6faf4]"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#ca8a04] text-sm font-black text-white shadow-sm">
+                  {initial}
+                </span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((o) => !o)}
+                className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1.5 text-left transition hover:bg-[#f6faf4]"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#16a34a] to-[#ca8a04] text-sm font-black text-white shadow-sm">
+                  {initial}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-xs font-extrabold text-[#16331f]">{fullName}</span>
+                    <span className="text-[10px] text-[#5c7863]">▾</span>
+                  </div>
+                  <div className="truncate text-[11px] text-[#5c7863]">Profile &amp; sign out</div>
+                </div>
+              </button>
+
+              <ThemeToggle />
+            </div>
+          )}
+
+          {profileMenuOpen && (
+            <div
+              className={`absolute z-50 rounded-2xl border border-[#d9e6d3] bg-white p-3 shadow-2xl ${
+                isCollapsed
+                  ? "bottom-2 left-full ml-2 w-60"
+                  : "bottom-16 left-3 right-3"
+              }`}
+            >
+              <div className="mb-2 border-b border-[#e2ece0] pb-2">
+                <div className="truncate text-xs font-extrabold text-[#16331f]">{fullName}</div>
+                <div className="truncate text-[11px] text-[#5c7863]">{user.email}</div>
+                {(profile?.user_label || isAdmin) && (
+                  <div className="mt-1.5">
+                    <UserBadgePill
+                      label={profile?.user_label}
+                      color={profile?.user_badge_color}
+                      isAdmin={isAdmin}
+                      size="xs"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => handleProfileNav("/dashboard")}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-bold text-[#3d5c44] hover:bg-[#f6faf4] hover:text-[#16331f]"
+                >
+                  <span>🌱</span>
+                  <span>My Study Desk</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleProfileNav("/study-room")}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-bold text-[#3d5c44] hover:bg-[#f6faf4] hover:text-[#16331f]"
+                >
+                  <span>💬</span>
+                  <span>Join Study Room</span>
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => handleProfileNav("/admin")}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-bold text-[#b45309] hover:bg-[#fffbeb]"
+                  >
+                    <span>🛠️</span>
+                    <span>Admin Dashboard</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={signingOut}
+                  onClick={handleSignOut}
+                  className="mt-1 w-full rounded-lg border border-[#fecaca] bg-[#fef2f2] px-2.5 py-2 text-left text-xs font-extrabold text-[#991b1b] hover:bg-[#fee2e2] disabled:opacity-50"
+                >
+                  {signingOut ? "Signing out…" : "Sign out"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f6faf4]">
       {/* Desktop Fixed Left Sidebar */}
       <aside
         className={`hidden md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col border-r border-[#d9e6d3] bg-[#f6faf4] transition-all duration-200 ${
-          collapsed ? "md:w-20" : "md:w-64"
+          collapsed ? "md:w-[72px]" : "md:w-64"
         }`}
       >
         {sidebarContent(false)}
@@ -458,7 +564,7 @@ export default function AppSidebar({
       {/* Right Main Column */}
       <div
         className={`flex min-w-0 flex-1 flex-col transition-all duration-200 ${
-          collapsed ? "md:pl-20" : "md:pl-64"
+          collapsed ? "md:pl-[72px]" : "md:pl-64"
         }`}
       >
         {/* Top Utility Header Bar (like the LETPass reference) */}

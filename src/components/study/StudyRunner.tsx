@@ -76,7 +76,23 @@ export default function StudyRunner(props: StudyRunnerProps) {
   const [pass, setPass] = useState(1);
 
   const submittedRef = useRef(false);
+  const runnerTopRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => createClient(), []);
+
+  // Scroll the question card cleanly into view whenever the question or phase advances
+  useEffect(() => {
+    if (phase !== "run") return;
+    if (runnerTopRef.current) {
+      const rect = runnerTopRef.current.getBoundingClientRect();
+      // If the top of the runner is scrolled above the sticky utility bar (56px), scroll smoothly up
+      if (rect.top < 56 || window.scrollY > 80) {
+        const y = Math.max(0, window.scrollY + rect.top - 68);
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [current, index, phase]);
 
   const answeredCount = Object.keys(answers).length;
 
@@ -280,7 +296,7 @@ export default function StudyRunner(props: StudyRunnerProps) {
     };
 
     return (
-      <div>
+      <div ref={runnerTopRef}>
         <RunnerHeader
           left={`Card ${index + 1} / ${deck.length}`}
           center={
@@ -609,7 +625,7 @@ export default function StudyRunner(props: StudyRunnerProps) {
   const win = questions.slice(winStart, winStart + 9);
 
   return (
-    <div>
+    <div ref={runnerTopRef}>
       <RunnerHeader
         left={`Q${current + 1} / ${total}`}
         center={
@@ -682,8 +698,8 @@ export default function StudyRunner(props: StudyRunnerProps) {
         </div>
       )}
 
-      <div className="game-card p-6 sm:p-8">
-        <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="game-card p-5 sm:p-6">
+        <div className="mb-2.5 flex items-start justify-between gap-2">
           <p className="text-xs font-extrabold uppercase tracking-wide text-[#94a896]">
             {q.subject ? `${subjectIcon(track, q.subject)} ${q.subtopic ?? q.subject}` : "Question"}
           </p>
@@ -699,11 +715,11 @@ export default function StudyRunner(props: StudyRunnerProps) {
           </button>
         </div>
 
-        <h2 className="mb-6 text-lg font-black leading-relaxed text-[#16331f]">
+        <h2 className="mb-4 text-base font-black leading-snug text-[#16331f] sm:text-lg">
           {current + 1}. {q.question_text}
         </h2>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {LETTERS.map((c) => {
             const selected = chosen === c;
             const showCorrect = !isMock && answeredThis && key?.correct_choice === c;
@@ -714,7 +730,7 @@ export default function StudyRunner(props: StudyRunnerProps) {
                 type="button"
                 onClick={() => chooseAnswer(q, c)}
                 aria-pressed={selected}
-                className={`flex w-full items-center gap-3 rounded-2xl border-2 border-b-4 px-5 py-4 text-left text-sm transition ${
+                className={`flex w-full items-center gap-3 rounded-2xl border-2 border-b-4 px-4 py-3 text-left text-sm transition ${
                   showCorrect
                     ? "animate-pop border-[#16a34a] bg-[#dcfce7] font-bold text-[#16331f]"
                     : showWrong
@@ -725,7 +741,7 @@ export default function StudyRunner(props: StudyRunnerProps) {
                 }`}
               >
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-black ${
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-black ${
                     selected || showCorrect
                       ? "bg-gradient-to-br from-[#16a34a] to-[#d4af37] text-white"
                       : "bg-[#dcfce7] text-[#15803d]"
@@ -733,7 +749,7 @@ export default function StudyRunner(props: StudyRunnerProps) {
                 >
                   {c}
                 </span>
-                <span className="flex-1">{q[`choice_${c.toLowerCase()}` as "choice_a"]}</span>
+                <span className="flex-1 leading-snug">{q[`choice_${c.toLowerCase()}` as "choice_a"]}</span>
                 {showCorrect && <span className="font-black text-[#166534]">✓</span>}
                 {showWrong && <span className="font-black text-[#991b1b]">✕</span>}
               </button>
@@ -742,9 +758,9 @@ export default function StudyRunner(props: StudyRunnerProps) {
         </div>
 
         {!isMock && answeredThis && key && (
-          <div className="animate-pop mt-5">
+          <div className="animate-pop mt-4">
             <div
-              className={`flex items-center justify-between rounded-2xl px-5 py-3.5 text-sm font-extrabold ${
+              className={`flex items-center justify-between rounded-2xl px-4 py-2.5 text-sm font-extrabold ${
                 chosen === key.correct_choice ? "bg-[#dcfce7] text-[#166534]" : "bg-[#fee2e2] text-[#991b1b]"
               }`}
             >
@@ -758,7 +774,7 @@ export default function StudyRunner(props: StudyRunnerProps) {
               )}
             </div>
             {key.explanation && (
-              <p className="mt-3 rounded-2xl border border-[#86efac] bg-[#f0fdf4] px-5 py-4 text-sm leading-relaxed text-[#15803d]">
+              <p className="mt-2.5 rounded-2xl border border-[#86efac] bg-[#f0fdf4] px-4 py-3 text-sm leading-relaxed text-[#15803d]">
                 💡 {key.explanation}
               </p>
             )}
@@ -766,9 +782,9 @@ export default function StudyRunner(props: StudyRunnerProps) {
         )}
       </div>
 
-      {error && <p className="mt-4 rounded-xl bg-[#fee2e2] px-4 py-3 text-sm text-[#991b1b]">⚠️ {error}</p>}
+      {error && <p className="mt-3 rounded-xl bg-[#fee2e2] px-4 py-2.5 text-sm text-[#991b1b]">⚠️ {error}</p>}
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => setCurrent((c) => Math.max(0, c - 1))}
@@ -892,12 +908,12 @@ function RunnerHeader({
 }) {
   return (
     <>
-      <div className="game-card sticky top-20 z-30 mb-3 flex items-center justify-between gap-2 px-4 py-3">
+      <div className="game-card sticky top-16 z-20 mb-2.5 flex items-center justify-between gap-2 px-4 py-2.5">
         <div className="text-sm font-black text-[#16331f]">{left}</div>
         <div>{center}</div>
         <div>{right}</div>
       </div>
-      <div className="mb-5 h-2.5 w-full overflow-hidden rounded-full bg-[#d9e6d3]">
+      <div className="mb-3.5 h-2 w-full overflow-hidden rounded-full bg-[#d9e6d3]">
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#16a34a] to-[#d4af37] transition-all"
           style={{ width: `${Math.min(100, progress)}%` }}

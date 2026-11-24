@@ -55,3 +55,20 @@ test("admin panel includes Study Rooms management and User Badges / Labels", () 
   assert.match(api, /case "save_study_room":/);
   assert.match(api, /case "delete_study_room":/);
 });
+
+test("profile menu uses separate desktop/mobile refs so mousedown outside check does not kill menu clicks, and centers icons when collapsed", () => {
+  const sidebar = read("src/components/AppSidebar.tsx");
+  assert.match(sidebar, /desktopProfileRef/);
+  assert.match(sidebar, /mobileProfileRef/);
+  assert.ok(!sidebar.includes("const profileMenuRef ="), "shared profileMenuRef causes mobile ref overwrite");
+  assert.match(sidebar, /fetch\("\/api\/auth\/signout"/);
+  assert.match(sidebar, /window\.location\.href = "\/"/);
+  assert.match(sidebar, /mx-auto flex h-11 w-11 items-center justify-center/);
+});
+
+test("StudyRunner scrolls to top of question card on Next/Prev and fits viewport cleanly", () => {
+  const runner = read("src/components/study/StudyRunner.tsx");
+  assert.match(runner, /runnerTopRef/);
+  assert.match(runner, /window\.scrollTo\(\{ top:/);
+  assert.match(runner, /sticky top-16 z-20/);
+});
